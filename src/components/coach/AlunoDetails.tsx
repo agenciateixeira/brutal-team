@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { Profile, ProgressPhoto, Message, Dieta, Treino, ProtocoloHormonal } from '@/types';
-import { ArrowLeft, Image as ImageIcon, MessageCircle, Apple, Dumbbell, Syringe, Calendar, FileText, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Profile, ProgressPhoto, Message, Dieta, Treino, ProtocoloHormonal, NotificationCounts } from '@/types';
+import { ArrowLeft, Image as ImageIcon, MessageCircle, Apple, Dumbbell, Syringe, Calendar, FileText, X, Bell } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import Image from 'next/image';
 import CoachMessageList from './CoachMessageList';
@@ -38,6 +39,87 @@ export default function AlunoDetails({
   const [showMeasurementsModal, setShowMeasurementsModal] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [modalData, setModalData] = useState<ProgressPhoto | null>(null);
+  const [notifications, setNotifications] = useState<NotificationCounts>({
+    photo: 0,
+    message: 0,
+    diet: 0,
+    workout: 0,
+    protocol: 0,
+    total: 0
+  });
+
+  const supabase = createClient();
+
+  // Carregar notificações não visualizadas
+  useEffect(() => {
+    loadNotifications();
+  }, [aluno.id, coachId]);
+
+  // Marcar como visualizado ao trocar de tab
+  useEffect(() => {
+    handleTabView(activeTab);
+  }, [activeTab]);
+
+  const loadNotifications = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('coach_notifications')
+        .select('notification_type')
+        .eq('coach_id', coachId)
+        .eq('aluno_id', aluno.id)
+        .eq('is_viewed', false);
+
+      if (error) throw error;
+
+      const counts: NotificationCounts = {
+        photo: 0,
+        message: 0,
+        diet: 0,
+        workout: 0,
+        protocol: 0,
+        total: data?.length || 0
+      };
+
+      data?.forEach((notif) => {
+        counts[notif.notification_type as keyof NotificationCounts]++;
+      });
+
+      setNotifications(counts);
+    } catch (error) {
+      console.error('Erro ao carregar notificações:', error);
+    }
+  };
+
+  const handleTabView = async (tab: Tab) => {
+    const typeMap: Record<Tab, string> = {
+      fotos: 'photo',
+      mensagens: 'message',
+      dieta: 'diet',
+      treino: 'workout',
+      protocolo: 'protocol'
+    };
+
+    const notificationType = typeMap[tab];
+
+    try {
+      const { error } = await supabase.rpc('mark_notifications_as_viewed', {
+        p_coach_id: coachId,
+        p_aluno_id: aluno.id,
+        p_notification_type: notificationType
+      });
+
+      if (error) throw error;
+
+      // Atualizar contadores localmente
+      setNotifications(prev => ({
+        ...prev,
+        [notificationType]: 0,
+        total: Math.max(0, prev.total - prev[notificationType as keyof NotificationCounts])
+      }));
+    } catch (error) {
+      console.error('Erro ao marcar notificações como vistas:', error);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -80,7 +162,7 @@ export default function AlunoDetails({
         <div className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
           <button
             onClick={() => setActiveTab('fotos')}
-            className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap ${
+            className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap relative ${
               activeTab === 'fotos'
                 ? 'bg-primary-600 text-white'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -88,10 +170,15 @@ export default function AlunoDetails({
           >
             <ImageIcon size={20} />
             Resumo Semanal ({photos.length})
+            {notifications.photo > 0 && (
+              <span className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
+                {notifications.photo}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab('mensagens')}
-            className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap ${
+            className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap relative ${
               activeTab === 'mensagens'
                 ? 'bg-primary-600 text-white'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -99,10 +186,15 @@ export default function AlunoDetails({
           >
             <MessageCircle size={20} />
             Mensagens ({messages.length})
+            {notifications.message > 0 && (
+              <span className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-white text-xs font-bold">
+                {notifications.message}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab('dieta')}
-            className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap ${
+            className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap relative ${
               activeTab === 'dieta'
                 ? 'bg-primary-600 text-white'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -110,10 +202,15 @@ export default function AlunoDetails({
           >
             <Apple size={20} />
             Dieta ({dietas.length})
+            {notifications.diet > 0 && (
+              <span className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-white text-xs font-bold">
+                {notifications.diet}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab('treino')}
-            className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap ${
+            className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap relative ${
               activeTab === 'treino'
                 ? 'bg-primary-600 text-white'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -121,10 +218,15 @@ export default function AlunoDetails({
           >
             <Dumbbell size={20} />
             Treino ({treinos.length})
+            {notifications.workout > 0 && (
+              <span className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-purple-500 text-white text-xs font-bold">
+                {notifications.workout}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab('protocolo')}
-            className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap ${
+            className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap relative ${
               activeTab === 'protocolo'
                 ? 'bg-primary-600 text-white'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -132,6 +234,11 @@ export default function AlunoDetails({
           >
             <Syringe size={20} />
             Protocolo ({protocolos.length})
+            {notifications.protocol > 0 && (
+              <span className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-pink-500 text-white text-xs font-bold">
+                {notifications.protocol}
+              </span>
+            )}
           </button>
         </div>
 

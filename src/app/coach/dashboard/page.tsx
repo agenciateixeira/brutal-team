@@ -49,6 +49,23 @@ export default async function CoachDashboard() {
     return acc;
   }, {});
 
+  // Buscar notificações não visualizadas por aluno
+  const { data: notifications } = await supabase
+    .from('coach_notifications')
+    .select('aluno_id, notification_type')
+    .eq('coach_id', session.user.id)
+    .eq('is_viewed', false);
+
+  // Agrupar notificações por aluno
+  const notificationsByAluno = notifications?.reduce((acc: any, notif) => {
+    if (!acc[notif.aluno_id]) {
+      acc[notif.aluno_id] = { photo: false, message: false, diet: false, workout: false, protocol: false, count: 0 };
+    }
+    acc[notif.aluno_id][notif.notification_type] = true;
+    acc[notif.aluno_id].count++;
+    return acc;
+  }, {}) || {};
+
   // Buscar última atividade de cada aluno
   const alunosWithData = await Promise.all(
     (alunos || []).map(async (aluno) => {
@@ -74,12 +91,20 @@ export default async function CoachDashboard() {
       const lastActivity = Math.max(lastPhotoDate, lastMessageDate);
 
       const hasUnviewedUpdates = (unreadByAluno?.[aluno.id] || 0) > 0;
+      const alunoNotifications = notificationsByAluno[aluno.id] || { photo: false, message: false, diet: false, workout: false, protocol: false, count: 0 };
+
+      // Determinar se tem todas as notificações
+      const hasAllNotifications = alunoNotifications.photo && alunoNotifications.message &&
+                                  alunoNotifications.diet && alunoNotifications.workout &&
+                                  alunoNotifications.protocol;
 
       return {
         ...aluno,
         unread_messages_count: unreadByAluno?.[aluno.id] || 0,
         last_activity: lastActivity > 0 ? new Date(lastActivity).toISOString() : null,
         has_unviewed_updates: hasUnviewedUpdates,
+        notifications: alunoNotifications,
+        has_all_notifications: hasAllNotifications,
       };
     })
   );

@@ -114,3 +114,24 @@ export interface WorkoutTracking {
   created_at: string;
   updated_at: string;
 }
+
+export type NotificationType = 'photo' | 'message' | 'diet' | 'workout' | 'protocol';
+
+export interface CoachNotification {
+  id: string;
+  coach_id: string;
+  aluno_id: string;
+  notification_type: NotificationType;
+  reference_id: string | null;
+  is_viewed: boolean;
+  created_at: string;
+}
+
+export interface NotificationCounts {
+  photo: number;
+  message: number;
+  diet: number;
+  workout: number;
+  protocol: number;
+  total: number;
+}

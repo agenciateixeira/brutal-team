@@ -6,12 +6,22 @@ import Link from 'next/link';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useState, useMemo } from 'react';
+import AlunoNotificationIndicator from './AlunoNotificationIndicator';
 
 interface AlunosListProps {
   alunos: (Profile & {
     unread_messages_count?: number;
     last_activity?: string | null;
     has_unviewed_updates?: boolean;
+    notifications?: {
+      photo: boolean;
+      message: boolean;
+      diet: boolean;
+      workout: boolean;
+      protocol: boolean;
+      count: number;
+    };
+    has_all_notifications?: boolean;
   })[];
 }
 
@@ -199,10 +209,12 @@ export default function AlunosList({ alunos }: AlunosListProps) {
                       {aluno.full_name?.[0]?.toUpperCase() || aluno.email[0].toUpperCase()}
                     </div>
                   )}
-                  {/* Indicador de atualizações não visualizadas */}
-                  {aluno.has_unviewed_updates && (
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white dark:border-gray-800" title="Tem atualizações não visualizadas" />
-                  )}
+                  {/* Indicadores de notificações por tipo */}
+                  <AlunoNotificationIndicator
+                    hasPhoto={aluno.notifications?.photo || false}
+                    hasMessage={aluno.notifications?.message || false}
+                    hasAll={aluno.has_all_notifications || false}
+                  />
                 </div>
 
                 <div className="flex-1 min-w-0">
