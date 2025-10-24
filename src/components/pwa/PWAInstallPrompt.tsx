@@ -138,8 +138,8 @@ export default function PWAInstallPrompt() {
                 </p>
                 <ol className="list-decimal list-inside space-y-1 text-xs">
                   <li>Toque no botão <strong>Compartilhar</strong> (ícone ⬆️)</li>
-                  <li>Role e toque em <strong>"Adicionar à Tela de Início"</strong></li>
-                  <li>Toque em <strong>"Adicionar"</strong></li>
+                  <li>Role e toque em <strong>Adicionar à Tela de Início</strong></li>
+                  <li>Toque em <strong>Adicionar</strong></li>
                 </ol>
               </div>
             )}
@@ -152,7 +152,7 @@ export default function PWAInstallPrompt() {
                 </p>
                 <ol className="list-decimal list-inside space-y-1 text-xs">
                   <li>Toque nos <strong>3 pontinhos</strong> (menu)</li>
-                  <li>Toque em <strong>"Instalar app"</strong> ou <strong>"Adicionar à tela inicial"</strong></li>
+                  <li>Toque em <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong></li>
                   <li>Confirme a instalação</li>
                 </ol>
               </div>
