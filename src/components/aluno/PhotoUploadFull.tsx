@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import Toast from '@/components/ui/Toast';
 
 interface PhotoUploadFullProps {
   alunoId: string;
@@ -27,6 +28,7 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -40,7 +42,7 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
 
     // Validar se é uma imagem
     if (!file.type.startsWith('image/')) {
-      alert('Por favor, selecione apenas arquivos de imagem');
+      setToast({ type: 'error', message: 'Por favor, selecione apenas arquivos de imagem' });
       e.target.value = '';
       return;
     }
@@ -78,7 +80,7 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
       }, 100);
     } catch (error) {
       console.error('Erro ao acessar câmera:', error);
-      alert('Não foi possível acessar a câmera. Verifique as permissões do navegador.');
+      setToast({ type: 'error', message: 'Não foi possível acessar a câmera. Verifique as permissões do navegador.' });
     }
   };
 
@@ -136,18 +138,18 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
 
     if (!selectedFile) {
       console.log('❌ Sem arquivo selecionado');
-      alert('Por favor, selecione uma foto');
+      setToast({ type: 'error', message: 'Por favor, selecione uma foto' });
       return;
     }
 
     if (!weekNumber) {
       console.log('❌ Sem número da semana');
-      alert('Por favor, informe o número da semana');
+      setToast({ type: 'error', message: 'Por favor, informe o número da semana' });
       return;
     }
 
     if (!peso || !cintura || !bicepsContraido || !pernas || !panturrilha) {
-      alert('Por favor, preencha todas as medidas corporais');
+      setToast({ type: 'error', message: 'Por favor, preencha todas as medidas corporais' });
       return;
     }
 
@@ -194,7 +196,7 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
       }
       console.log('✅ Salvo no banco com sucesso');
 
-      alert('Foto enviada com sucesso!');
+      setToast({ type: 'success', message: 'Foto enviada com sucesso!' });
       setWeekNumber('');
       setNotes('');
       setPeso('');
@@ -209,7 +211,7 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
       router.refresh();
     } catch (error: any) {
       console.error('❌ Erro ao fazer upload:', error);
-      alert('Erro ao fazer upload: ' + error.message);
+      setToast({ type: 'error', message: `Erro ao fazer upload: ${error.message}` });
     } finally {
       setUploading(false);
       console.log('✅ handleUpload finalizado');
@@ -217,27 +219,40 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
   };
 
   const handleDelete = async (photoId: string, photoUrl: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta foto?')) return;
+    if (!confirm('Tem certeza que deseja excluir esta foto? Esta ação não pode ser desfeita.')) return;
 
     try {
+      setToast({ type: 'info', message: 'Excluindo foto...' });
+
       // Extrair o caminho do arquivo da URL
       const urlParts = photoUrl.split('/');
       const filePath = urlParts.slice(-2).join('/');
 
+      console.log('🗑️ Deletando arquivo:', filePath);
+
       // Deletar do storage
-      await supabase.storage.from('progress-photos').remove([filePath]);
+      const { error: storageError } = await supabase.storage
+        .from('progress-photos')
+        .remove([filePath]);
+
+      if (storageError) {
+        console.error('Erro ao deletar do storage:', storageError);
+        // Continua mesmo se der erro no storage, pois pode já ter sido deletado
+      }
 
       // Deletar do banco
-      const { error } = await supabase
+      const { error: dbError } = await supabase
         .from('progress_photos')
         .delete()
         .eq('id', photoId);
 
-      if (error) throw error;
+      if (dbError) throw dbError;
 
+      setToast({ type: 'success', message: 'Foto excluída com sucesso!' });
       router.refresh();
     } catch (error: any) {
-      alert('Erro ao excluir foto: ' + error.message);
+      console.error('Erro ao excluir foto:', error);
+      setToast({ type: 'error', message: `Erro ao excluir foto: ${error.message}` });
     }
   };
 
@@ -612,6 +627,15 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
             </div>
           </div>
         </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );
