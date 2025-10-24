@@ -77,6 +77,7 @@ export default function PaymentManagement({ alunos }: PaymentManagementProps) {
           amount,
           payment_date: paymentDate,
           reference_month: referenceMonth,
+          status: 'paid',
           notes: notes || null,
         });
 

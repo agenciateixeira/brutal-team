@@ -207,7 +207,7 @@ export default function AlunosList({ alunos }: AlunosListProps) {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-gray-900 dark:text-white font-semibold group-hover:text-primary-600 dark:group-hover:text-primary-500 transition-colors truncate">
+                    <h3 className="text-sm md:text-base text-gray-900 dark:text-white font-semibold group-hover:text-primary-600 dark:group-hover:text-primary-500 transition-colors truncate">
                       {aluno.full_name || 'Nome não definido'}
                     </h3>
                     {/* Badge de status */}
@@ -223,7 +223,7 @@ export default function AlunosList({ alunos }: AlunosListProps) {
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{aluno.email}</p>
+                  <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 truncate">{aluno.email}</p>
                   <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500 mt-1">
                     <span className="flex items-center gap-1">
                       <Calendar size={12} />
