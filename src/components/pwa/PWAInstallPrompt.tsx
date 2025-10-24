@@ -8,10 +8,11 @@ export default function PWAInstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
-    // Só habilitar PWA em produção no domínio correto
+    // Só habilitar PWA em produção nos domínios corretos
     const isProduction = process.env.NODE_ENV === 'production';
+    const allowedDomains = ['app.brutalteam.blog.br', 'www.app.brutalteam.blog.br'];
     const isCorrectDomain = typeof window !== 'undefined' &&
-      window.location.hostname === 'app.brutalteam.blog.br';
+      allowedDomains.includes(window.location.hostname);
 
     if (!isProduction || !isCorrectDomain) {
       console.log('PWA desabilitado. Ambiente:', process.env.NODE_ENV, 'Domínio:', typeof window !== 'undefined' ? window.location.hostname : 'N/A');
