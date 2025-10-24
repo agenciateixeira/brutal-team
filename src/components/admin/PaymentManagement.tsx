@@ -69,7 +69,23 @@ export default function PaymentManagement({ alunos }: PaymentManagementProps) {
     const notes = formData.get('notes') as string;
 
     try {
-      // Inserir pagamento no histórico
+      // Verificar se o aluno já tem dia de vencimento definido
+      const { data: alunoData } = await supabase
+        .from('profiles')
+        .select('payment_due_day')
+        .eq('id', selectedAluno?.id)
+        .single();
+
+      // Se não tiver dia de vencimento, definir baseado na data do pagamento
+      if (!alunoData?.payment_due_day) {
+        const paymentDay = new Date(paymentDate).getDate();
+        await supabase
+          .from('profiles')
+          .update({ payment_due_day: paymentDay })
+          .eq('id', selectedAluno?.id);
+      }
+
+      // Inserir pagamento no histórico (o trigger vai atualizar status e last_payment_date automaticamente)
       const { error: paymentError } = await supabase
         .from('payment_history')
         .insert({
@@ -82,14 +98,6 @@ export default function PaymentManagement({ alunos }: PaymentManagementProps) {
         });
 
       if (paymentError) throw paymentError;
-
-      // Atualizar status do aluno para 'active'
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ payment_status: 'active' })
-        .eq('id', selectedAluno?.id);
-
-      if (updateError) throw updateError;
 
       setMessage({ type: 'success', text: 'Pagamento registrado com sucesso!' });
       setShowPaymentModal(false);
