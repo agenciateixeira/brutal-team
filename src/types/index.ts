@@ -21,6 +21,11 @@ export interface ProgressPhoto {
   photo_url: string;
   week_number: number;
   notes: string | null;
+  peso: number | null;
+  cintura: number | null;
+  biceps_contraido: number | null;
+  pernas: number | null;
+  panturrilha: number | null;
   created_at: string;
 }
 

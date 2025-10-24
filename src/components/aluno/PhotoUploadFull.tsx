@@ -18,6 +18,11 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
   const [uploading, setUploading] = useState(false);
   const [weekNumber, setWeekNumber] = useState('');
   const [notes, setNotes] = useState('');
+  const [peso, setPeso] = useState('');
+  const [cintura, setCintura] = useState('');
+  const [bicepsContraido, setBicepsContraido] = useState('');
+  const [pernas, setPernas] = useState('');
+  const [panturrilha, setPanturrilha] = useState('');
   const [selectedPhoto, setSelectedPhoto] = useState<ProgressPhoto | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -141,6 +146,11 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
       return;
     }
 
+    if (!peso || !cintura || !bicepsContraido || !pernas || !panturrilha) {
+      alert('Por favor, preencha todas as medidas corporais');
+      return;
+    }
+
     setUploading(true);
     console.log('⏳ Iniciando upload...');
 
@@ -171,6 +181,11 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
         photo_url: publicUrl,
         week_number: parseInt(weekNumber),
         notes: notes || null,
+        peso: parseFloat(peso),
+        cintura: parseFloat(cintura),
+        biceps_contraido: parseFloat(bicepsContraido),
+        pernas: parseFloat(pernas),
+        panturrilha: parseFloat(panturrilha),
       });
 
       if (dbError) {
@@ -182,6 +197,11 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
       alert('Foto enviada com sucesso!');
       setWeekNumber('');
       setNotes('');
+      setPeso('');
+      setCintura('');
+      setBicepsContraido('');
+      setPernas('');
+      setPanturrilha('');
       setSelectedFile(null);
       setPreviewUrl(null);
 
@@ -245,6 +265,106 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
               placeholder="Ex: 1"
               disabled={uploading}
             />
+          </div>
+
+          {/* Medidas Corporais */}
+          <div className="bg-primary-50 dark:bg-primary-900/10 border-2 border-primary-200 dark:border-primary-800 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary-600">
+                <path d="M12 2v20M2 12h20"/>
+              </svg>
+              Resumo Semanal - Medidas Corporais
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Peso */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Peso (kg) *
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={peso}
+                  onChange={(e) => setPeso(e.target.value)}
+                  className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                  placeholder="Ex: 75.5"
+                  disabled={uploading}
+                  required
+                />
+              </div>
+
+              {/* Cintura */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Cintura (cm) *
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={cintura}
+                  onChange={(e) => setCintura(e.target.value)}
+                  className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                  placeholder="Ex: 85.0"
+                  disabled={uploading}
+                  required
+                />
+              </div>
+
+              {/* Bíceps Contraído */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Bíceps Contraído (cm) *
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={bicepsContraido}
+                  onChange={(e) => setBicepsContraido(e.target.value)}
+                  className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                  placeholder="Ex: 38.5"
+                  disabled={uploading}
+                  required
+                />
+              </div>
+
+              {/* Pernas */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Pernas (cm) *
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={pernas}
+                  onChange={(e) => setPernas(e.target.value)}
+                  className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                  placeholder="Ex: 58.0"
+                  disabled={uploading}
+                  required
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  📏 Medir 1 palmo acima do joelho
+                </p>
+              </div>
+
+              {/* Panturrilha */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Panturrilha (cm) *
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={panturrilha}
+                  onChange={(e) => setPanturrilha(e.target.value)}
+                  className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                  placeholder="Ex: 38.0"
+                  disabled={uploading}
+                  required
+                />
+              </div>
+            </div>
           </div>
 
           {/* Photo Selection Buttons */}
@@ -318,7 +438,7 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
                 console.log('  - disabled:', uploading || !weekNumber);
                 handleUpload();
               }}
-              disabled={uploading || !weekNumber}
+              disabled={uploading || !weekNumber || !peso || !cintura || !bicepsContraido || !pernas || !panturrilha}
               className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               <Upload size={20} />
@@ -408,6 +528,45 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
                   {format(new Date(selectedPhoto.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                 </div>
               </div>
+
+              {/* Medidas Corporais */}
+              {(selectedPhoto.peso || selectedPhoto.cintura || selectedPhoto.biceps_contraido || selectedPhoto.pernas || selectedPhoto.panturrilha) && (
+                <div className="mb-3 p-3 bg-primary-50 dark:bg-primary-900/10 rounded-lg border border-primary-200 dark:border-primary-800">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Medidas Corporais</h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                    {selectedPhoto.peso && (
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Peso:</span>
+                        <span className="ml-1 font-semibold text-gray-900 dark:text-white">{selectedPhoto.peso} kg</span>
+                      </div>
+                    )}
+                    {selectedPhoto.cintura && (
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Cintura:</span>
+                        <span className="ml-1 font-semibold text-gray-900 dark:text-white">{selectedPhoto.cintura} cm</span>
+                      </div>
+                    )}
+                    {selectedPhoto.biceps_contraido && (
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Bíceps:</span>
+                        <span className="ml-1 font-semibold text-gray-900 dark:text-white">{selectedPhoto.biceps_contraido} cm</span>
+                      </div>
+                    )}
+                    {selectedPhoto.pernas && (
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Pernas:</span>
+                        <span className="ml-1 font-semibold text-gray-900 dark:text-white">{selectedPhoto.pernas} cm</span>
+                      </div>
+                    )}
+                    {selectedPhoto.panturrilha && (
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Panturrilha:</span>
+                        <span className="ml-1 font-semibold text-gray-900 dark:text-white">{selectedPhoto.panturrilha} cm</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {selectedPhoto.notes && (
                 <div className="flex gap-2 text-gray-700 dark:text-gray-300">
