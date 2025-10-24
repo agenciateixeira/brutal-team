@@ -6,6 +6,7 @@ import { Apple, Calendar, FileText, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useRealtimeDietas } from '@/hooks/useRealtimeDietas';
+import MealTracker from '@/components/aluno/MealTracker';
 
 interface DietaViewProps {
   alunoId: string;
@@ -141,6 +142,9 @@ export default function DietaView({ alunoId, dietaAtiva: initialDietaAtiva, hist
           )}
         </div>
       )}
+
+      {/* Tracking de Refeições */}
+      <MealTracker alunoId={alunoId} />
     </div>
   );
 }

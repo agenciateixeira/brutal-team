@@ -90,3 +90,27 @@ export interface PaymentHistory {
   created_by: string | null;
   aluno?: Profile;
 }
+
+export interface MealTracking {
+  id: string;
+  aluno_id: string;
+  date: string;
+  cafe_da_manha: boolean;
+  lanche_manha: boolean;
+  almoco: boolean;
+  lanche_tarde: boolean;
+  janta: boolean;
+  ceia: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkoutTracking {
+  id: string;
+  aluno_id: string;
+  date: string;
+  period: 'manha' | 'tarde' | 'noite';
+  completed: boolean;
+  created_at: string;
+  updated_at: string;
+}

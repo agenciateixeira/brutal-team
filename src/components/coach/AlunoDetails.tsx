@@ -228,6 +228,45 @@ export default function AlunoDetails({
                 </div>
               </div>
 
+              {/* Medidas Corporais */}
+              {(selectedPhoto.peso || selectedPhoto.cintura || selectedPhoto.biceps_contraido || selectedPhoto.pernas || selectedPhoto.panturrilha) && (
+                <div className="mb-3 p-3 bg-primary-50 dark:bg-primary-900/10 rounded-lg border border-primary-200 dark:border-primary-800">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Medidas Corporais</h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                    {selectedPhoto.peso && (
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Peso:</span>
+                        <span className="ml-1 font-semibold text-gray-900 dark:text-white">{selectedPhoto.peso} kg</span>
+                      </div>
+                    )}
+                    {selectedPhoto.cintura && (
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Cintura:</span>
+                        <span className="ml-1 font-semibold text-gray-900 dark:text-white">{selectedPhoto.cintura} cm</span>
+                      </div>
+                    )}
+                    {selectedPhoto.biceps_contraido && (
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Bíceps:</span>
+                        <span className="ml-1 font-semibold text-gray-900 dark:text-white">{selectedPhoto.biceps_contraido} cm</span>
+                      </div>
+                    )}
+                    {selectedPhoto.pernas && (
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Pernas:</span>
+                        <span className="ml-1 font-semibold text-gray-900 dark:text-white">{selectedPhoto.pernas} cm</span>
+                      </div>
+                    )}
+                    {selectedPhoto.panturrilha && (
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Panturrilha:</span>
+                        <span className="ml-1 font-semibold text-gray-900 dark:text-white">{selectedPhoto.panturrilha} cm</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {selectedPhoto.notes && (
                 <div className="flex gap-2 text-gray-700 dark:text-gray-300">
                   <FileText size={18} className="flex-shrink-0 mt-0.5" />

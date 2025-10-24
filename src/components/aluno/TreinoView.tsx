@@ -6,6 +6,7 @@ import { Dumbbell, Calendar, FileText, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useRealtimeTreinos } from '@/hooks/useRealtimeTreinos';
+import WorkoutTracker from '@/components/aluno/WorkoutTracker';
 
 interface TreinoViewProps {
   alunoId: string;
@@ -141,6 +142,9 @@ export default function TreinoView({ alunoId, treinoAtivo: initialTreinoAtivo, h
           )}
         </div>
       )}
+
+      {/* Tracking de Treinos */}
+      <WorkoutTracker alunoId={alunoId} />
     </div>
   );
 }
