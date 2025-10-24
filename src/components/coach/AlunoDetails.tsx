@@ -62,12 +62,12 @@ export default function AlunoDetails({
                 {aluno.full_name?.[0]?.toUpperCase() || aluno.email[0].toUpperCase()}
               </div>
             )}
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white truncate">
                 {aluno.full_name || 'Nome não definido'}
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">{aluno.email}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+              <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 truncate">{aluno.email}</p>
+              <p className="text-xs md:text-sm text-gray-500 dark:text-gray-500 mt-1">
                 Cliente desde {format(new Date(aluno.created_at), "dd/MM/yyyy", { locale: ptBR })}
               </p>
             </div>
@@ -183,27 +183,27 @@ export default function AlunoDetails({
                                 Ver detalhes
                               </button>
                             </div>
-                            <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="space-y-2 text-sm">
                               {photo.peso && (
-                                <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded">
                                   <span className="text-gray-500 dark:text-gray-400">Peso:</span>
                                   <span className="ml-1 font-semibold text-gray-900 dark:text-white">{photo.peso} kg</span>
                                 </div>
                               )}
                               {photo.cintura && (
-                                <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded">
                                   <span className="text-gray-500 dark:text-gray-400">Cintura:</span>
                                   <span className="ml-1 font-semibold text-gray-900 dark:text-white">{photo.cintura} cm</span>
                                 </div>
                               )}
                               {photo.biceps_contraido && (
-                                <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded">
                                   <span className="text-gray-500 dark:text-gray-400">Bíceps:</span>
                                   <span className="ml-1 font-semibold text-gray-900 dark:text-white">{photo.biceps_contraido} cm</span>
                                 </div>
                               )}
                               {photo.pernas && (
-                                <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded">
                                   <span className="text-gray-500 dark:text-gray-400">Pernas:</span>
                                   <span className="ml-1 font-semibold text-gray-900 dark:text-white">{photo.pernas} cm</span>
                                 </div>
