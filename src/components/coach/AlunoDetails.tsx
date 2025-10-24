@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Profile, ProgressPhoto, Message, Dieta, Treino, ProtocoloHormonal } from '@/types';
-import { ArrowLeft, Image as ImageIcon, MessageCircle, Apple, Dumbbell, Syringe, Calendar, FileText } from 'lucide-react';
+import { ArrowLeft, Image as ImageIcon, MessageCircle, Apple, Dumbbell, Syringe, Calendar, FileText, X } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import CoachMessageList from './CoachMessageList';
