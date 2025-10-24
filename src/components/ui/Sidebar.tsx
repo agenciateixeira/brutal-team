@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
@@ -27,13 +27,131 @@ interface SidebarProps {
   profile: Profile;
 }
 
+interface UnreadCounts {
+  messages: number;
+  dietas: number;
+  treinos: number;
+  protocolos: number;
+}
+
 export default function Sidebar({ profile }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState<UnreadCounts>({
+    messages: 0,
+    dietas: 0,
+    treinos: 0,
+    protocolos: 0,
+  });
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
 
   const isCoach = profile.role === 'coach';
+
+  // Carregar contadores de não lidos para alunos
+  useEffect(() => {
+    if (!isCoach) {
+      loadUnreadCounts();
+
+      // Subscription para atualizar em tempo real
+      const messagesChannel = supabase
+        .channel('sidebar-messages')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+          filter: `aluno_id=eq.${profile.id}`
+        }, () => {
+          loadUnreadCounts();
+        })
+        .subscribe();
+
+      const dietasChannel = supabase
+        .channel('sidebar-dietas')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'dietas',
+          filter: `aluno_id=eq.${profile.id}`
+        }, () => {
+          loadUnreadCounts();
+        })
+        .subscribe();
+
+      const treinosChannel = supabase
+        .channel('sidebar-treinos')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'treinos',
+          filter: `aluno_id=eq.${profile.id}`
+        }, () => {
+          loadUnreadCounts();
+        })
+        .subscribe();
+
+      const protocolosChannel = supabase
+        .channel('sidebar-protocolos')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'protocolos_hormonais',
+          filter: `aluno_id=eq.${profile.id}`
+        }, () => {
+          loadUnreadCounts();
+        })
+        .subscribe();
+
+      return () => {
+        messagesChannel.unsubscribe();
+        dietasChannel.unsubscribe();
+        treinosChannel.unsubscribe();
+        protocolosChannel.unsubscribe();
+      };
+    }
+  }, [isCoach, profile.id]);
+
+  const loadUnreadCounts = async () => {
+    try {
+      // Mensagens não lidas
+      const { count: messagesCount } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('aluno_id', profile.id)
+        .eq('read', false)
+        .neq('sender_id', profile.id);
+
+      // Dietas não visualizadas (criadas/atualizadas recentemente)
+      const { count: dietasCount } = await supabase
+        .from('dietas')
+        .select('*', { count: 'exact', head: true })
+        .eq('aluno_id', profile.id)
+        .gte('updated_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+
+      // Treinos não visualizados
+      const { count: treinosCount } = await supabase
+        .from('treinos')
+        .select('*', { count: 'exact', head: true })
+        .eq('aluno_id', profile.id)
+        .gte('updated_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+
+      // Protocolos não visualizados
+      const { count: protocolosCount } = await supabase
+        .from('protocolos_hormonais')
+        .select('*', { count: 'exact', head: true })
+        .eq('aluno_id', profile.id)
+        .gte('updated_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+
+      setUnreadCounts({
+        messages: messagesCount || 0,
+        dietas: dietasCount || 0,
+        treinos: treinosCount || 0,
+        protocolos: protocolosCount || 0,
+      });
+    } catch (error) {
+      console.error('Erro ao carregar contadores:', error);
+    }
+  };
 
   const menuItems = isCoach ? [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/coach/dashboard' },
@@ -126,13 +244,33 @@ export default function Sidebar({ profile }: SidebarProps) {
               // Lógica especial: "Alunos" nunca é marcado como ativo, apenas Dashboard
               const isActive = item.label !== 'Alunos' && (pathname === item.href || pathname.startsWith(item.href + '/'));
 
+              // Determinar badge count baseado no label
+              let badgeCount = 0;
+              let badgeColor = 'bg-blue-500';
+
+              if (!isCoach) {
+                if (item.label === 'Mensagens') {
+                  badgeCount = unreadCounts.messages;
+                  badgeColor = 'bg-blue-500';
+                } else if (item.label === 'Dieta') {
+                  badgeCount = unreadCounts.dietas;
+                  badgeColor = 'bg-green-500';
+                } else if (item.label === 'Treino') {
+                  badgeCount = unreadCounts.treinos;
+                  badgeColor = 'bg-orange-500';
+                } else if (item.label === 'Protocolo') {
+                  badgeCount = unreadCounts.protocolos;
+                  badgeColor = 'bg-purple-500';
+                }
+              }
+
               return (
                 <Link
                   key={`${item.href}-${item.label}`}
                   href={item.href}
                   onClick={() => setIsOpen(false)}
                   className={`
-                    flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
+                    flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative
                     ${isActive
                       ? 'bg-primary-50 text-primary-600 font-semibold'
                       : 'text-gray-700 hover:bg-gray-100'
@@ -140,7 +278,12 @@ export default function Sidebar({ profile }: SidebarProps) {
                   `}
                 >
                   <Icon size={20} />
-                  <span>{item.label}</span>
+                  <span className="flex-1">{item.label}</span>
+                  {badgeCount > 0 && (
+                    <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full ${badgeColor} text-white text-xs font-bold`}>
+                      {badgeCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}
