@@ -54,11 +54,22 @@ export interface Treino {
   updated_at: string;
 }
 
+export interface ProtocoloHormonal {
+  id: string;
+  aluno_id: string;
+  title: string;
+  content: string;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AlunoWithDetails extends Profile {
   progress_photos: ProgressPhoto[];
   messages: Message[];
   dietas: Dieta[];
   treinos: Treino[];
+  protocolos_hormonais: ProtocoloHormonal[];
   unread_messages_count?: number;
 }
 

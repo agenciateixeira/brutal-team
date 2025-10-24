@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Profile, ProgressPhoto, Message, Dieta, Treino } from '@/types';
-import { ArrowLeft, Image as ImageIcon, MessageCircle, Apple, Dumbbell, Calendar, FileText } from 'lucide-react';
+import { Profile, ProgressPhoto, Message, Dieta, Treino, ProtocoloHormonal } from '@/types';
+import { ArrowLeft, Image as ImageIcon, MessageCircle, Apple, Dumbbell, Syringe, Calendar, FileText } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import CoachMessageList from './CoachMessageList';
 import DietaManager from './DietaManager';
 import TreinoManager from './TreinoManager';
+import ProtocoloManager from './ProtocoloManager';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -17,10 +18,11 @@ interface AlunoDetailsProps {
   messages: Message[];
   dietas: Dieta[];
   treinos: Treino[];
+  protocolos: ProtocoloHormonal[];
   coachId: string;
 }
 
-type Tab = 'fotos' | 'mensagens' | 'dieta' | 'treino';
+type Tab = 'fotos' | 'mensagens' | 'dieta' | 'treino' | 'protocolo';
 
 export default function AlunoDetails({
   aluno,
@@ -28,6 +30,7 @@ export default function AlunoDetails({
   messages,
   dietas,
   treinos,
+  protocolos,
   coachId
 }: AlunoDetailsProps) {
   const [activeTab, setActiveTab] = useState<Tab>('fotos');
@@ -116,6 +119,17 @@ export default function AlunoDetails({
             <Dumbbell size={20} />
             Treino ({treinos.length})
           </button>
+          <button
+            onClick={() => setActiveTab('protocolo')}
+            className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap ${
+              activeTab === 'protocolo'
+                ? 'bg-primary-600 text-white'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+            }`}
+          >
+            <Syringe size={20} />
+            Protocolo ({protocolos.length})
+          </button>
         </div>
 
         <div className="p-6">
@@ -178,6 +192,11 @@ export default function AlunoDetails({
           {/* Treino Tab */}
           {activeTab === 'treino' && (
             <TreinoManager alunoId={aluno.id} treinos={treinos} />
+          )}
+
+          {/* Protocolo Tab */}
+          {activeTab === 'protocolo' && (
+            <ProtocoloManager alunoId={aluno.id} protocolos={protocolos} />
           )}
         </div>
       </div>

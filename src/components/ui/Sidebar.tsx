@@ -11,6 +11,7 @@ import {
   MessageCircle,
   Apple,
   Dumbbell,
+  Syringe,
   Menu,
   X,
   LogOut,
@@ -45,6 +46,7 @@ export default function Sidebar({ profile }: SidebarProps) {
     { icon: MessageCircle, label: 'Mensagens', href: '/aluno/mensagens' },
     { icon: Apple, label: 'Dieta', href: '/aluno/dieta' },
     { icon: Dumbbell, label: 'Treino', href: '/aluno/treino' },
+    { icon: Syringe, label: 'Protocolo', href: '/aluno/protocolo' },
     { icon: User, label: 'Perfil', href: '/aluno/perfil' },
   ];
 

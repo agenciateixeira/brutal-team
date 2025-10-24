@@ -64,6 +64,13 @@ export default async function AlunoDetailPage({ params }: { params: { id: string
     .eq('aluno_id', params.id)
     .order('created_at', { ascending: false });
 
+  // Buscar todos os protocolos hormonais
+  const { data: protocolos } = await supabase
+    .from('protocolos_hormonais')
+    .select('*')
+    .eq('aluno_id', params.id)
+    .order('created_at', { ascending: false });
+
   // Marcar mensagens como lidas
   await supabase
     .from('messages')
@@ -79,6 +86,7 @@ export default async function AlunoDetailPage({ params }: { params: { id: string
         messages={messages || []}
         dietas={dietas || []}
         treinos={treinos || []}
+        protocolos={protocolos || []}
         coachId={session.user.id}
       />
     </AppLayout>
