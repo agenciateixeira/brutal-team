@@ -105,7 +105,7 @@ export default async function AlunoDashboard() {
                       Semanas de Treino
                     </p>
                     <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                      {photos?.length > 0 ? Math.max(...photos.map(p => p.week_number)) : 0}
+                      {photos && photos.length > 0 ? Math.max(...photos.map(p => p.week_number)) : 0}
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-secondary-100 dark:bg-secondary-900/30 rounded-lg flex items-center justify-center">
