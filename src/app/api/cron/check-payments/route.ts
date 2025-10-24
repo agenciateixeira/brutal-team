@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     }
 
     // Criar cliente Supabase
-    const supabase = await createClient();
+    const supabase = createServerClient();
 
     // Executar função de verificação de status de pagamento
     const { error } = await supabase.rpc('check_payment_status');
