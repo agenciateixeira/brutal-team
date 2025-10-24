@@ -2,7 +2,6 @@ import { createServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Sidebar from '@/components/ui/Sidebar';
 import ProgressChart from '@/components/aluno/ProgressChart';
-import MealTracking from '@/components/aluno/MealTracking';
 import { TrendingUp, Calendar, Apple } from 'lucide-react';
 
 export default async function AlunoDashboard() {
@@ -34,33 +33,47 @@ export default async function AlunoDashboard() {
     .eq('aluno_id', session.user.id)
     .order('week_number', { ascending: true });
 
-  // Buscar refeições do mês atual
+  // Buscar dados do ano inteiro para progresso anual
   const now = new Date();
-  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const daysPassedInYear = Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
-  const { data: meals } = await supabase
-    .from('meal_photos')
+  // Buscar meal tracking do ano
+  const { data: mealTracking } = await supabase
+    .from('meal_tracking')
     .select('*')
     .eq('aluno_id', session.user.id)
-    .gte('created_at', firstDayOfMonth.toISOString())
-    .lte('created_at', lastDayOfMonth.toISOString())
-    .order('created_at', { ascending: false });
+    .gte('date', startOfYear.toISOString().split('T')[0]);
 
-  // Buscar dieta ativa para saber quantas refeições por dia
-  const { data: dieta } = await supabase
-    .from('dietas')
+  // Buscar workout tracking do ano
+  const { data: workoutTracking } = await supabase
+    .from('workout_tracking')
     .select('*')
     .eq('aluno_id', session.user.id)
-    .eq('active', true)
-    .single();
+    .gte('date', startOfYear.toISOString().split('T')[0]);
 
-  // Calcular % de conclusão
-  const daysInMonth = lastDayOfMonth.getDate();
-  const mealsPerDay = dieta?.meals_per_day || 5;
-  const expectedMeals = daysInMonth * mealsPerDay;
-  const completedMeals = meals?.length || 0;
-  const completionPercentage = Math.round((completedMeals / expectedMeals) * 100);
+  // Calcular % de conclusão de refeições
+  // 6 refeições por dia * dias passados no ano
+  const expectedMeals = daysPassedInYear * 6;
+  let completedMeals = 0;
+  mealTracking?.forEach((day) => {
+    if (day.cafe_da_manha) completedMeals++;
+    if (day.lanche_manha) completedMeals++;
+    if (day.almoco) completedMeals++;
+    if (day.lanche_tarde) completedMeals++;
+    if (day.janta) completedMeals++;
+    if (day.ceia) completedMeals++;
+  });
+  const mealCompletionPercentage = Math.round((completedMeals / expectedMeals) * 100);
+
+  // Calcular % de conclusão de treinos
+  // 3 períodos por dia * dias passados no ano
+  const expectedWorkouts = daysPassedInYear * 3;
+  const completedWorkouts = workoutTracking?.filter(w => w.completed).length || 0;
+  const workoutCompletionPercentage = Math.round((completedWorkouts / expectedWorkouts) * 100);
+
+  // Progresso anual combinado (média de refeições e treinos)
+  const overallCompletionPercentage = Math.round((mealCompletionPercentage + workoutCompletionPercentage) / 2);
 
   return (
     <div className="flex h-screen bg-white">
@@ -114,19 +127,27 @@ export default async function AlunoDashboard() {
                 </div>
               </div>
 
-              {/* Compliance de Dieta */}
+              {/* Progresso Anual */}
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="flex-1">
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      Compliance Mensal
+                      Progresso Anual
                     </p>
                     <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                      {completionPercentage}%
+                      {overallCompletionPercentage}%
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {completedMeals} de {expectedMeals} refeições
-                    </p>
+                    <div className="mt-2 space-y-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        🍎 Dieta: {mealCompletionPercentage}% ({completedMeals}/{expectedMeals})
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        💪 Treino: {workoutCompletionPercentage}% ({completedWorkouts}/{expectedWorkouts})
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Dia {daysPassedInYear} de 365
+                      </p>
+                    </div>
                   </div>
                   <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
                     <Apple className="text-green-600 dark:text-green-400" size={24} />
@@ -137,13 +158,6 @@ export default async function AlunoDashboard() {
 
             {/* Gráfico de Progresso */}
             <ProgressChart photos={photos || []} />
-
-            {/* Tracking de Refeições */}
-            <MealTracking
-              alunoId={session.user.id}
-              meals={meals || []}
-              completionPercentage={completionPercentage}
-            />
           </div>
         </div>
       </main>

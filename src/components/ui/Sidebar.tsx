@@ -160,7 +160,7 @@ export default function Sidebar({ profile }: SidebarProps) {
     { icon: User, label: 'Perfil', href: '/coach/perfil' },
   ] : [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/aluno/dashboard' },
-    { icon: ImageIcon, label: 'Progresso', href: '/aluno/progresso' },
+    { icon: ImageIcon, label: 'Atualização Semanal', href: '/aluno/progresso' },
     { icon: MessageCircle, label: 'Mensagens', href: '/aluno/mensagens' },
     { icon: Apple, label: 'Dieta', href: '/aluno/dieta' },
     { icon: Dumbbell, label: 'Treino', href: '/aluno/treino' },
