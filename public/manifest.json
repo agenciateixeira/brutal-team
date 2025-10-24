@@ -2,7 +2,8 @@
   "name": "Brutal Team - Consultoria Fitness",
   "short_name": "Brutal Team",
   "description": "Plataforma de consultoria fitness online - Transforme seu corpo com acompanhamento profissional",
-  "start_url": "https://app.brutalteam.blog.br/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#111827",
   "theme_color": "#0081A7",
@@ -55,18 +56,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshot1.png",
-      "sizes": "540x720",
-      "type": "image/png"
-    },
-    {
-      "src": "/screenshot2.png",
-      "sizes": "540x720",
-      "type": "image/png"
     }
   ],
   "categories": ["health", "lifestyle", "fitness"],
