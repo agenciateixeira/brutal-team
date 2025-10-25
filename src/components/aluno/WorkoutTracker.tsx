@@ -231,7 +231,7 @@ export default function WorkoutTracker({ alunoId, workoutTypes = ['musculacao'] 
 
         {/* Filtro Personalizado */}
         {filterPeriod === 'custom' && (
-          <div className="mb-4 flex gap-3">
+          <div className="mb-4 flex flex-col sm:flex-row gap-3">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 De
