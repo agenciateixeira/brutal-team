@@ -107,8 +107,8 @@ export default function TreinoView({ alunoId, treinoAtivo: initialTreinoAtivo, h
                   }`}
                   onClick={() => setSelectedTreino(selectedTreino?.id === treino.id ? null : treino)}
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="flex-1">
                       <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                         {treino.title}
                         {treino.active && (
@@ -123,7 +123,7 @@ export default function TreinoView({ alunoId, treinoAtivo: initialTreinoAtivo, h
                     </div>
                     <ChevronRight
                       size={20}
-                      className={`text-gray-400 transition-transform ${
+                      className={`text-gray-400 transition-transform self-end sm:self-center ${
                         selectedTreino?.id === treino.id ? 'rotate-90' : ''
                       }`}
                     />

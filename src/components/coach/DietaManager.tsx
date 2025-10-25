@@ -215,51 +215,54 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
               dieta.active ? 'border-green-500' : 'border-gray-700'
             }`}
           >
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-white font-semibold">{dieta.title}</h3>
-                  {dieta.active && (
-                    <span className="px-2 py-1 bg-green-600 text-white text-xs rounded-full">
-                      Ativa
-                    </span>
-                  )}
-                  <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded-full">
-                    {dieta.meals_per_day} refeições/dia
-                  </span>
-                </div>
-                <p className="text-xs text-gray-400 mt-1">
-                  Criada em {format(new Date(dieta.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                </p>
-              </div>
+            {/* Botões no topo */}
+            <div className="flex flex-col sm:flex-row gap-2 mb-3">
+              <button
+                onClick={() => handleEdit(dieta)}
+                className="p-2 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors flex items-center justify-center gap-2"
+                title="Editar (criar nova versão)"
+              >
+                <Edit size={18} />
+                <span className="sm:hidden text-white text-sm font-medium">Editar</span>
+              </button>
+              <button
+                onClick={() => toggleActive(dieta.id, dieta.active)}
+                className={`p-2 rounded-md transition-colors flex items-center justify-center gap-2 ${
+                  dieta.active
+                    ? 'bg-yellow-600 hover:bg-yellow-700'
+                    : 'bg-green-600 hover:bg-green-700'
+                }`}
+                title={dieta.active ? 'Desativar' : 'Ativar'}
+              >
+                {dieta.active ? <XCircle size={18} /> : <CheckCircle size={18} />}
+                <span className="sm:hidden text-white text-sm font-medium">{dieta.active ? 'Desativar' : 'Ativar'}</span>
+              </button>
+              <button
+                onClick={() => handleDelete(dieta.id)}
+                className="p-2 bg-red-600 hover:bg-red-700 rounded-md transition-colors flex items-center justify-center gap-2"
+                title="Excluir"
+              >
+                <Trash2 size={18} />
+                <span className="sm:hidden text-white text-sm font-medium">Excluir</span>
+              </button>
+            </div>
 
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleEdit(dieta)}
-                  className="p-2 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
-                  title="Editar (criar nova versão)"
-                >
-                  <Edit size={18} />
-                </button>
-                <button
-                  onClick={() => toggleActive(dieta.id, dieta.active)}
-                  className={`p-2 rounded-md transition-colors ${
-                    dieta.active
-                      ? 'bg-yellow-600 hover:bg-yellow-700'
-                      : 'bg-green-600 hover:bg-green-700'
-                  }`}
-                  title={dieta.active ? 'Desativar' : 'Ativar'}
-                >
-                  {dieta.active ? <XCircle size={18} /> : <CheckCircle size={18} />}
-                </button>
-                <button
-                  onClick={() => handleDelete(dieta.id)}
-                  className="p-2 bg-red-600 hover:bg-red-700 rounded-md transition-colors"
-                  title="Excluir"
-                >
-                  <Trash2 size={18} />
-                </button>
+            {/* Conteúdo */}
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-white font-semibold">{dieta.title}</h3>
+                {dieta.active && (
+                  <span className="px-2 py-1 bg-green-600 text-white text-xs rounded-full">
+                    Ativa
+                  </span>
+                )}
+                <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded-full">
+                  {dieta.meals_per_day} refeições/dia
+                </span>
               </div>
+              <p className="text-xs text-gray-400 mt-1">
+                Criada em {format(new Date(dieta.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+              </p>
             </div>
 
             <pre className="whitespace-pre-wrap text-gray-300 text-sm bg-gray-800 p-3 rounded max-h-40 overflow-y-auto">

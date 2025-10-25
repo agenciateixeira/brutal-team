@@ -106,8 +106,8 @@ export default function ProtocoloView({ alunoId, protocoloAtivo: initialProtocol
                   }`}
                   onClick={() => setSelectedProtocolo(selectedProtocolo?.id === protocolo.id ? null : protocolo)}
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="flex-1">
                       <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                         {protocolo.title}
                         {protocolo.active && (
@@ -122,7 +122,7 @@ export default function ProtocoloView({ alunoId, protocoloAtivo: initialProtocol
                     </div>
                     <ChevronRight
                       size={20}
-                      className={`text-gray-400 transition-transform ${
+                      className={`text-gray-400 transition-transform self-end sm:self-center ${
                         selectedProtocolo?.id === protocolo.id ? 'rotate-90' : ''
                       }`}
                     />
