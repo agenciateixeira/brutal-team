@@ -18,15 +18,9 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [mealsPerDay, setMealsPerDay] = useState(6);
+  const [observacoesNutricionais, setObservacoesNutricionais] = useState('');
   const [setAsActive, setSetAsActive] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  // Estados para macronutrientes
-  const [calorias, setCalorias] = useState('');
-  const [proteinas, setProteinas] = useState('');
-  const [carboidratos, setCarboidratos] = useState('');
-  const [gorduras, setGorduras] = useState('');
-  const [fibras, setFibras] = useState('');
 
   const router = useRouter();
   const supabase = createClient();
@@ -46,24 +40,12 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
           .eq('aluno_id', alunoId);
       }
 
-      // Preparar macronutrientes se algum campo foi preenchido
-      let macronutrientes = null;
-      if (calorias || proteinas || carboidratos || gorduras || fibras) {
-        macronutrientes = {
-          calorias: calorias ? parseFloat(calorias) : 0,
-          proteinas: proteinas ? parseFloat(proteinas) : 0,
-          carboidratos: carboidratos ? parseFloat(carboidratos) : 0,
-          gorduras: gorduras ? parseFloat(gorduras) : 0,
-          ...(fibras && { fibras: parseFloat(fibras) }),
-        };
-      }
-
       const { error } = await supabase.from('dietas').insert({
         aluno_id: alunoId,
         title: title.trim(),
         content: content.trim(),
         meals_per_day: mealsPerDay,
-        macronutrientes,
+        observacoes_nutricionais: observacoesNutricionais.trim() || null,
         active: setAsActive,
       });
 
@@ -72,11 +54,7 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
       setTitle('');
       setContent('');
       setMealsPerDay(6);
-      setCalorias('');
-      setProteinas('');
-      setCarboidratos('');
-      setGorduras('');
-      setFibras('');
+      setObservacoesNutricionais('');
       setSetAsActive(true);
       setShowForm(false);
       router.refresh();
@@ -132,16 +110,7 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
     setTitle(dieta.title + ' (Nova Versão)');
     setContent(dieta.content);
     setMealsPerDay(dieta.meals_per_day);
-
-    // Copiar macronutrientes se existirem
-    if (dieta.macronutrientes) {
-      setCalorias(dieta.macronutrientes.calorias?.toString() || '');
-      setProteinas(dieta.macronutrientes.proteinas?.toString() || '');
-      setCarboidratos(dieta.macronutrientes.carboidratos?.toString() || '');
-      setGorduras(dieta.macronutrientes.gorduras?.toString() || '');
-      setFibras(dieta.macronutrientes.fibras?.toString() || '');
-    }
-
+    setObservacoesNutricionais(dieta.observacoes_nutricionais || '');
     setSetAsActive(true);
     setShowForm(true);
   };
@@ -196,85 +165,20 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
             </p>
           </div>
 
-          {/* Macronutrientes */}
-          <div className="bg-gray-800 p-4 rounded-lg space-y-3">
-            <h4 className="text-sm font-semibold text-gray-200 mb-2">
-              Tabela de Macronutrientes (Opcional)
-            </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">
-                  Calorias (kcal)
-                </label>
-                <input
-                  type="number"
-                  value={calorias}
-                  onChange={(e) => setCalorias(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
-                  placeholder="2000"
-                  min="0"
-                  step="1"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">
-                  Proteínas (g)
-                </label>
-                <input
-                  type="number"
-                  value={proteinas}
-                  onChange={(e) => setProteinas(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
-                  placeholder="150"
-                  min="0"
-                  step="0.1"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">
-                  Carboidratos (g)
-                </label>
-                <input
-                  type="number"
-                  value={carboidratos}
-                  onChange={(e) => setCarboidratos(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
-                  placeholder="200"
-                  min="0"
-                  step="0.1"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">
-                  Gorduras (g)
-                </label>
-                <input
-                  type="number"
-                  value={gorduras}
-                  onChange={(e) => setGorduras(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
-                  placeholder="60"
-                  min="0"
-                  step="0.1"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">
-                  Fibras (g) - Opcional
-                </label>
-                <input
-                  type="number"
-                  value={fibras}
-                  onChange={(e) => setFibras(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
-                  placeholder="30"
-                  min="0"
-                  step="0.1"
-                />
-              </div>
-            </div>
-            <p className="text-xs text-gray-400 mt-2">
-              Preencha os valores diários recomendados de macronutrientes para esta dieta
+          {/* Observações Nutricionais */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Observações Nutricionais (Opcional)
+            </label>
+            <textarea
+              value={observacoesNutricionais}
+              onChange={(e) => setObservacoesNutricionais(e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
+              placeholder="Ex: Total diário: ~1500 kcal, 150g proteína, 150g gordura, 0-20g carbo"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Informações gerais sobre macros ou totais diários (aparece destacado para o aluno)
             </p>
           </div>
 
@@ -383,34 +287,11 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
               </p>
             </div>
 
-            {/* Macronutrientes */}
-            {dieta.macronutrientes && (
-              <div className="bg-gray-800 p-3 rounded-lg">
-                <h4 className="text-xs font-semibold text-gray-300 mb-2">Macronutrientes Diários:</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
-                  <div className="bg-gray-700 px-2 py-1 rounded">
-                    <span className="text-gray-400">Calorias:</span>
-                    <span className="text-white font-semibold ml-1">{dieta.macronutrientes.calorias} kcal</span>
-                  </div>
-                  <div className="bg-gray-700 px-2 py-1 rounded">
-                    <span className="text-gray-400">Proteínas:</span>
-                    <span className="text-white font-semibold ml-1">{dieta.macronutrientes.proteinas}g</span>
-                  </div>
-                  <div className="bg-gray-700 px-2 py-1 rounded">
-                    <span className="text-gray-400">Carboidratos:</span>
-                    <span className="text-white font-semibold ml-1">{dieta.macronutrientes.carboidratos}g</span>
-                  </div>
-                  <div className="bg-gray-700 px-2 py-1 rounded">
-                    <span className="text-gray-400">Gorduras:</span>
-                    <span className="text-white font-semibold ml-1">{dieta.macronutrientes.gorduras}g</span>
-                  </div>
-                  {dieta.macronutrientes.fibras && (
-                    <div className="bg-gray-700 px-2 py-1 rounded">
-                      <span className="text-gray-400">Fibras:</span>
-                      <span className="text-white font-semibold ml-1">{dieta.macronutrientes.fibras}g</span>
-                    </div>
-                  )}
-                </div>
+            {/* Observações Nutricionais */}
+            {dieta.observacoes_nutricionais && (
+              <div className="bg-blue-900/30 border border-blue-700 p-3 rounded-lg">
+                <h4 className="text-xs font-semibold text-blue-300 mb-1">📊 Observações Nutricionais:</h4>
+                <p className="text-sm text-gray-300">{dieta.observacoes_nutricionais}</p>
               </div>
             )}
 
