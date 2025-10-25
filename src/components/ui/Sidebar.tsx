@@ -113,7 +113,7 @@ export default function Sidebar({ profile }: SidebarProps) {
 
   const handleLogout = async () => {
     const userName = profile.full_name || profile.email.split('@')[0];
-    showLoading(`Te aguardamos amanhã, ${userName}!`);
+    showLoading(`Te aguardamos amanhã, ${userName}!`, 1300); // 1.3 segundos para logout
 
     await supabase.auth.signOut();
 

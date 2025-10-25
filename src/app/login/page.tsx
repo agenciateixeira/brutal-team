@@ -20,7 +20,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    showLoading('Entrando...');
+    showLoading('Entrando...', 3000); // 3 segundos para login
 
     try {
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -40,7 +40,7 @@ export default function LoginPage() {
       if (profileError) throw profileError;
 
       // Redirecionar baseado no role
-      showLoading('Preparando seu dashboard...');
+      showLoading('Preparando seu dashboard...', 3000);
       if (profile.role === 'coach') {
         router.push('/coach/dashboard');
       } else {

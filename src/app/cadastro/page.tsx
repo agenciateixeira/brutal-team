@@ -29,7 +29,7 @@ export default function CadastroPage() {
 
     setLoading(true);
     setError(null);
-    showLoading('Criando sua conta...');
+    showLoading('Criando sua conta...', 3000); // 3 segundos para cadastro
 
     try {
       const { data, error: signUpError } = await supabase.auth.signUp({
@@ -46,7 +46,7 @@ export default function CadastroPage() {
 
       if (data.user) {
         setSuccess(true);
-        showLoading('Conta criada! Redirecionando...');
+        showLoading('Conta criada! Redirecionando...', 3000);
         setTimeout(() => {
           hideLoading();
           router.push('/login');

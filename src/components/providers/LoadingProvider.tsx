@@ -4,28 +4,31 @@ import { createContext, useContext, useState, useCallback, ReactNode, useRef } f
 import LoadingScreen from '@/components/ui/LoadingScreen';
 
 interface LoadingContextType {
-  showLoading: (message?: string) => void;
+  showLoading: (message?: string, minTime?: number) => void;
   hideLoading: () => void;
 }
 
 const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 
-const MIN_LOADING_TIME = 3000; // 3 segundos mínimo
+const DEFAULT_MIN_TIME = 3000; // 3 segundos para login/cadastro
+const NAVIGATION_MIN_TIME = 1300; // 1.3 segundos para navegação interna
 
 export function LoadingProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('Carregando...');
   const loadingStartTime = useRef<number>(0);
+  const minLoadingTime = useRef<number>(DEFAULT_MIN_TIME);
 
-  const showLoading = useCallback((msg = 'Carregando...') => {
+  const showLoading = useCallback((msg = 'Carregando...', minTime = NAVIGATION_MIN_TIME) => {
     setMessage(msg);
     setIsLoading(true);
     loadingStartTime.current = Date.now();
+    minLoadingTime.current = minTime;
   }, []);
 
   const hideLoading = useCallback(() => {
     const elapsedTime = Date.now() - loadingStartTime.current;
-    const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
+    const remainingTime = Math.max(0, minLoadingTime.current - elapsedTime);
 
     // Garantir que o loading fique visível pelo tempo mínimo
     setTimeout(() => {
