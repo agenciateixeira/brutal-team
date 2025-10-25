@@ -53,7 +53,7 @@ export default function Sidebar({ profile }: SidebarProps) {
     if (!isCoach) {
       loadUnreadCounts();
 
-      // Subscription para atualizar em tempo real
+      // Subscription apenas para mensagens (único com controle de read/unread)
       const messagesChannel = supabase
         .channel('sidebar-messages')
         .on('postgres_changes', {
@@ -66,54 +66,15 @@ export default function Sidebar({ profile }: SidebarProps) {
         })
         .subscribe();
 
-      const dietasChannel = supabase
-        .channel('sidebar-dietas')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'dietas',
-          filter: `aluno_id=eq.${profile.id}`
-        }, () => {
-          loadUnreadCounts();
-        })
-        .subscribe();
-
-      const treinosChannel = supabase
-        .channel('sidebar-treinos')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'treinos',
-          filter: `aluno_id=eq.${profile.id}`
-        }, () => {
-          loadUnreadCounts();
-        })
-        .subscribe();
-
-      const protocolosChannel = supabase
-        .channel('sidebar-protocolos')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'protocolos_hormonais',
-          filter: `aluno_id=eq.${profile.id}`
-        }, () => {
-          loadUnreadCounts();
-        })
-        .subscribe();
-
       return () => {
         messagesChannel.unsubscribe();
-        dietasChannel.unsubscribe();
-        treinosChannel.unsubscribe();
-        protocolosChannel.unsubscribe();
       };
     }
   }, [isCoach, profile.id]);
 
   const loadUnreadCounts = async () => {
     try {
-      // Mensagens não lidas
+      // Mensagens não lidas (único com controle real de read/unread)
       const { count: messagesCount } = await supabase
         .from('messages')
         .select('*', { count: 'exact', head: true })
@@ -121,32 +82,11 @@ export default function Sidebar({ profile }: SidebarProps) {
         .eq('read', false)
         .neq('sender_id', profile.id);
 
-      // Dietas não visualizadas (criadas/atualizadas recentemente)
-      const { count: dietasCount } = await supabase
-        .from('dietas')
-        .select('*', { count: 'exact', head: true })
-        .eq('aluno_id', profile.id)
-        .gte('updated_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-
-      // Treinos não visualizados
-      const { count: treinosCount } = await supabase
-        .from('treinos')
-        .select('*', { count: 'exact', head: true })
-        .eq('aluno_id', profile.id)
-        .gte('updated_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-
-      // Protocolos não visualizados
-      const { count: protocolosCount } = await supabase
-        .from('protocolos_hormonais')
-        .select('*', { count: 'exact', head: true })
-        .eq('aluno_id', profile.id)
-        .gte('updated_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-
       setUnreadCounts({
         messages: messagesCount || 0,
-        dietas: dietasCount || 0,
-        treinos: treinosCount || 0,
-        protocolos: protocolosCount || 0,
+        dietas: 0, // Removido: não tem controle de visualizado
+        treinos: 0, // Removido: não tem controle de visualizado
+        protocolos: 0, // Removido: não tem controle de visualizado
       });
     } catch (error) {
       console.error('Erro ao carregar contadores:', error);
