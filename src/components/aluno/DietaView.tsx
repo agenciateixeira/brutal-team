@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Dieta } from '@/types';
-import { Apple, Calendar, FileText, ChevronRight } from 'lucide-react';
+import { Apple, Calendar, FileText, ChevronRight, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useRealtimeDietas } from '@/hooks/useRealtimeDietas';
@@ -17,6 +17,7 @@ interface DietaViewProps {
 export default function DietaView({ alunoId, dietaAtiva: initialDietaAtiva, historico: initialHistorico }: DietaViewProps) {
   const [showHistorico, setShowHistorico] = useState(false);
   const [selectedDieta, setSelectedDieta] = useState<Dieta | null>(null);
+  const [showMacros, setShowMacros] = useState(false);
 
   // Hook de realtime
   const { dietas, dietaAtiva } = useRealtimeDietas(alunoId, initialHistorico);
@@ -56,6 +57,94 @@ export default function DietaView({ alunoId, dietaAtiva: initialDietaAtiva, hist
                 )}
               </div>
             </div>
+
+            {/* Macronutrientes Expansível */}
+            {dietaAtiva.macronutrientes && (
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setShowMacros(!showMacros)}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 hover:from-green-100 hover:to-blue-100 dark:hover:from-green-900/30 dark:hover:to-blue-900/30 transition-colors flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <Apple size={20} className="text-green-600 dark:text-green-400" />
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      Tabela de Macronutrientes
+                    </span>
+                  </div>
+                  {showMacros ? (
+                    <ChevronDown size={20} className="text-gray-600 dark:text-gray-400" />
+                  ) : (
+                    <ChevronRight size={20} className="text-gray-600 dark:text-gray-400" />
+                  )}
+                </button>
+
+                {showMacros && (
+                  <div className="p-4 bg-white dark:bg-gray-800 space-y-3">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                      Valores diários recomendados de macronutrientes para sua dieta:
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {/* Calorias */}
+                      <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
+                        <div className="text-xs font-medium text-orange-600 dark:text-orange-400 mb-1">
+                          Calorias
+                        </div>
+                        <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                          {dietaAtiva.macronutrientes.calorias}
+                          <span className="text-sm font-normal text-gray-600 dark:text-gray-400 ml-1">kcal</span>
+                        </div>
+                      </div>
+
+                      {/* Proteínas */}
+                      <div className="bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
+                        <div className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">
+                          Proteínas
+                        </div>
+                        <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                          {dietaAtiva.macronutrientes.proteinas}
+                          <span className="text-sm font-normal text-gray-600 dark:text-gray-400 ml-1">g</span>
+                        </div>
+                      </div>
+
+                      {/* Carboidratos */}
+                      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <div className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">
+                          Carboidratos
+                        </div>
+                        <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                          {dietaAtiva.macronutrientes.carboidratos}
+                          <span className="text-sm font-normal text-gray-600 dark:text-gray-400 ml-1">g</span>
+                        </div>
+                      </div>
+
+                      {/* Gorduras */}
+                      <div className="bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                        <div className="text-xs font-medium text-yellow-600 dark:text-yellow-400 mb-1">
+                          Gorduras
+                        </div>
+                        <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                          {dietaAtiva.macronutrientes.gorduras}
+                          <span className="text-sm font-normal text-gray-600 dark:text-gray-400 ml-1">g</span>
+                        </div>
+                      </div>
+
+                      {/* Fibras (opcional) */}
+                      {dietaAtiva.macronutrientes.fibras && (
+                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                          <div className="text-xs font-medium text-green-600 dark:text-green-400 mb-1">
+                            Fibras
+                          </div>
+                          <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                            {dietaAtiva.macronutrientes.fibras}
+                            <span className="text-sm font-normal text-gray-600 dark:text-gray-400 ml-1">g</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
               <pre className="whitespace-pre-wrap text-gray-900 dark:text-gray-100 font-sans text-sm leading-relaxed">

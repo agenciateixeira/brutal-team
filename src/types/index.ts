@@ -44,12 +44,21 @@ export interface Message {
   sender?: Profile;
 }
 
+export interface Macronutrientes {
+  calorias: number;
+  proteinas: number;
+  carboidratos: number;
+  gorduras: number;
+  fibras?: number;
+}
+
 export interface Dieta {
   id: string;
   aluno_id: string;
   title: string;
   content: string;
   meals_per_day: number;
+  macronutrientes?: Macronutrientes | null;
   active: boolean;
   created_at: string;
   updated_at: string;
