@@ -119,6 +119,18 @@ export default function LoginPage() {
               Não tem uma conta? Cadastre-se
             </Link>
           </div>
+
+          <div className="text-center pt-4 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-gray-500">
+              <Link href="/termos-de-uso" className="hover:text-primary-600 transition-colors">
+                Termos de Uso
+              </Link>
+              <span className="hidden sm:inline">•</span>
+              <Link href="/politica-de-privacidade" className="hover:text-primary-600 transition-colors">
+                Política de Privacidade
+              </Link>
+            </div>
+          </div>
         </form>
       </div>
     </div>

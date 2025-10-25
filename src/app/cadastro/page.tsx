@@ -10,6 +10,7 @@ export default function CadastroPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -18,6 +19,12 @@ export default function CadastroPage() {
 
   const handleCadastro = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!acceptedTerms) {
+      setError('Você deve aceitar os Termos de Uso e Política de Privacidade para continuar');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -129,9 +136,39 @@ export default function CadastroPage() {
               </div>
             </div>
 
+            {/* Checkbox de aceite de termos */}
+            <div className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                id="acceptTerms"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-1 w-4 h-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+                required
+              />
+              <label htmlFor="acceptTerms" className="text-sm text-gray-700">
+                Li e aceito os{' '}
+                <Link
+                  href="/termos-de-uso"
+                  target="_blank"
+                  className="text-primary-600 hover:text-primary-700 font-medium underline"
+                >
+                  Termos de Uso
+                </Link>
+                {' '}e a{' '}
+                <Link
+                  href="/politica-de-privacidade"
+                  target="_blank"
+                  className="text-primary-600 hover:text-primary-700 font-medium underline"
+                >
+                  Política de Privacidade
+                </Link>
+              </label>
+            </div>
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !acceptedTerms}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Criando conta...' : 'Criar Conta'}
@@ -141,6 +178,18 @@ export default function CadastroPage() {
               <Link href="/login" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
                 Já tem uma conta? Faça login
               </Link>
+            </div>
+
+            <div className="text-center pt-4 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-gray-500">
+                <Link href="/termos-de-uso" className="hover:text-primary-600 transition-colors">
+                  Termos de Uso
+                </Link>
+                <span className="hidden sm:inline">•</span>
+                <Link href="/politica-de-privacidade" className="hover:text-primary-600 transition-colors">
+                  Política de Privacidade
+                </Link>
+              </div>
             </div>
           </form>
         )}
