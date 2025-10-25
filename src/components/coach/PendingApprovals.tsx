@@ -44,7 +44,8 @@ export default function PendingApprovals({ pendingAlunos, coachId }: PendingAppr
     try {
       const now = new Date().toISOString();
 
-      const { error } = await supabase
+      // Atualizar o perfil do aluno
+      const { data: updateData, error: updateError } = await supabase
         .from('profiles')
         .update({
           approved: true,
@@ -52,12 +53,18 @@ export default function PendingApprovals({ pendingAlunos, coachId }: PendingAppr
           approved_at: now,
           payment_due_day: dueDay,
           monthly_fee: parseFloat(monthlyFee),
-          last_payment_date: now.split('T')[0], // Define pagamento de hoje
+          last_payment_date: now.split('T')[0],
           payment_status: 'active',
         })
-        .eq('id', alunoId);
+        .eq('id', alunoId)
+        .select();
 
-      if (error) throw error;
+      if (updateError) {
+        console.error('Erro ao atualizar:', updateError);
+        throw updateError;
+      }
+
+      console.log('Aluno aprovado:', updateData);
 
       // Remover imediatamente da lista (otimista)
       setHiddenAlunos(prev => new Set(prev).add(alunoId));
@@ -66,10 +73,10 @@ export default function PendingApprovals({ pendingAlunos, coachId }: PendingAppr
       setMonthlyFee('');
       setPaymentDueDay('5');
 
-      // Hard refresh para garantir que a página recarregue do servidor
+      // Navegar para a mesma página para forçar reload
       setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+        router.push('/coach/dashboard');
+      }, 1500);
     } catch (error: any) {
       console.error('Erro ao aprovar aluno:', error);
       setToast({ type: 'error', message: `Erro ao aprovar: ${error.message}` });
@@ -89,16 +96,21 @@ export default function PendingApprovals({ pendingAlunos, coachId }: PendingAppr
         .delete()
         .eq('id', alunoId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao deletar:', error);
+        throw error;
+      }
+
+      console.log('Aluno rejeitado:', alunoId);
 
       // Remover imediatamente da lista (otimista)
       setHiddenAlunos(prev => new Set(prev).add(alunoId));
       setToast({ type: 'success', message: 'Cadastro rejeitado' });
 
-      // Hard refresh para garantir que a página recarregue do servidor
+      // Navegar para a mesma página para forçar reload
       setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+        router.push('/coach/dashboard');
+      }, 1500);
     } catch (error: any) {
       console.error('Erro ao rejeitar aluno:', error);
       setToast({ type: 'error', message: `Erro ao rejeitar: ${error.message}` });
@@ -127,7 +139,7 @@ export default function PendingApprovals({ pendingAlunos, coachId }: PendingAppr
               key={aluno.id}
               className="bg-yellow-50 dark:bg-yellow-900/10 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg p-4"
             >
-              <div className="flex items-start justify-between mb-3">
+              <div className="mb-3">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     {aluno.full_name || 'Sem nome'}
@@ -142,11 +154,11 @@ export default function PendingApprovals({ pendingAlunos, coachId }: PendingAppr
                 </div>
 
                 {showApprovalForm !== aluno.id && (
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2 mt-3">
                     <button
                       onClick={() => setShowApprovalForm(aluno.id)}
                       disabled={processing === aluno.id}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
                     >
                       <CheckCircle size={18} />
                       Aprovar
@@ -154,7 +166,7 @@ export default function PendingApprovals({ pendingAlunos, coachId }: PendingAppr
                     <button
                       onClick={() => handleReject(aluno.id)}
                       disabled={processing === aluno.id}
-                      className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50"
                     >
                       <XCircle size={18} />
                       Rejeitar

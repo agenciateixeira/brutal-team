@@ -43,12 +43,18 @@ export default async function CoachDashboard() {
     .order('created_at', { ascending: false });
 
   // Buscar alunos pendentes de aprovação
-  const { data: pendingAlunos } = await supabase
+  const { data: pendingAlunos, error: pendingError } = await supabase
     .from('profiles')
     .select('*')
     .eq('role', 'aluno')
     .eq('approved', false)
     .order('created_at', { ascending: false });
+
+  if (pendingError) {
+    console.error('Erro ao buscar alunos pendentes:', pendingError);
+  }
+
+  console.log('Alunos pendentes encontrados:', pendingAlunos?.length || 0);
 
   // Buscar mensagens não lidas por aluno
   const { data: unreadMessages } = await supabase
