@@ -66,8 +66,10 @@ export default function PendingApprovals({ pendingAlunos, coachId }: PendingAppr
       setMonthlyFee('');
       setPaymentDueDay('5');
 
-      // Refresh para atualizar toda a página
-      setTimeout(() => router.refresh(), 500);
+      // Hard refresh para garantir que a página recarregue do servidor
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error: any) {
       console.error('Erro ao aprovar aluno:', error);
       setToast({ type: 'error', message: `Erro ao aprovar: ${error.message}` });
@@ -93,8 +95,10 @@ export default function PendingApprovals({ pendingAlunos, coachId }: PendingAppr
       setHiddenAlunos(prev => new Set(prev).add(alunoId));
       setToast({ type: 'success', message: 'Cadastro rejeitado' });
 
-      // Refresh para atualizar toda a página
-      setTimeout(() => router.refresh(), 500);
+      // Hard refresh para garantir que a página recarregue do servidor
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error: any) {
       console.error('Erro ao rejeitar aluno:', error);
       setToast({ type: 'error', message: `Erro ao rejeitar: ${error.message}` });

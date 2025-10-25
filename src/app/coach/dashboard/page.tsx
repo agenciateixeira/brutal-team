@@ -4,6 +4,10 @@ import AppLayout from '@/components/layouts/AppLayout';
 import AlunosList from '@/components/coach/AlunosList';
 import PendingApprovals from '@/components/coach/PendingApprovals';
 
+// Forçar revalidação em cada request (sem cache)
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function CoachDashboard() {
   const supabase = createServerClient();
 
