@@ -179,7 +179,7 @@ export default function TermosDeUso() {
                 13. Lei Aplicável e Foro
               </h2>
               <p>
-                Estes termos serão regidos e interpretados de acordo com as leis da República Federativa do Brasil. Qualquer disputa será resolvida no foro da comarca de [INSERIR CIDADE], com exclusão de qualquer outro, por mais privilegiado que seja.
+                Estes termos serão regidos e interpretados de acordo com as leis da República Federativa do Brasil. Qualquer disputa será resolvida no foro da comarca de Campinas - SP, com exclusão de qualquer outro, por mais privilegiado que seja.
               </p>
             </section>
 

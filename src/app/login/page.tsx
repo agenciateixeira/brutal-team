@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useLoading } from '@/components/providers/LoadingProvider';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -13,11 +14,13 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
+  const { showLoading, hideLoading } = useLoading();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    showLoading('Entrando...');
 
     try {
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -37,6 +40,7 @@ export default function LoginPage() {
       if (profileError) throw profileError;
 
       // Redirecionar baseado no role
+      showLoading('Preparando seu dashboard...');
       if (profile.role === 'coach') {
         router.push('/coach/dashboard');
       } else {
@@ -46,6 +50,7 @@ export default function LoginPage() {
       router.refresh();
     } catch (err: any) {
       setError(err.message || 'Erro ao fazer login');
+      hideLoading();
     } finally {
       setLoading(false);
     }

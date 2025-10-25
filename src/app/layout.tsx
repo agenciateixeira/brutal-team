@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
+import { LoadingProvider } from "@/components/providers/LoadingProvider";
+import { RouteLoadingProvider } from "@/components/providers/RouteLoadingProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -40,8 +42,12 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} bg-white`}>
         <ThemeProvider>
-          {children}
-          <PWAInstallPrompt />
+          <LoadingProvider>
+            <RouteLoadingProvider>
+              {children}
+            </RouteLoadingProvider>
+            <PWAInstallPrompt />
+          </LoadingProvider>
         </ThemeProvider>
       </body>
     </html>

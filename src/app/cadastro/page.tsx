@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useLoading } from '@/components/providers/LoadingProvider';
 
 export default function CadastroPage() {
   const [email, setEmail] = useState('');
@@ -16,6 +17,7 @@ export default function CadastroPage() {
   const [success, setSuccess] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+  const { showLoading, hideLoading } = useLoading();
 
   const handleCadastro = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +29,7 @@ export default function CadastroPage() {
 
     setLoading(true);
     setError(null);
+    showLoading('Criando sua conta...');
 
     try {
       const { data, error: signUpError } = await supabase.auth.signUp({
@@ -43,12 +46,15 @@ export default function CadastroPage() {
 
       if (data.user) {
         setSuccess(true);
+        showLoading('Conta criada! Redirecionando...');
         setTimeout(() => {
+          hideLoading();
           router.push('/login');
         }, 2000);
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao criar conta');
+      hideLoading();
     } finally {
       setLoading(false);
     }
