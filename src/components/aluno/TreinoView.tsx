@@ -144,7 +144,7 @@ export default function TreinoView({ alunoId, treinoAtivo: initialTreinoAtivo, h
       )}
 
       {/* Tracking de Treinos */}
-      <WorkoutTracker alunoId={alunoId} />
+      <WorkoutTracker alunoId={alunoId} workoutTypes={treinoAtivo?.workout_types || ['musculacao']} />
     </div>
   );
 }

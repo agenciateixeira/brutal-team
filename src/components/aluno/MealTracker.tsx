@@ -10,20 +10,17 @@ import Toast from '@/components/ui/Toast';
 
 interface MealTrackerProps {
   alunoId: string;
+  mealsPerDay?: number;
 }
 
 type FilterPeriod = '7days' | '30days' | 'custom';
 
-const meals = [
-  { key: 'cafe_da_manha', label: 'Café da Manhã' },
-  { key: 'lanche_manha', label: 'Lanche da Manhã' },
-  { key: 'almoco', label: 'Almoço' },
-  { key: 'lanche_tarde', label: 'Lanche da Tarde' },
-  { key: 'janta', label: 'Janta' },
-  { key: 'ceia', label: 'Ceia' },
-] as const;
-
-export default function MealTracker({ alunoId }: MealTrackerProps) {
+export default function MealTracker({ alunoId, mealsPerDay = 6 }: MealTrackerProps) {
+  // Gerar array dinâmico de refeições baseado em mealsPerDay
+  const meals = Array.from({ length: mealsPerDay }, (_, i) => ({
+    index: i,
+    label: `Refeição ${i + 1}`
+  }));
   const [todayTracking, setTodayTracking] = useState<MealTracking | null>(null);
   const [historicalTracking, setHistoricalTracking] = useState<MealTracking[]>([]);
   const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('7days');
@@ -91,21 +88,23 @@ export default function MealTracker({ alunoId }: MealTrackerProps) {
     }
   };
 
-  const toggleMeal = async (mealKey: string) => {
+  const toggleMeal = async (mealIndex: number) => {
     try {
-      const currentValue = todayTracking?.[mealKey as keyof MealTracking] as boolean || false;
-      const newValue = !currentValue;
+      const currentCompleted = (todayTracking?.meals_completed as any) || [];
+      const newCompleted = currentCompleted.includes(mealIndex)
+        ? currentCompleted.filter((i: number) => i !== mealIndex)
+        : [...currentCompleted, mealIndex];
 
       if (todayTracking) {
         // Atualizar registro existente
         const { error } = await supabase
           .from('meal_tracking')
-          .update({ [mealKey]: newValue })
+          .update({ meals_completed: newCompleted })
           .eq('id', todayTracking.id);
 
         if (error) throw error;
 
-        setTodayTracking({ ...todayTracking, [mealKey]: newValue });
+        setTodayTracking({ ...todayTracking, meals_completed: newCompleted as any });
       } else {
         // Criar novo registro
         const { data, error } = await supabase
@@ -113,7 +112,7 @@ export default function MealTracker({ alunoId }: MealTrackerProps) {
           .insert({
             aluno_id: alunoId,
             date: today,
-            [mealKey]: newValue,
+            meals_completed: newCompleted,
           })
           .select()
           .single();
@@ -132,8 +131,8 @@ export default function MealTracker({ alunoId }: MealTrackerProps) {
   };
 
   const calculateDayCompletion = (tracking: MealTracking) => {
-    const completed = meals.filter(m => tracking[m.key as keyof MealTracking] === true).length;
-    return Math.round((completed / meals.length) * 100);
+    const completed = (tracking.meals_completed as any || []).length;
+    return Math.round((completed / mealsPerDay) * 100);
   };
 
   if (loading) {
@@ -156,11 +155,12 @@ export default function MealTracker({ alunoId }: MealTrackerProps) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {meals.map((meal) => {
-            const isChecked = todayTracking?.[meal.key as keyof MealTracking] as boolean || false;
+            const completedMeals = (todayTracking?.meals_completed as any) || [];
+            const isChecked = completedMeals.includes(meal.index);
             return (
               <button
-                key={meal.key}
-                onClick={() => toggleMeal(meal.key)}
+                key={meal.index}
+                onClick={() => toggleMeal(meal.index)}
                 className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all ${
                   isChecked
                     ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
@@ -290,10 +290,11 @@ export default function MealTracker({ alunoId }: MealTrackerProps) {
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {meals.map((meal) => {
-                    const isChecked = tracking[meal.key as keyof MealTracking] as boolean;
+                    const completedMeals = (tracking.meals_completed as any) || [];
+                    const isChecked = completedMeals.includes(meal.index);
                     return (
                       <div
-                        key={meal.key}
+                        key={meal.index}
                         className={`flex items-center gap-2 p-2 rounded text-xs ${
                           isChecked
                             ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'

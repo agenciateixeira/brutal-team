@@ -144,7 +144,7 @@ export default function DietaView({ alunoId, dietaAtiva: initialDietaAtiva, hist
       )}
 
       {/* Tracking de Refeições */}
-      <MealTracker alunoId={alunoId} />
+      <MealTracker alunoId={alunoId} mealsPerDay={dietaAtiva?.meals_per_day || 6} />
     </div>
   );
 }

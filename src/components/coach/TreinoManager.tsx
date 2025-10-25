@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Treino } from '@/types';
-import { Plus, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { Plus, CheckCircle, XCircle, Trash2, Edit } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -13,18 +13,38 @@ interface TreinoManagerProps {
   treinos: Treino[];
 }
 
+const workoutTypeOptions = [
+  { value: 'cardio', label: 'Cardio' },
+  { value: 'musculacao', label: 'Musculação' },
+  { value: 'luta', label: 'Luta' },
+  { value: 'outros', label: 'Outros' },
+];
+
 export default function TreinoManager({ alunoId, treinos }: TreinoManagerProps) {
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [workoutTypes, setWorkoutTypes] = useState<string[]>(['musculacao']);
   const [setAsActive, setSetAsActive] = useState(true);
   const [saving, setSaving] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
+  const toggleWorkoutType = (type: string) => {
+    setWorkoutTypes(prev =>
+      prev.includes(type)
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    );
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) return;
+    if (workoutTypes.length === 0) {
+      alert('Selecione pelo menos um tipo de treino');
+      return;
+    }
 
     setSaving(true);
 
@@ -41,6 +61,7 @@ export default function TreinoManager({ alunoId, treinos }: TreinoManagerProps) 
         aluno_id: alunoId,
         title: title.trim(),
         content: content.trim(),
+        workout_types: workoutTypes,
         active: setAsActive,
       });
 
@@ -48,6 +69,7 @@ export default function TreinoManager({ alunoId, treinos }: TreinoManagerProps) 
 
       setTitle('');
       setContent('');
+      setWorkoutTypes(['musculacao']);
       setSetAsActive(true);
       setShowForm(false);
       router.refresh();
@@ -99,6 +121,14 @@ export default function TreinoManager({ alunoId, treinos }: TreinoManagerProps) 
     }
   };
 
+  const handleEdit = (treino: Treino) => {
+    setTitle(treino.title + ' (Nova Versão)');
+    setContent(treino.content);
+    setWorkoutTypes(treino.workout_types);
+    setSetAsActive(true);
+    setShowForm(true);
+  };
+
   return (
     <div className="space-y-4">
       {/* Add Button */}
@@ -127,6 +157,35 @@ export default function TreinoManager({ alunoId, treinos }: TreinoManagerProps) 
               placeholder="Ex: Treino ABC"
               required
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Tipos de Treino
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {workoutTypeOptions.map((option) => (
+                <label
+                  key={option.value}
+                  className={`flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                    workoutTypes.includes(option.value)
+                      ? 'border-primary-500 bg-primary-900/30'
+                      : 'border-gray-600 hover:border-gray-500'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={workoutTypes.includes(option.value)}
+                    onChange={() => toggleWorkoutType(option.value)}
+                    className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-primary-600 focus:ring-primary-500"
+                  />
+                  <span className="text-sm text-gray-300">{option.label}</span>
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">
+              Selecione os tipos de treino que o aluno deve fazer
+            </p>
           </div>
 
           <div>
@@ -186,13 +245,23 @@ export default function TreinoManager({ alunoId, treinos }: TreinoManagerProps) 
           >
             <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="text-white font-semibold">{treino.title}</h3>
                   {treino.active && (
                     <span className="px-2 py-1 bg-green-600 text-white text-xs rounded-full">
                       Ativo
                     </span>
                   )}
+                  <div className="flex gap-1">
+                    {treino.workout_types.map((type) => {
+                      const typeLabel = workoutTypeOptions.find(opt => opt.value === type)?.label || type;
+                      return (
+                        <span key={type} className="px-2 py-1 bg-purple-600 text-white text-xs rounded-full">
+                          {typeLabel}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
                 <p className="text-xs text-gray-400 mt-1">
                   Criado em {format(new Date(treino.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
@@ -200,6 +269,13 @@ export default function TreinoManager({ alunoId, treinos }: TreinoManagerProps) 
               </div>
 
               <div className="flex gap-2">
+                <button
+                  onClick={() => handleEdit(treino)}
+                  className="p-2 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                  title="Editar (criar nova versão)"
+                >
+                  <Edit size={18} />
+                </button>
                 <button
                   onClick={() => toggleActive(treino.id, treino.active)}
                   className={`p-2 rounded-md transition-colors ${

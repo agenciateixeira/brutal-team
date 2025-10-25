@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Dieta } from '@/types';
-import { Plus, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { Plus, CheckCircle, XCircle, Trash2, Edit } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -17,6 +17,7 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [mealsPerDay, setMealsPerDay] = useState(6);
   const [setAsActive, setSetAsActive] = useState(true);
   const [saving, setSaving] = useState(false);
   const router = useRouter();
@@ -41,6 +42,7 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
         aluno_id: alunoId,
         title: title.trim(),
         content: content.trim(),
+        meals_per_day: mealsPerDay,
         active: setAsActive,
       });
 
@@ -48,6 +50,7 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
 
       setTitle('');
       setContent('');
+      setMealsPerDay(6);
       setSetAsActive(true);
       setShowForm(false);
       router.refresh();
@@ -99,6 +102,14 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
     }
   };
 
+  const handleEdit = (dieta: Dieta) => {
+    setTitle(dieta.title + ' (Nova Versão)');
+    setContent(dieta.content);
+    setMealsPerDay(dieta.meals_per_day);
+    setSetAsActive(true);
+    setShowForm(true);
+  };
+
   return (
     <div className="space-y-4">
       {/* Add Button */}
@@ -127,6 +138,26 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
               placeholder="Ex: Dieta de Cutting"
               required
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Número de Refeições por Dia
+            </label>
+            <select
+              value={mealsPerDay}
+              onChange={(e) => setMealsPerDay(parseInt(e.target.value))}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+            >
+              <option value={2}>2 refeições</option>
+              <option value={3}>3 refeições</option>
+              <option value={4}>4 refeições</option>
+              <option value={5}>5 refeições</option>
+              <option value={6}>6 refeições</option>
+            </select>
+            <p className="text-xs text-gray-400 mt-1">
+              Define quantas refeições o aluno deve fazer por dia
+            </p>
           </div>
 
           <div>
@@ -193,6 +224,9 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
                       Ativa
                     </span>
                   )}
+                  <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded-full">
+                    {dieta.meals_per_day} refeições/dia
+                  </span>
                 </div>
                 <p className="text-xs text-gray-400 mt-1">
                   Criada em {format(new Date(dieta.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
@@ -200,6 +234,13 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
               </div>
 
               <div className="flex gap-2">
+                <button
+                  onClick={() => handleEdit(dieta)}
+                  className="p-2 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                  title="Editar (criar nova versão)"
+                >
+                  <Edit size={18} />
+                </button>
                 <button
                   onClick={() => toggleActive(dieta.id, dieta.active)}
                   className={`p-2 rounded-md transition-colors ${

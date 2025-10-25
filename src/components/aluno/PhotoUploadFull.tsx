@@ -153,6 +153,31 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
       return;
     }
 
+    // Verificar se pode enviar (7 dias)
+    const { data: lastPhoto } = await supabase
+      .from('progress_photos')
+      .select('next_allowed_date, created_at')
+      .eq('aluno_id', alunoId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (lastPhoto && lastPhoto.next_allowed_date) {
+      const nextAllowedDate = new Date(lastPhoto.next_allowed_date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      nextAllowedDate.setHours(0, 0, 0, 0);
+
+      if (today < nextAllowedDate) {
+        const formattedDate = format(nextAllowedDate, "dd/MM/yyyy", { locale: ptBR });
+        setToast({
+          type: 'error',
+          message: `Seu resumo semanal já foi enviado. Aguarde até ${formattedDate} para enviar o próximo.`
+        });
+        return;
+      }
+    }
+
     setUploading(true);
     console.log('⏳ Iniciando upload...');
 

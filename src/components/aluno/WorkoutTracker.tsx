@@ -3,26 +3,28 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { WorkoutTracking } from '@/types';
-import { Calendar, Filter, CheckCircle, Circle, Sunrise, Sun, Moon } from 'lucide-react';
+import { Calendar, Filter, CheckCircle, Circle } from 'lucide-react';
 import { format, startOfDay, subDays, isToday, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Toast from '@/components/ui/Toast';
 
 interface WorkoutTrackerProps {
   alunoId: string;
+  workoutTypes?: string[];
 }
 
 type FilterPeriod = '7days' | '30days' | 'custom';
 
-const periods = [
-  { key: 'manha', label: 'Manhã', icon: Sunrise },
-  { key: 'tarde', label: 'Tarde', icon: Sun },
-  { key: 'noite', label: 'Noite', icon: Moon },
-] as const;
+const workoutTypeLabels: Record<string, string> = {
+  cardio: 'Cardio',
+  musculacao: 'Musculação',
+  luta: 'Luta',
+  outros: 'Outros',
+};
 
-export default function WorkoutTracker({ alunoId }: WorkoutTrackerProps) {
-  const [todayWorkouts, setTodayWorkouts] = useState<WorkoutTracking[]>([]);
-  const [historicalData, setHistoricalData] = useState<Map<string, WorkoutTracking[]>>(new Map());
+export default function WorkoutTracker({ alunoId, workoutTypes = ['musculacao'] }: WorkoutTrackerProps) {
+  const [todayTracking, setTodayTracking] = useState<WorkoutTracking | null>(null);
+  const [historicalData, setHistoricalData] = useState<WorkoutTracking[]>([]);
   const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('7days');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
@@ -34,21 +36,22 @@ export default function WorkoutTracker({ alunoId }: WorkoutTrackerProps) {
 
   // Carregar dados iniciais
   useEffect(() => {
-    loadTodayWorkouts();
+    loadTodayTracking();
     loadHistoricalData();
   }, [alunoId, filterPeriod, customStartDate, customEndDate]);
 
-  const loadTodayWorkouts = async () => {
+  const loadTodayTracking = async () => {
     try {
       const { data, error } = await supabase
         .from('workout_tracking')
         .select('*')
         .eq('aluno_id', alunoId)
-        .eq('date', today);
+        .eq('date', today)
+        .single();
 
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') throw error;
 
-      setTodayWorkouts(data || []);
+      setTodayTracking(data || null);
     } catch (error: any) {
       console.error('Erro ao carregar treinos de hoje:', error);
     } finally {
@@ -81,38 +84,29 @@ export default function WorkoutTracker({ alunoId }: WorkoutTrackerProps) {
 
       if (error) throw error;
 
-      // Agrupar por data
-      const grouped = new Map<string, WorkoutTracking[]>();
-      data?.forEach((workout) => {
-        if (!grouped.has(workout.date)) {
-          grouped.set(workout.date, []);
-        }
-        grouped.get(workout.date)!.push(workout);
-      });
-
-      setHistoricalData(grouped);
+      setHistoricalData(data || []);
     } catch (error: any) {
       console.error('Erro ao carregar histórico:', error);
     }
   };
 
-  const toggleWorkout = async (period: string) => {
+  const toggleWorkout = async (workoutType: string) => {
     try {
-      const existing = todayWorkouts.find(w => w.period === period);
+      const currentCompleted = todayTracking?.workout_types_completed || [];
+      const newCompleted = currentCompleted.includes(workoutType)
+        ? currentCompleted.filter(t => t !== workoutType)
+        : [...currentCompleted, workoutType];
 
-      if (existing) {
+      if (todayTracking) {
         // Atualizar existente
-        const newCompleted = !existing.completed;
         const { error } = await supabase
           .from('workout_tracking')
-          .update({ completed: newCompleted })
-          .eq('id', existing.id);
+          .update({ workout_types_completed: newCompleted })
+          .eq('id', todayTracking.id);
 
         if (error) throw error;
 
-        setTodayWorkouts(todayWorkouts.map(w =>
-          w.id === existing.id ? { ...w, completed: newCompleted } : w
-        ));
+        setTodayTracking({ ...todayTracking, workout_types_completed: newCompleted });
       } else {
         // Criar novo
         const { data, error } = await supabase
@@ -120,15 +114,14 @@ export default function WorkoutTracker({ alunoId }: WorkoutTrackerProps) {
           .insert({
             aluno_id: alunoId,
             date: today,
-            period,
-            completed: true,
+            workout_types_completed: newCompleted,
           })
           .select()
           .single();
 
         if (error) throw error;
 
-        setTodayWorkouts([...todayWorkouts, data]);
+        setTodayTracking(data);
       }
 
       setToast({ type: 'success', message: 'Treino atualizado!' });
@@ -139,8 +132,8 @@ export default function WorkoutTracker({ alunoId }: WorkoutTrackerProps) {
     }
   };
 
-  const isPeriodCompleted = (period: string) => {
-    return todayWorkouts.some(w => w.period === period && w.completed);
+  const isTypeCompleted = (workoutType: string) => {
+    return todayTracking?.workout_types_completed?.includes(workoutType) || false;
   };
 
   if (loading) {
@@ -157,41 +150,37 @@ export default function WorkoutTracker({ alunoId }: WorkoutTrackerProps) {
             Hoje - {format(new Date(), "dd 'de' MMMM", { locale: ptBR })}
           </h3>
           <div className="text-sm font-medium text-primary-600 dark:text-primary-400">
-            {todayWorkouts.filter(w => w.completed).length} de {periods.length} períodos
+            {(todayTracking?.workout_types_completed || []).length} de {workoutTypes.length} tipos
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {periods.map((period) => {
-            const isCompleted = isPeriodCompleted(period.key);
-            const Icon = period.icon;
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {workoutTypes.map((type) => {
+            const isCompleted = isTypeCompleted(type);
+            const label = workoutTypeLabels[type] || type;
 
             return (
               <button
-                key={period.key}
-                onClick={() => toggleWorkout(period.key)}
-                className={`flex flex-col items-center gap-3 p-6 rounded-lg border-2 transition-all ${
+                key={type}
+                onClick={() => toggleWorkout(type)}
+                className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all ${
                   isCompleted
                     ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
                     : 'border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-700'
                 }`}
               >
-                <Icon
-                  size={32}
-                  className={isCompleted ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}
-                />
+                {isCompleted ? (
+                  <CheckCircle size={24} className="text-green-600 dark:text-green-400 flex-shrink-0" />
+                ) : (
+                  <Circle size={24} className="text-gray-400 flex-shrink-0" />
+                )}
                 <span className={`text-sm font-medium ${
                   isCompleted
                     ? 'text-green-700 dark:text-green-300'
                     : 'text-gray-700 dark:text-gray-300'
                 }`}>
-                  {period.label}
+                  {label}
                 </span>
-                {isCompleted ? (
-                  <CheckCircle size={20} className="text-green-600 dark:text-green-400" />
-                ) : (
-                  <Circle size={20} className="text-gray-400" />
-                )}
               </button>
             );
           })}
@@ -270,24 +259,24 @@ export default function WorkoutTracker({ alunoId }: WorkoutTrackerProps) {
 
         {/* Lista de Dias */}
         <div className="space-y-3">
-          {Array.from(historicalData.entries()).map(([date, workouts]) => {
-            const workoutDate = parseISO(date);
-            const completedCount = workouts.filter(w => w.completed).length;
+          {historicalData.map((tracking) => {
+            const trackingDate = parseISO(tracking.date);
+            const completedCount = (tracking.workout_types_completed || []).length;
 
             return (
               <div
-                key={date}
+                key={tracking.id}
                 className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <div className="font-medium text-gray-900 dark:text-white">
-                      {isToday(workoutDate)
+                      {isToday(trackingDate)
                         ? 'Hoje'
-                        : format(workoutDate, "dd 'de' MMMM", { locale: ptBR })}
+                        : format(trackingDate, "dd 'de' MMMM", { locale: ptBR })}
                     </div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">
-                      {format(workoutDate, 'EEEE', { locale: ptBR })}
+                      {format(trackingDate, 'EEEE', { locale: ptBR })}
                     </div>
                   </div>
                   <div className={`text-sm font-semibold ${
@@ -295,28 +284,30 @@ export default function WorkoutTracker({ alunoId }: WorkoutTrackerProps) {
                       ? 'text-green-600 dark:text-green-400'
                       : 'text-gray-500 dark:text-gray-400'
                   }`}>
-                    {completedCount} {completedCount === 1 ? 'treino' : 'treinos'}
+                    {completedCount} {completedCount === 1 ? 'tipo' : 'tipos'}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
-                  {periods.map((period) => {
-                    const workout = workouts.find(w => w.period === period.key);
-                    const isCompleted = workout?.completed || false;
-                    const Icon = period.icon;
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {workoutTypes.map((type) => {
+                    const isCompleted = (tracking.workout_types_completed || []).includes(type);
+                    const label = workoutTypeLabels[type] || type;
 
                     return (
                       <div
-                        key={period.key}
+                        key={type}
                         className={`flex items-center gap-2 p-2 rounded text-xs ${
                           isCompleted
                             ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                             : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                         }`}
                       >
-                        <Icon size={14} />
-                        <span className="truncate">{period.label}</span>
-                        {isCompleted && <CheckCircle size={12} />}
+                        {isCompleted ? (
+                          <CheckCircle size={14} />
+                        ) : (
+                          <Circle size={14} />
+                        )}
+                        <span className="truncate">{label}</span>
                       </div>
                     );
                   })}
@@ -325,7 +316,7 @@ export default function WorkoutTracker({ alunoId }: WorkoutTrackerProps) {
             );
           })}
 
-          {historicalData.size === 0 && (
+          {historicalData.length === 0 && (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               Nenhum registro encontrado para o período selecionado
             </div>

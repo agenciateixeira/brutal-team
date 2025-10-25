@@ -44,6 +44,7 @@ export interface Dieta {
   aluno_id: string;
   title: string;
   content: string;
+  meals_per_day: number;
   active: boolean;
   created_at: string;
   updated_at: string;
@@ -54,6 +55,7 @@ export interface Treino {
   aluno_id: string;
   title: string;
   content: string;
+  workout_types: string[];
   active: boolean;
   created_at: string;
   updated_at: string;
@@ -95,12 +97,13 @@ export interface MealTracking {
   id: string;
   aluno_id: string;
   date: string;
-  cafe_da_manha: boolean;
-  lanche_manha: boolean;
-  almoco: boolean;
-  lanche_tarde: boolean;
-  janta: boolean;
-  ceia: boolean;
+  meals_completed: number[];
+  cafe_da_manha?: boolean;
+  lanche_manha?: boolean;
+  almoco?: boolean;
+  lanche_tarde?: boolean;
+  janta?: boolean;
+  ceia?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -109,8 +112,9 @@ export interface WorkoutTracking {
   id: string;
   aluno_id: string;
   date: string;
-  period: 'manha' | 'tarde' | 'noite';
-  completed: boolean;
+  workout_types_completed: string[];
+  period?: 'manha' | 'tarde' | 'noite';
+  completed?: boolean;
   created_at: string;
   updated_at: string;
 }

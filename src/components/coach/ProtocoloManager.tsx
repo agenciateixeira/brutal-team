@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { ProtocoloHormonal } from '@/types';
-import { Plus, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { Plus, CheckCircle, XCircle, Trash2, Edit } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -97,6 +97,13 @@ export default function ProtocoloManager({ alunoId, protocolos }: ProtocoloManag
     } catch (error: any) {
       alert('Erro ao excluir protocolo: ' + error.message);
     }
+  };
+
+  const handleEdit = (protocolo: ProtocoloHormonal) => {
+    setTitle(protocolo.title + ' (Nova Versão)');
+    setContent(protocolo.content);
+    setSetAsActive(true);
+    setShowForm(true);
   };
 
   return (
@@ -200,6 +207,13 @@ export default function ProtocoloManager({ alunoId, protocolos }: ProtocoloManag
               </div>
 
               <div className="flex gap-2">
+                <button
+                  onClick={() => handleEdit(protocolo)}
+                  className="p-2 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                  title="Editar (criar nova versão)"
+                >
+                  <Edit size={18} />
+                </button>
                 <button
                   onClick={() => toggleActive(protocolo.id, protocolo.active)}
                   className={`p-2 rounded-md transition-colors ${

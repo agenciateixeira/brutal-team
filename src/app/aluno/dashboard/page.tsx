@@ -2,7 +2,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Sidebar from '@/components/ui/Sidebar';
 import ProgressChart from '@/components/aluno/ProgressChart';
-import { TrendingUp, Calendar, Apple } from 'lucide-react';
+import { TrendingUp, Calendar, Apple, AlertCircle } from 'lucide-react';
 
 export default async function AlunoDashboard() {
   const supabase = createServerClient();
@@ -25,6 +25,19 @@ export default async function AlunoDashboard() {
   if (profile?.role !== 'aluno') {
     redirect('/coach/dashboard');
   }
+
+  // Buscar lembretes de vencimento (3 dias antes)
+  const { data: paymentReminders } = await supabase
+    .from('payment_reminders')
+    .select('*')
+    .eq('aluno_id', session.user.id)
+    .eq('sent', false)
+    .gte('reminder_date', new Date().toISOString().split('T')[0])
+    .lte('reminder_date', new Date().toISOString().split('T')[0])
+    .order('due_date', { ascending: true });
+
+  const hasPaymentReminder = paymentReminders && paymentReminders.length > 0;
+  const reminderData = hasPaymentReminder ? paymentReminders[0] : null;
 
   // Buscar fotos de progresso para o gráfico
   const { data: photos } = await supabase
@@ -90,6 +103,25 @@ export default async function AlunoDashboard() {
                 Bem-vindo de volta, {profile.full_name || 'Atleta'}!
               </p>
             </div>
+
+            {/* Aviso de Vencimento */}
+            {hasPaymentReminder && reminderData && (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" size={24} />
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-300 mb-1">
+                      Lembrete de Pagamento
+                    </h3>
+                    <p className="text-yellow-700 dark:text-yellow-200">
+                      Sua mensalidade vence em {new Date(reminderData.due_date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                      ({reminderData.days_before} {reminderData.days_before === 1 ? 'dia' : 'dias'} restantes).
+                      Não esqueça de realizar o pagamento para manter seu acesso ativo!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

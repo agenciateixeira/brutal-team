@@ -25,7 +25,7 @@ export default async function CoachDashboard() {
     redirect('/aluno/dashboard');
   }
 
-  // Buscar todos os alunos
+  // Buscar alunos aprovados
   const { data: alunos } = await supabase
     .from('profiles')
     .select(`
@@ -34,6 +34,15 @@ export default async function CoachDashboard() {
       messages!messages_aluno_id_fkey(count)
     `)
     .eq('role', 'aluno')
+    .eq('approved', true)
+    .order('created_at', { ascending: false });
+
+  // Buscar alunos pendentes de aprovação
+  const { data: pendingAlunos } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('role', 'aluno')
+    .eq('approved', false)
     .order('created_at', { ascending: false });
 
   // Buscar mensagens não lidas por aluno
