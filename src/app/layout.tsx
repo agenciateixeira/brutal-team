@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
 import { LoadingProvider } from "@/components/providers/LoadingProvider";
 import { RouteLoadingProvider } from "@/components/providers/RouteLoadingProvider";
+import { Suspense } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -43,9 +44,11 @@ export default function RootLayout({
       <body className={`${inter.className} bg-white`}>
         <ThemeProvider>
           <LoadingProvider>
-            <RouteLoadingProvider>
-              {children}
-            </RouteLoadingProvider>
+            <Suspense fallback={null}>
+              <RouteLoadingProvider>
+                {children}
+              </RouteLoadingProvider>
+            </Suspense>
             <PWAInstallPrompt />
           </LoadingProvider>
         </ThemeProvider>
