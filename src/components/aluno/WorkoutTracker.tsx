@@ -315,12 +315,6 @@ export default function WorkoutTracker({ alunoId, workoutTypes = ['musculacao'] 
               </div>
             );
           })}
-
-          {historicalData.length === 0 && (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              Nenhum registro encontrado para o período selecionado
-            </div>
-          )}
         </div>
       </div>
 
