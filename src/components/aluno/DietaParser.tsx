@@ -16,10 +16,12 @@ interface ParsedItem {
   category: 'proteina' | 'gordura' | 'vegetal' | 'geral';
   text: string;
   quantity?: string;
+  alternatives?: ParsedItem[]; // Outras opções agrupadas
 }
 
 export default function DietaParser({ content }: DietaParserProps) {
   const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set([0]));
+  const [expandedAlternatives, setExpandedAlternatives] = useState<Set<string>>(new Set());
 
   const toggleSection = (index: number) => {
     const newExpanded = new Set(expandedSections);
@@ -29,6 +31,16 @@ export default function DietaParser({ content }: DietaParserProps) {
       newExpanded.add(index);
     }
     setExpandedSections(newExpanded);
+  };
+
+  const toggleAlternatives = (key: string) => {
+    const newExpanded = new Set(expandedAlternatives);
+    if (newExpanded.has(key)) {
+      newExpanded.delete(key);
+    } else {
+      newExpanded.add(key);
+    }
+    setExpandedAlternatives(newExpanded);
   };
 
   const getCategoryIcon = (category: string) => {
@@ -112,10 +124,18 @@ export default function DietaParser({ content }: DietaParserProps) {
     return 'geral';
   };
 
-  const extractQuantity = (text: string): string | undefined => {
-    // Procura por padrões de quantidade: 50g, 150-200g, 10ml, etc
-    const quantityMatch = text.match(/(\d+(?:-\d+)?(?:\.\d+)?)\s*(g|ml|kg|mg|litro|l|unidade|un|und)/i);
-    return quantityMatch ? quantityMatch[0] : undefined;
+  const extractQuantity = (text: string): { quantity: string; cleanText: string } | null => {
+    // Procura por padrões de quantidade: 50g, 150-200g, 10ml, ⅓, 1 ovo, etc
+    const quantityMatch = text.match(/^(\d+(?:-\d+)?(?:\.\d+)?|⅓|½|¼|¾)\s*(g|ml|kg|mg|litro|l|unidade|un|und|ovo|ovos)?\s*/i);
+
+    if (quantityMatch) {
+      const quantity = quantityMatch[0].trim();
+      // Remove a quantidade do início do texto
+      const cleanText = text.replace(quantityMatch[0], '').trim();
+      return { quantity, cleanText };
+    }
+
+    return null;
   };
 
   const parseSections = (content: string): ParsedSection[] => {
@@ -123,6 +143,29 @@ export default function DietaParser({ content }: DietaParserProps) {
     const lines = content.split('\n');
     let currentSection: ParsedSection | null = null;
     let currentText = '';
+    let pendingAlternatives: ParsedItem[] = [];
+
+    const saveCurrentText = () => {
+      if (!currentText || !currentSection) return;
+
+      const category = categorizeItem(currentText);
+      const extracted = extractQuantity(currentText);
+
+      const item: ParsedItem = {
+        category,
+        text: extracted ? extracted.cleanText : currentText.trim(),
+        quantity: extracted ? extracted.quantity : undefined,
+      };
+
+      // Se há alternativas pendentes, adiciona ao item
+      if (pendingAlternatives.length > 0) {
+        item.alternatives = [...pendingAlternatives];
+        pendingAlternatives = [];
+      }
+
+      currentSection.items.push(item);
+      currentText = '';
+    };
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
@@ -133,19 +176,11 @@ export default function DietaParser({ content }: DietaParserProps) {
         line.match(/^\d+[hª]/) ||
         line.match(/^[-*]\s*(refeição|café|almoço)/i)
       ) {
-        // Salva seção anterior se existir
-        if (currentSection && currentText) {
-          currentSection.items.push({
-            category: 'geral',
-            text: currentText.trim(),
-          });
-          currentText = '';
-        }
+        saveCurrentText();
         if (currentSection) {
           sections.push(currentSection);
         }
 
-        // Cria nova seção
         currentSection = {
           title: line,
           items: [],
@@ -161,52 +196,33 @@ export default function DietaParser({ content }: DietaParserProps) {
         };
       }
 
-      // Processa linhas com "ou" - opções de escolha
-      if (line.toLowerCase().includes('ou ') || line.startsWith('ou')) {
-        // Salva texto acumulado
-        if (currentText) {
-          const category = categorizeItem(currentText);
-          currentSection.items.push({
-            category,
-            text: currentText.trim(),
-            quantity: extractQuantity(currentText),
-          });
-          currentText = '';
-        }
-
-        // Adiciona a opção
+      // Processa linhas com "ou" - agrupa como alternativas
+      if (line.toLowerCase().startsWith('ou ')) {
         const cleanLine = line.replace(/^ou\s+/i, '').trim();
         if (cleanLine) {
           const category = categorizeItem(cleanLine);
-          currentSection.items.push({
+          const extracted = extractQuantity(cleanLine);
+
+          pendingAlternatives.push({
             category,
-            text: cleanLine,
-            quantity: extractQuantity(cleanLine),
+            text: extracted ? extracted.cleanText : cleanLine,
+            quantity: extracted ? extracted.quantity : undefined,
           });
         }
       } else if (line) {
+        // Se houver texto acumulado e começa uma nova linha (não é "ou"), salva o anterior
+        if (currentText && !line.toLowerCase().startsWith('ou ')) {
+          saveCurrentText();
+        }
         currentText += (currentText ? '\n' : '') + line;
       } else if (currentText) {
         // Linha vazia - salva texto acumulado
-        const category = categorizeItem(currentText);
-        currentSection.items.push({
-          category,
-          text: currentText.trim(),
-          quantity: extractQuantity(currentText),
-        });
-        currentText = '';
+        saveCurrentText();
       }
     }
 
     // Salva última seção
-    if (currentText && currentSection) {
-      const category = categorizeItem(currentText);
-      currentSection.items.push({
-        category,
-        text: currentText.trim(),
-        quantity: extractQuantity(currentText),
-      });
-    }
+    saveCurrentText();
     if (currentSection) {
       sections.push(currentSection);
     }
@@ -252,26 +268,74 @@ export default function DietaParser({ content }: DietaParserProps) {
           {/* Conteúdo da Seção */}
           {expandedSections.has(sectionIndex) && (
             <div className="p-4 space-y-2">
-              {section.items.map((item, itemIndex) => (
-                <div
-                  key={itemIndex}
-                  className={`border-l-4 pl-3 py-2 ${getCategoryColor(item.category)}`}
-                >
-                  <div className="flex items-start gap-2">
-                    {getCategoryIcon(item.category)}
-                    <div className="flex-1">
-                      {item.quantity && (
-                        <span className="inline-block px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 rounded mr-2">
-                          {item.quantity}
-                        </span>
-                      )}
-                      <span className="text-sm text-gray-700 dark:text-gray-300">
-                        {item.text}
-                      </span>
+              {section.items.map((item, itemIndex) => {
+                const alternativesKey = `${sectionIndex}-${itemIndex}`;
+                const hasAlternatives = item.alternatives && item.alternatives.length > 0;
+                const isAlternativesExpanded = expandedAlternatives.has(alternativesKey);
+
+                return (
+                  <div key={itemIndex} className="space-y-2">
+                    {/* Item Principal */}
+                    <div
+                      className={`border-l-4 pl-3 py-2 ${getCategoryColor(item.category)}`}
+                    >
+                      <div className="flex items-start gap-2">
+                        {getCategoryIcon(item.category)}
+                        <div className="flex-1">
+                          {item.quantity && (
+                            <span className="inline-block px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 rounded mr-2">
+                              {item.quantity}
+                            </span>
+                          )}
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            {item.text}
+                          </span>
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Botão de Alternativas */}
+                    {hasAlternatives && (
+                      <div className="pl-7">
+                        <button
+                          onClick={() => toggleAlternatives(alternativesKey)}
+                          className="text-xs text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1"
+                        >
+                          {isAlternativesExpanded ? (
+                            <ChevronDown size={14} />
+                          ) : (
+                            <ChevronRight size={14} />
+                          )}
+                          {isAlternativesExpanded
+                            ? 'Ocultar alternativas'
+                            : `Ver ${item.alternatives!.length} outras opções`}
+                        </button>
+
+                        {/* Lista de Alternativas */}
+                        {isAlternativesExpanded && (
+                          <div className="mt-2 space-y-1">
+                            {item.alternatives!.map((alt, altIndex) => (
+                              <div
+                                key={altIndex}
+                                className="pl-3 py-1.5 bg-gray-50 dark:bg-gray-800/50 rounded text-sm border-l-2 border-gray-300 dark:border-gray-600"
+                              >
+                                {alt.quantity && (
+                                  <span className="inline-block px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 rounded mr-2">
+                                    {alt.quantity}
+                                  </span>
+                                )}
+                                <span className="text-gray-700 dark:text-gray-300">
+                                  {alt.text}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

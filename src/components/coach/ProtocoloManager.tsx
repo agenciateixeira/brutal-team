@@ -121,23 +121,23 @@ export default function ProtocoloManager({ alunoId, protocolos }: ProtocoloManag
 
       {/* Form */}
       {showForm && (
-        <form onSubmit={handleSave} className="bg-gray-900 p-4 rounded-lg space-y-3">
+        <form onSubmit={handleSave} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-4 rounded-lg space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Título
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white"
               placeholder="Ex: Protocolo de TRT"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Conteúdo
             </label>
             <textarea
@@ -156,7 +156,7 @@ export default function ProtocoloManager({ alunoId, protocolos }: ProtocoloManag
               id="setAsActive"
               checked={setAsActive}
               onChange={(e) => setSetAsActive(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-primary-600 focus:ring-primary-500"
+              className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-primary-600 focus:ring-primary-500"
             />
             <label htmlFor="setAsActive" className="text-sm text-gray-300 cursor-pointer">
               Ativar este protocolo imediatamente (desativa os outros)
@@ -174,7 +174,7 @@ export default function ProtocoloManager({ alunoId, protocolos }: ProtocoloManag
             <button
               type="button"
               onClick={() => setShowForm(false)}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-colors"
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-md transition-colors"
             >
               Cancelar
             </button>
@@ -187,8 +187,8 @@ export default function ProtocoloManager({ alunoId, protocolos }: ProtocoloManag
         {protocolos.map((protocolo) => (
           <div
             key={protocolo.id}
-            className={`bg-gray-900 p-4 rounded-lg border-2 ${
-              protocolo.active ? 'border-purple-500' : 'border-gray-700'
+            className={`bg-white dark:bg-gray-900 p-4 rounded-lg border-2 ${
+              protocolo.active ? 'border-purple-500' : 'border-gray-200 dark:border-gray-700'
             }`}
           >
             {/* Botões no topo */}
@@ -226,26 +226,26 @@ export default function ProtocoloManager({ alunoId, protocolos }: ProtocoloManag
             {/* Conteúdo */}
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-white font-semibold">{protocolo.title}</h3>
+                <h3 className="text-gray-900 dark:text-white font-semibold">{protocolo.title}</h3>
                 {protocolo.active && (
                   <span className="px-2 py-1 bg-purple-600 text-white text-xs rounded-full">
                     Ativo
                   </span>
                 )}
               </div>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Criado em {format(new Date(protocolo.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
               </p>
             </div>
 
-            <pre className="whitespace-pre-wrap text-gray-300 text-sm bg-gray-800 p-3 rounded max-h-40 overflow-y-auto">
+            <pre className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 text-sm bg-gray-50 dark:bg-gray-800 p-3 rounded max-h-40 overflow-y-auto">
               {protocolo.content}
             </pre>
           </div>
         ))}
 
         {protocolos.length === 0 && !showForm && (
-          <p className="text-center text-gray-400 py-8">
+          <p className="text-center text-gray-500 dark:text-gray-400 py-8">
             Nenhum protocolo cadastrado ainda
           </p>
         )}
