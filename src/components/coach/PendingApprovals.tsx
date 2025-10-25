@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { Profile } from '@/types';
 import { UserPlus, CheckCircle, XCircle, Calendar, DollarSign } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -22,7 +21,6 @@ export default function PendingApprovals({ pendingAlunos, coachId }: PendingAppr
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [hiddenAlunos, setHiddenAlunos] = useState<Set<string>>(new Set());
   const router = useRouter();
-  const supabase = createClient();
 
   // Filtrar alunos que foram aprovados ou rejeitados
   const visibleAlunos = pendingAlunos.filter(aluno => !hiddenAlunos.has(aluno.id));
@@ -42,29 +40,27 @@ export default function PendingApprovals({ pendingAlunos, coachId }: PendingAppr
     setProcessing(alunoId);
 
     try {
-      const now = new Date().toISOString();
+      // Chamar API route server-side para aprovar
+      const response = await fetch('/api/approve-aluno', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          alunoId,
+          paymentDueDay: dueDay,
+          monthlyFee: parseFloat(monthlyFee),
+          coachId,
+        }),
+      });
 
-      // Atualizar o perfil do aluno
-      const { data: updateData, error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          approved: true,
-          approved_by: coachId,
-          approved_at: now,
-          payment_due_day: dueDay,
-          monthly_fee: parseFloat(monthlyFee),
-          last_payment_date: now.split('T')[0],
-          payment_status: 'active',
-        })
-        .eq('id', alunoId)
-        .select();
+      const result = await response.json();
 
-      if (updateError) {
-        console.error('Erro ao atualizar:', updateError);
-        throw updateError;
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao aprovar aluno');
       }
 
-      console.log('Aluno aprovado:', updateData);
+      console.log('Aluno aprovado:', result);
 
       // Remover imediatamente da lista (otimista)
       setHiddenAlunos(prev => new Set(prev).add(alunoId));
@@ -73,10 +69,10 @@ export default function PendingApprovals({ pendingAlunos, coachId }: PendingAppr
       setMonthlyFee('');
       setPaymentDueDay('5');
 
-      // Navegar para a mesma página para forçar reload
+      // Refresh da página após um delay
       setTimeout(() => {
-        router.push('/coach/dashboard');
-      }, 1500);
+        router.refresh();
+      }, 1000);
     } catch (error: any) {
       console.error('Erro ao aprovar aluno:', error);
       setToast({ type: 'error', message: `Erro ao aprovar: ${error.message}` });
@@ -91,26 +87,33 @@ export default function PendingApprovals({ pendingAlunos, coachId }: PendingAppr
     setProcessing(alunoId);
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', alunoId);
+      // Chamar API route server-side para rejeitar
+      const response = await fetch('/api/reject-aluno', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          alunoId,
+        }),
+      });
 
-      if (error) {
-        console.error('Erro ao deletar:', error);
-        throw error;
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao rejeitar aluno');
       }
 
-      console.log('Aluno rejeitado:', alunoId);
+      console.log('Aluno rejeitado:', result);
 
       // Remover imediatamente da lista (otimista)
       setHiddenAlunos(prev => new Set(prev).add(alunoId));
       setToast({ type: 'success', message: 'Cadastro rejeitado' });
 
-      // Navegar para a mesma página para forçar reload
+      // Refresh da página após um delay
       setTimeout(() => {
-        router.push('/coach/dashboard');
-      }, 1500);
+        router.refresh();
+      }, 1000);
     } catch (error: any) {
       console.error('Erro ao rejeitar aluno:', error);
       setToast({ type: 'error', message: `Erro ao rejeitar: ${error.message}` });
