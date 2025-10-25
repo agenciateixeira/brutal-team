@@ -130,29 +130,29 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
 
       {/* Form */}
       {showForm && (
-        <form onSubmit={handleSave} className="bg-gray-900 p-4 rounded-lg space-y-3">
+        <form onSubmit={handleSave} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-4 rounded-lg space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Título
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white"
               placeholder="Ex: Dieta de Cutting"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Número de Refeições por Dia
             </label>
             <select
               value={mealsPerDay}
               onChange={(e) => setMealsPerDay(parseInt(e.target.value))}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white"
             >
               <option value={2}>2 refeições</option>
               <option value={3}>3 refeições</option>
@@ -160,37 +160,37 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
               <option value={5}>5 refeições</option>
               <option value={6}>6 refeições</option>
             </select>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Define quantas refeições o aluno deve fazer por dia
             </p>
           </div>
 
           {/* Observações Nutricionais */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Observações Nutricionais (Opcional)
             </label>
             <textarea
               value={observacoesNutricionais}
               onChange={(e) => setObservacoesNutricionais(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
+              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white text-sm"
               placeholder="Ex: Total diário: ~1500 kcal, 150g proteína, 150g gordura, 0-20g carbo"
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Informações gerais sobre macros ou totais diários (aparece destacado para o aluno)
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Conteúdo
             </label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={20}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white font-mono text-sm min-h-[500px]"
+              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white font-mono text-sm min-h-[500px]"
               placeholder="Cole aqui o conteúdo da dieta..."
               required
             />
@@ -202,9 +202,9 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
               id="setAsActive"
               checked={setAsActive}
               onChange={(e) => setSetAsActive(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-primary-600 focus:ring-primary-500"
+              className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-primary-600 focus:ring-primary-500"
             />
-            <label htmlFor="setAsActive" className="text-sm text-gray-300 cursor-pointer">
+            <label htmlFor="setAsActive" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
               Ativar esta dieta imediatamente (desativa as outras)
             </label>
           </div>
@@ -220,7 +220,7 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
             <button
               type="button"
               onClick={() => setShowForm(false)}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-colors"
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-md transition-colors"
             >
               Cancelar
             </button>
@@ -233,8 +233,8 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
         {dietas.map((dieta) => (
           <div
             key={dieta.id}
-            className={`bg-gray-900 p-4 rounded-lg border-2 ${
-              dieta.active ? 'border-green-500' : 'border-gray-700'
+            className={`bg-white dark:bg-gray-900 p-4 rounded-lg border-2 ${
+              dieta.active ? 'border-green-500' : 'border-gray-200 dark:border-gray-700'
             }`}
           >
             {/* Botões no topo */}
@@ -272,7 +272,7 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
             {/* Conteúdo */}
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-white font-semibold">{dieta.title}</h3>
+                <h3 className="text-gray-900 dark:text-white font-semibold">{dieta.title}</h3>
                 {dieta.active && (
                   <span className="px-2 py-1 bg-green-600 text-white text-xs rounded-full">
                     Ativa
@@ -282,27 +282,27 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
                   {dieta.meals_per_day} refeições/dia
                 </span>
               </div>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Criada em {format(new Date(dieta.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
               </p>
             </div>
 
             {/* Observações Nutricionais */}
             {dieta.observacoes_nutricionais && (
-              <div className="bg-blue-900/30 border border-blue-700 p-3 rounded-lg">
-                <h4 className="text-xs font-semibold text-blue-300 mb-1">📊 Observações Nutricionais:</h4>
-                <p className="text-sm text-gray-300">{dieta.observacoes_nutricionais}</p>
+              <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 p-3 rounded-lg">
+                <h4 className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">📊 Observações Nutricionais:</h4>
+                <p className="text-sm text-blue-900 dark:text-gray-300">{dieta.observacoes_nutricionais}</p>
               </div>
             )}
 
-            <pre className="whitespace-pre-wrap text-gray-300 text-sm bg-gray-800 p-3 rounded max-h-40 overflow-y-auto">
+            <pre className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 text-sm bg-gray-50 dark:bg-gray-800 p-3 rounded max-h-40 overflow-y-auto">
               {dieta.content}
             </pre>
           </div>
         ))}
 
         {dietas.length === 0 && !showForm && (
-          <p className="text-center text-gray-400 py-8">
+          <p className="text-center text-gray-500 dark:text-gray-400 py-8">
             Nenhuma dieta cadastrada ainda
           </p>
         )}
