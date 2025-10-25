@@ -20,8 +20,12 @@ export default function PendingApprovals({ pendingAlunos, coachId }: PendingAppr
   const [paymentDueDay, setPaymentDueDay] = useState('5');
   const [monthlyFee, setMonthlyFee] = useState('');
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const [hiddenAlunos, setHiddenAlunos] = useState<Set<string>>(new Set());
   const router = useRouter();
   const supabase = createClient();
+
+  // Filtrar alunos que foram aprovados ou rejeitados
+  const visibleAlunos = pendingAlunos.filter(aluno => !hiddenAlunos.has(aluno.id));
 
   const handleApprove = async (alunoId: string) => {
     if (!monthlyFee || parseFloat(monthlyFee) <= 0) {
@@ -55,11 +59,15 @@ export default function PendingApprovals({ pendingAlunos, coachId }: PendingAppr
 
       if (error) throw error;
 
+      // Remover imediatamente da lista (otimista)
+      setHiddenAlunos(prev => new Set(prev).add(alunoId));
       setToast({ type: 'success', message: 'Aluno aprovado com sucesso!' });
       setShowApprovalForm(null);
       setMonthlyFee('');
       setPaymentDueDay('5');
-      router.refresh();
+
+      // Refresh para atualizar toda a página
+      setTimeout(() => router.refresh(), 500);
     } catch (error: any) {
       console.error('Erro ao aprovar aluno:', error);
       setToast({ type: 'error', message: `Erro ao aprovar: ${error.message}` });
@@ -81,8 +89,12 @@ export default function PendingApprovals({ pendingAlunos, coachId }: PendingAppr
 
       if (error) throw error;
 
+      // Remover imediatamente da lista (otimista)
+      setHiddenAlunos(prev => new Set(prev).add(alunoId));
       setToast({ type: 'success', message: 'Cadastro rejeitado' });
-      router.refresh();
+
+      // Refresh para atualizar toda a página
+      setTimeout(() => router.refresh(), 500);
     } catch (error: any) {
       console.error('Erro ao rejeitar aluno:', error);
       setToast({ type: 'error', message: `Erro ao rejeitar: ${error.message}` });
@@ -91,7 +103,7 @@ export default function PendingApprovals({ pendingAlunos, coachId }: PendingAppr
     }
   };
 
-  if (pendingAlunos.length === 0) {
+  if (visibleAlunos.length === 0) {
     return null;
   }
 
@@ -101,12 +113,12 @@ export default function PendingApprovals({ pendingAlunos, coachId }: PendingAppr
         <div className="flex items-center gap-2 mb-4">
           <UserPlus size={24} className="text-yellow-600" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Cadastros Pendentes ({pendingAlunos.length})
+            Cadastros Pendentes ({visibleAlunos.length})
           </h2>
         </div>
 
         <div className="space-y-3">
-          {pendingAlunos.map((aluno) => (
+          {visibleAlunos.map((aluno) => (
             <div
               key={aluno.id}
               className="bg-yellow-50 dark:bg-yellow-900/10 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg p-4"

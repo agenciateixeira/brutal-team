@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Profile, ProgressPhoto, Message, Dieta, Treino, ProtocoloHormonal, NotificationCounts } from '@/types';
-import { ArrowLeft, Image as ImageIcon, MessageCircle, Apple, Dumbbell, Syringe, Calendar, FileText, X, Bell } from 'lucide-react';
+import { ArrowLeft, Image as ImageIcon, MessageCircle, Apple, Dumbbell, Syringe, Calendar, FileText, X, Bell, User, Mail, Phone, CreditCard, DollarSign } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -23,7 +23,7 @@ interface AlunoDetailsProps {
   coachId: string;
 }
 
-type Tab = 'fotos' | 'mensagens' | 'dieta' | 'treino' | 'protocolo';
+type Tab = 'perfil' | 'fotos' | 'mensagens' | 'dieta' | 'treino' | 'protocolo';
 
 export default function AlunoDetails({
   aluno,
@@ -34,7 +34,7 @@ export default function AlunoDetails({
   protocolos,
   coachId
 }: AlunoDetailsProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('fotos');
+  const [activeTab, setActiveTab] = useState<Tab>('perfil');
   const [selectedPhoto, setSelectedPhoto] = useState<ProgressPhoto | null>(null);
   const [showMeasurementsModal, setShowMeasurementsModal] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
@@ -91,7 +91,10 @@ export default function AlunoDetails({
   };
 
   const handleTabView = async (tab: Tab) => {
-    const typeMap: Record<Tab, string> = {
+    // Perfil não tem notificações
+    if (tab === 'perfil') return;
+
+    const typeMap: Record<Exclude<Tab, 'perfil'>, string> = {
       fotos: 'photo',
       mensagens: 'message',
       dieta: 'diet',
@@ -160,6 +163,17 @@ export default function AlunoDetails({
       {/* Tabs */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
         <div className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('perfil')}
+            className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap ${
+              activeTab === 'perfil'
+                ? 'bg-primary-600 text-white'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+            }`}
+          >
+            <User size={20} />
+            Perfil
+          </button>
           <button
             onClick={() => setActiveTab('fotos')}
             className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap relative ${
@@ -243,6 +257,170 @@ export default function AlunoDetails({
         </div>
 
         <div className="p-6">
+          {/* Perfil Tab */}
+          {activeTab === 'perfil' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Informações Pessoais */}
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                    <User size={20} className="text-primary-600" />
+                    Informações Pessoais
+                  </h3>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Nome Completo</label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <User size={16} className="text-gray-400" />
+                        <p className="text-gray-900 dark:text-white font-medium">
+                          {aluno.full_name || 'Não informado'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Email</label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Mail size={16} className="text-gray-400" />
+                        <p className="text-gray-900 dark:text-white font-medium">
+                          {aluno.email}
+                        </p>
+                      </div>
+                    </div>
+
+                    {aluno.phone_number && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Telefone</label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Phone size={16} className="text-gray-400" />
+                          <p className="text-gray-900 dark:text-white font-medium">
+                            {aluno.phone_number}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Cliente Desde</label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Calendar size={16} className="text-gray-400" />
+                        <p className="text-gray-900 dark:text-white font-medium">
+                          {format(new Date(aluno.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                        </p>
+                      </div>
+                    </div>
+
+                    {aluno.approved_at && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Aprovado em</label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Calendar size={16} className="text-gray-400" />
+                          <p className="text-gray-900 dark:text-white font-medium">
+                            {format(new Date(aluno.approved_at), "dd/MM/yyyy", { locale: ptBR })}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Informações de Pagamento */}
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                    <DollarSign size={20} className="text-green-600" />
+                    Informações de Pagamento
+                  </h3>
+
+                  <div className="space-y-3">
+                    {aluno.monthly_fee && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Mensalidade</label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <DollarSign size={16} className="text-gray-400" />
+                          <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                            R$ {aluno.monthly_fee.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {aluno.payment_due_day && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Dia de Vencimento</label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <CreditCard size={16} className="text-gray-400" />
+                          <p className="text-gray-900 dark:text-white font-medium">
+                            Todo dia {aluno.payment_due_day}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {aluno.last_payment_date && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Último Pagamento</label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Calendar size={16} className="text-gray-400" />
+                          <p className="text-gray-900 dark:text-white font-medium">
+                            {format(new Date(aluno.last_payment_date), "dd/MM/yyyy", { locale: ptBR })}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {aluno.payment_status && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Status</label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                            aluno.payment_status === 'active'
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                              : aluno.payment_status === 'pending'
+                              ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
+                              : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                          }`}>
+                            {aluno.payment_status === 'active' ? 'Ativo' :
+                             aluno.payment_status === 'pending' ? 'Pendente' : 'Atrasado'}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Estatísticas */}
+              <div className="bg-gradient-to-r from-primary-50 to-accent-50 dark:from-primary-900/20 dark:to-accent-900/20 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Estatísticas
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                    <ImageIcon size={24} className="mx-auto text-primary-600 mb-2" />
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{photos.length}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">Resumos Semanais</div>
+                  </div>
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                    <MessageCircle size={24} className="mx-auto text-blue-600 mb-2" />
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{messages.length}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">Mensagens</div>
+                  </div>
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                    <Apple size={24} className="mx-auto text-orange-600 mb-2" />
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{dietas.length}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">Dietas</div>
+                  </div>
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                    <Dumbbell size={24} className="mx-auto text-purple-600 mb-2" />
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{treinos.length}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">Treinos</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Resumo Semanal Tab */}
           {activeTab === 'fotos' && (
             <div>
