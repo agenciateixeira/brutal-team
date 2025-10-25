@@ -161,7 +161,7 @@ export default function TermosDeUso() {
                 11. Isenção de Garantias
               </h2>
               <p>
-                A plataforma é fornecida "como está" e "conforme disponível", sem garantias de qualquer tipo, expressas ou implícitas. Não garantimos que o serviço será ininterrupto, seguro ou livre de erros.
+                A plataforma é fornecida &quot;como está&quot; e &quot;conforme disponível&quot;, sem garantias de qualquer tipo, expressas ou implícitas. Não garantimos que o serviço será ininterrupto, seguro ou livre de erros.
               </p>
             </section>
 
