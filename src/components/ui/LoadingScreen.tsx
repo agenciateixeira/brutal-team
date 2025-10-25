@@ -5,6 +5,7 @@ import { Dumbbell, Apple, User, Heart } from 'lucide-react';
 
 interface LoadingScreenProps {
   message?: string;
+  isFadingOut?: boolean;
 }
 
 const loadingIcons = [
@@ -14,7 +15,7 @@ const loadingIcons = [
   { Icon: Heart, label: 'Saúde', color: 'text-red-500' },
 ];
 
-export default function LoadingScreen({ message = 'Carregando...' }: LoadingScreenProps) {
+export default function LoadingScreen({ message = 'Carregando...', isFadingOut = false }: LoadingScreenProps) {
   const [currentIconIndex, setCurrentIconIndex] = useState(0);
 
   useEffect(() => {
@@ -29,7 +30,11 @@ export default function LoadingScreen({ message = 'Carregando...' }: LoadingScre
   const Icon = currentIcon.Icon;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-white transition-opacity duration-300 ${
+        isFadingOut ? 'opacity-0' : 'opacity-100'
+      }`}
+    >
       {/* Background animated gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary-100/20 via-transparent to-blue-100/20 animate-pulse" />
 

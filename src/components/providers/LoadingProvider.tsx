@@ -15,6 +15,7 @@ const NAVIGATION_MIN_TIME = 1300; // 1.3 segundos para navegação interna
 
 export function LoadingProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false);
   const [message, setMessage] = useState('Carregando...');
   const loadingStartTime = useRef<number>(0);
   const minLoadingTime = useRef<number>(DEFAULT_MIN_TIME);
@@ -22,6 +23,7 @@ export function LoadingProvider({ children }: { children: ReactNode }) {
   const showLoading = useCallback((msg = 'Carregando...', minTime = NAVIGATION_MIN_TIME) => {
     setMessage(msg);
     setIsLoading(true);
+    setIsFadingOut(false);
     loadingStartTime.current = Date.now();
     minLoadingTime.current = minTime;
   }, []);
@@ -32,14 +34,21 @@ export function LoadingProvider({ children }: { children: ReactNode }) {
 
     // Garantir que o loading fique visível pelo tempo mínimo
     setTimeout(() => {
-      setIsLoading(false);
+      // Iniciar fade out
+      setIsFadingOut(true);
+
+      // Remover loading após a animação de fade
+      setTimeout(() => {
+        setIsLoading(false);
+        setIsFadingOut(false);
+      }, 300); // Duração do fade-out
     }, remainingTime);
   }, []);
 
   return (
     <LoadingContext.Provider value={{ showLoading, hideLoading }}>
       {children}
-      {isLoading && <LoadingScreen message={message} />}
+      {isLoading && <LoadingScreen message={message} isFadingOut={isFadingOut} />}
     </LoadingContext.Provider>
   );
 }
