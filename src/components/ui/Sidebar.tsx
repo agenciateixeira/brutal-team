@@ -22,6 +22,8 @@ import { Profile } from '@/types';
 import ThemeToggle from './ThemeToggle';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { useLoading } from '@/components/providers/LoadingProvider';
+import NavLink from './NavLink';
 
 interface SidebarProps {
   profile: Profile;
@@ -45,6 +47,7 @@ export default function Sidebar({ profile }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const { showLoading } = useLoading();
 
   const isCoach = profile.role === 'coach';
 
@@ -109,9 +112,16 @@ export default function Sidebar({ profile }: SidebarProps) {
   ];
 
   const handleLogout = async () => {
+    const userName = profile.full_name || profile.email.split('@')[0];
+    showLoading(`Te aguardamos amanhã, ${userName}!`);
+
     await supabase.auth.signOut();
-    router.push('/login');
-    router.refresh();
+
+    // Aguardar um pouco para mostrar a mensagem
+    setTimeout(() => {
+      router.push('/login');
+      router.refresh();
+    }, 1000);
   };
 
   return (
@@ -205,9 +215,10 @@ export default function Sidebar({ profile }: SidebarProps) {
               }
 
               return (
-                <Link
+                <NavLink
                   key={`${item.href}-${item.label}`}
                   href={item.href}
+                  loadingMessage={`Carregando ${item.label}...`}
                   onClick={() => setIsOpen(false)}
                   className={`
                     flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative
@@ -224,7 +235,7 @@ export default function Sidebar({ profile }: SidebarProps) {
                       {badgeCount}
                     </span>
                   )}
-                </Link>
+                </NavLink>
               );
             })}
           </nav>

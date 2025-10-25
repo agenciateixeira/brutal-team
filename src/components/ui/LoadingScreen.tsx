@@ -29,9 +29,9 @@ export default function LoadingScreen({ message = 'Carregando...' }: LoadingScre
   const Icon = currentIcon.Icon;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
       {/* Background animated gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary-500/10 via-transparent to-blue-500/10 animate-pulse" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary-100/20 via-transparent to-blue-100/20 animate-pulse" />
 
       <div className="relative flex flex-col items-center gap-6">
         {/* Icon container with rotation animation */}
@@ -44,7 +44,7 @@ export default function LoadingScreen({ message = 'Carregando...' }: LoadingScre
           {/* Icon with fade animation */}
           <div
             key={currentIconIndex}
-            className="w-24 h-24 flex items-center justify-center bg-white/10 backdrop-blur-sm rounded-full animate-fadeIn"
+            className="w-24 h-24 flex items-center justify-center bg-gray-50 backdrop-blur-sm rounded-full shadow-lg animate-fadeIn"
           >
             <Icon
               size={48}
@@ -56,10 +56,10 @@ export default function LoadingScreen({ message = 'Carregando...' }: LoadingScre
 
         {/* Loading text */}
         <div className="text-center space-y-2">
-          <h3 className="text-xl font-bold text-white animate-pulse">
+          <h3 className="text-xl font-bold text-gray-900 animate-pulse">
             {message}
           </h3>
-          <p className="text-sm text-gray-300 animate-fadeIn">
+          <p className="text-sm text-gray-600 animate-fadeIn">
             {currentIcon.label}
           </p>
         </div>
