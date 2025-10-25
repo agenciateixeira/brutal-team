@@ -90,5 +90,34 @@
   - Botão azul com ícone Edit
   - Cria novo protocolo
 
-## Próximas Tarefas Pendentes:
-1. Aprovação de cadastro pelo coach
+### 6. **Sistema de Aprovação de Cadastro**
+- **src/components/coach/PendingApprovals.tsx** (NOVO):
+  - Componente para listar alunos pendentes
+  - Formulário de aprovação com campos de pagamento
+  - Define approved=true, approved_by, approved_at
+  - Registra primeiro pagamento como feito hoje
+  - Botão de rejeitar (exclui usuário)
+
+- **src/app/coach/dashboard/page.tsx**:
+  - Query para buscar pendingAlunos (approved=false)
+  - Exibe PendingApprovals no topo do dashboard
+  - Badge amarelo com contador de pendências
+
+- **src/app/aguardando-aprovacao/page.tsx** (NOVO):
+  - Página de espera para alunos não aprovados
+  - Auto-refresh a cada 30 segundos
+  - Redireciona automaticamente quando aprovado
+  - Botão de logout
+
+- **middleware.ts**:
+  - Verifica approved=false para alunos
+  - Redireciona para /aguardando-aprovacao
+  - Adiciona rota pública
+
+- **src/app/cadastro/page.tsx**:
+  - Mensagem informando sobre aprovação
+  - Explica que deve aguardar aprovação do coach
+
+## ✅ TODAS AS FUNCIONALIDADES IMPLEMENTADAS!
+
+Funcionalidades SQL necessárias já executadas em advanced_features.sql

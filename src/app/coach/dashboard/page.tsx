@@ -2,6 +2,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import AppLayout from '@/components/layouts/AppLayout';
 import AlunosList from '@/components/coach/AlunosList';
+import PendingApprovals from '@/components/coach/PendingApprovals';
 
 export default async function CoachDashboard() {
   const supabase = createServerClient();
@@ -127,6 +128,11 @@ export default async function CoachDashboard() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Painel do Coach</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Visão geral de todos os seus alunos</p>
         </div>
+
+        {/* Aprovações Pendentes */}
+        {pendingAlunos && pendingAlunos.length > 0 && (
+          <PendingApprovals pendingAlunos={pendingAlunos} coachId={session.user.id} />
+        )}
 
         {/* Lista de Alunos */}
         <AlunosList alunos={alunosWithUnread || []} />

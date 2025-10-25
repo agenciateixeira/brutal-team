@@ -64,8 +64,13 @@ export default function CadastroPage() {
         </div>
 
         {success ? (
-          <div className="bg-green-500/10 border border-green-500 text-green-700 px-4 py-3 rounded text-center">
-            Conta criada com sucesso! Redirecionando...
+          <div className="bg-green-500/10 border border-green-500 text-green-700 px-4 py-3 rounded">
+            <p className="font-semibold text-center mb-2">Conta criada com sucesso!</p>
+            <p className="text-sm text-center">
+              Seu cadastro está aguardando aprovação do coach.
+              Você receberá acesso assim que for aprovado.
+            </p>
+            <p className="text-xs text-center mt-2 text-gray-600">Redirecionando para login...</p>
           </div>
         ) : (
           <form onSubmit={handleCadastro} className="mt-8 space-y-6">

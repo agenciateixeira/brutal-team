@@ -12,7 +12,7 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession();
 
   // Rotas públicas
-  const publicRoutes = ['/login'];
+  const publicRoutes = ['/login', '/cadastro', '/aguardando-aprovacao'];
   const isPublicRoute = publicRoutes.some(route => req.nextUrl.pathname === route);
 
   // Se não está logado e tenta acessar rota privada
@@ -40,9 +40,16 @@ export async function middleware(req: NextRequest) {
   if (session) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, approved')
       .eq('id', session.user.id)
       .single();
+
+    // Verificar se aluno está aprovado
+    if (profile?.role === 'aluno' && profile?.approved === false) {
+      if (req.nextUrl.pathname !== '/aguardando-aprovacao') {
+        return NextResponse.redirect(new URL('/aguardando-aprovacao', req.url));
+      }
+    }
 
     // Coach tentando acessar área do aluno
     if (profile?.role === 'coach' && req.nextUrl.pathname.startsWith('/aluno')) {
