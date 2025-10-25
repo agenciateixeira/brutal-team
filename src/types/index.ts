@@ -8,9 +8,14 @@ export interface Profile {
   avatar_url: string | null;
   phone_number: string | null;
   role: UserRole;
+  approved: boolean;
+  approved_by: string | null;
+  approved_at: string | null;
   payment_status: PaymentStatus | null;
   payment_due_date: string | null;
+  payment_due_day: number | null;
   monthly_fee: number | null;
+  last_payment_date: string | null;
   created_at: string;
   updated_at: string;
 }
