@@ -189,13 +189,13 @@ export default function WorkoutTracker({ alunoId, workoutTypes = ['musculacao'] 
 
       {/* Histórico */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <Filter size={20} className="text-primary-600" />
             Histórico
           </h3>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setFilterPeriod('7days')}
               className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
