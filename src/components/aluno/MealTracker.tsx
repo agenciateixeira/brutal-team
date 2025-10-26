@@ -57,6 +57,37 @@ export default function MealTracker({ alunoId, mealsPerDay = 6 }: MealTrackerPro
     loadHistoricalData();
   }, [alunoId, filterPeriod, customStartDate, customEndDate]);
 
+  // Realtime subscription para auto-refresh
+  useEffect(() => {
+    console.log('🍎 [MealTracker] Iniciando subscription para:', alunoId);
+
+    const channel = supabase
+      .channel(`meal-tracking-${alunoId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'meal_tracking',
+          filter: `aluno_id=eq.${alunoId}`,
+        },
+        (payload) => {
+          console.log('🍎 [MealTracker] Meal tracking changed:', payload);
+          // Recarrega dados quando houver mudança
+          loadTodayTracking();
+          loadHistoricalData();
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 [MealTracker] Subscription status:', status);
+      });
+
+    return () => {
+      console.log('🔌 [MealTracker] Removendo subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [alunoId]);
+
   const loadTodayTracking = async () => {
     try {
       const { data, error } = await supabase

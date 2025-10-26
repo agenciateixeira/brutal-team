@@ -45,7 +45,7 @@ export default function WorkoutTracker({ alunoId, workoutTypes = ['musculacao'] 
     console.log('💪 [WorkoutTracker] Iniciando subscription para:', alunoId);
 
     const channel = supabase
-      .channel('workout-tracking-realtime')
+      .channel(`workout-tracking-${alunoId}`)
       .on(
         'postgres_changes',
         {

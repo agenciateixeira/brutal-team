@@ -36,9 +36,9 @@ export default function WeeklySummary({ alunoId }: WeeklySummaryProps) {
   useEffect(() => {
     loadStatistics();
 
-    // Subscribe to realtime changes in tracking tables
+    // Subscribe to realtime changes in tracking tables with unique channel names
     const mealChannel = supabase
-      .channel('meal-tracking-changes')
+      .channel(`weekly-meal-${alunoId}`)
       .on(
         'postgres_changes',
         {
@@ -48,17 +48,17 @@ export default function WeeklySummary({ alunoId }: WeeklySummaryProps) {
           filter: `aluno_id=eq.${alunoId}`,
         },
         (payload) => {
-          console.log('🍎 Meal tracking changed:', payload);
+          console.log('🍎 [WeeklySummary] Meal tracking changed:', payload);
           // Reload statistics when meal tracking changes
           loadStatistics();
         }
       )
       .subscribe((status) => {
-        console.log('📡 Meal tracking subscription status:', status);
+        console.log('📡 [WeeklySummary] Meal tracking subscription status:', status);
       });
 
     const workoutChannel = supabase
-      .channel('workout-tracking-changes')
+      .channel(`weekly-workout-${alunoId}`)
       .on(
         'postgres_changes',
         {
@@ -68,17 +68,17 @@ export default function WeeklySummary({ alunoId }: WeeklySummaryProps) {
           filter: `aluno_id=eq.${alunoId}`,
         },
         (payload) => {
-          console.log('💪 Workout tracking changed:', payload);
+          console.log('💪 [WeeklySummary] Workout tracking changed:', payload);
           // Reload statistics when workout tracking changes
           loadStatistics();
         }
       )
       .subscribe((status) => {
-        console.log('📡 Workout tracking subscription status:', status);
+        console.log('📡 [WeeklySummary] Workout tracking subscription status:', status);
       });
 
     const protocolChannel = supabase
-      .channel('protocol-tracking-changes')
+      .channel(`weekly-protocol-${alunoId}`)
       .on(
         'postgres_changes',
         {
@@ -88,13 +88,13 @@ export default function WeeklySummary({ alunoId }: WeeklySummaryProps) {
           filter: `aluno_id=eq.${alunoId}`,
         },
         (payload) => {
-          console.log('💊 Protocol tracking changed:', payload);
+          console.log('💊 [WeeklySummary] Protocol tracking changed:', payload);
           // Reload statistics when protocol tracking changes
           loadStatistics();
         }
       )
       .subscribe((status) => {
-        console.log('📡 Protocol tracking subscription status:', status);
+        console.log('📡 [WeeklySummary] Protocol tracking subscription status:', status);
       });
 
     return () => {
