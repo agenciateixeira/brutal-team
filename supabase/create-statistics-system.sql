@@ -38,13 +38,20 @@ BEGIN
   LIMIT 1;
 
   -- Calcula refeições (últimos 30 dias)
+  -- meal_tracking tem colunas individuais para cada refeição, não uma coluna "completed"
   v_total_expected_meals := v_meals_per_day * 30;
 
-  SELECT COUNT(*) INTO v_total_completed_meals
+  SELECT COALESCE(SUM(
+    (CASE WHEN cafe_da_manha THEN 1 ELSE 0 END) +
+    (CASE WHEN lanche_manha THEN 1 ELSE 0 END) +
+    (CASE WHEN almoco THEN 1 ELSE 0 END) +
+    (CASE WHEN lanche_tarde THEN 1 ELSE 0 END) +
+    (CASE WHEN janta THEN 1 ELSE 0 END) +
+    (CASE WHEN ceia THEN 1 ELSE 0 END)
+  ), 0)::INTEGER INTO v_total_completed_meals
   FROM meal_tracking
   WHERE aluno_id = aluno_user_id
-    AND completed = true
-    AND DATE(created_at) >= CURRENT_DATE - INTERVAL '30 days';
+    AND date >= CURRENT_DATE - INTERVAL '30 days';
 
   -- Calcula treinos (últimos 30 dias)
   -- Assumindo 5 treinos por semana = ~21 treinos em 30 dias
@@ -54,7 +61,7 @@ BEGIN
   FROM workout_tracking
   WHERE aluno_id = aluno_user_id
     AND completed = true
-    AND DATE(created_at) >= CURRENT_DATE - INTERVAL '30 days';
+    AND date >= CURRENT_DATE - INTERVAL '30 days';
 
   -- Calcula protocolos (últimos 30 dias)
   -- Assumindo 1 protocolo por dia
@@ -64,17 +71,24 @@ BEGIN
   FROM protocol_tracking
   WHERE aluno_id = aluno_user_id
     AND completed = true
-    AND DATE(created_at) >= CURRENT_DATE - INTERVAL '30 days';
+    AND date >= CURRENT_DATE - INTERVAL '30 days';
 
   -- Calcula sequência atual (dias consecutivos com pelo menos 1 atividade)
   WITH daily_activity AS (
-    SELECT DISTINCT DATE(created_at) as activity_date
+    SELECT DISTINCT date as activity_date
     FROM (
-      SELECT created_at FROM meal_tracking WHERE aluno_id = aluno_user_id AND completed = true
-      UNION ALL
-      SELECT created_at FROM workout_tracking WHERE aluno_id = aluno_user_id AND completed = true
-      UNION ALL
-      SELECT created_at FROM protocol_tracking WHERE aluno_id = aluno_user_id AND completed = true
+      -- Dias com pelo menos uma refeição
+      SELECT date FROM meal_tracking
+      WHERE aluno_id = aluno_user_id
+        AND (cafe_da_manha OR lanche_manha OR almoco OR lanche_tarde OR janta OR ceia)
+      UNION
+      -- Dias com treino completado
+      SELECT date FROM workout_tracking
+      WHERE aluno_id = aluno_user_id AND completed = true
+      UNION
+      -- Dias com protocolo completado
+      SELECT date FROM protocol_tracking
+      WHERE aluno_id = aluno_user_id AND completed = true
     ) all_activities
     ORDER BY activity_date DESC
   ),
@@ -98,19 +112,33 @@ BEGIN
 
   -- Calcula média últimos 7 dias vs últimos 30
   WITH last_7 AS (
-    SELECT COUNT(DISTINCT DATE(created_at)) as active_days
+    SELECT COUNT(DISTINCT date) as active_days
     FROM (
-      SELECT created_at FROM meal_tracking WHERE aluno_id = aluno_user_id AND completed = true AND created_at >= CURRENT_DATE - 7
-      UNION ALL
-      SELECT created_at FROM workout_tracking WHERE aluno_id = aluno_user_id AND completed = true AND created_at >= CURRENT_DATE - 7
+      SELECT date FROM meal_tracking
+      WHERE aluno_id = aluno_user_id
+        AND (cafe_da_manha OR lanche_manha OR almoco OR lanche_tarde OR janta OR ceia)
+        AND date >= CURRENT_DATE - 7
+      UNION
+      SELECT date FROM workout_tracking
+      WHERE aluno_id = aluno_user_id AND completed = true AND date >= CURRENT_DATE - 7
+      UNION
+      SELECT date FROM protocol_tracking
+      WHERE aluno_id = aluno_user_id AND completed = true AND date >= CURRENT_DATE - 7
     ) activities_7
   ),
   last_30 AS (
-    SELECT COUNT(DISTINCT DATE(created_at)) as active_days
+    SELECT COUNT(DISTINCT date) as active_days
     FROM (
-      SELECT created_at FROM meal_tracking WHERE aluno_id = aluno_user_id AND completed = true AND created_at >= CURRENT_DATE - 30
-      UNION ALL
-      SELECT created_at FROM workout_tracking WHERE aluno_id = aluno_user_id AND completed = true AND created_at >= CURRENT_DATE - 30
+      SELECT date FROM meal_tracking
+      WHERE aluno_id = aluno_user_id
+        AND (cafe_da_manha OR lanche_manha OR almoco OR lanche_tarde OR janta OR ceia)
+        AND date >= CURRENT_DATE - 30
+      UNION
+      SELECT date FROM workout_tracking
+      WHERE aluno_id = aluno_user_id AND completed = true AND date >= CURRENT_DATE - 30
+      UNION
+      SELECT date FROM protocol_tracking
+      WHERE aluno_id = aluno_user_id AND completed = true AND date >= CURRENT_DATE - 30
     ) activities_30
   )
   SELECT
@@ -156,6 +184,7 @@ RETURNS TABLE (
 ) AS $$
 DECLARE
   v_meals_per_day INTEGER;
+  v_meals_completed INTEGER;
 BEGIN
   -- Pega meals_per_day da dieta ativa
   SELECT COALESCE(d.meals_per_day, 6) INTO v_meals_per_day
@@ -163,11 +192,23 @@ BEGIN
   WHERE d.aluno_id = aluno_user_id AND d.active = true
   LIMIT 1;
 
+  -- Conta quantas refeições foram completadas hoje
+  SELECT COALESCE(SUM(
+    (CASE WHEN cafe_da_manha THEN 1 ELSE 0 END) +
+    (CASE WHEN lanche_manha THEN 1 ELSE 0 END) +
+    (CASE WHEN almoco THEN 1 ELSE 0 END) +
+    (CASE WHEN lanche_tarde THEN 1 ELSE 0 END) +
+    (CASE WHEN janta THEN 1 ELSE 0 END) +
+    (CASE WHEN ceia THEN 1 ELSE 0 END)
+  ), 0)::INTEGER INTO v_meals_completed
+  FROM meal_tracking
+  WHERE aluno_id = aluno_user_id AND date = CURRENT_DATE;
+
   RETURN QUERY
   SELECT
-    (SELECT COUNT(*)::INTEGER FROM meal_tracking WHERE aluno_id = aluno_user_id AND completed = true AND DATE(created_at) = CURRENT_DATE),
+    v_meals_completed,
     v_meals_per_day,
-    (SELECT COUNT(*)::INTEGER FROM workout_tracking WHERE aluno_id = aluno_user_id AND completed = true AND DATE(created_at) = CURRENT_DATE),
+    (SELECT COUNT(*)::INTEGER FROM workout_tracking WHERE aluno_id = aluno_user_id AND completed = true AND date = CURRENT_DATE),
     2, -- Assumindo 2 treinos por dia em média
     NULL::TIME, -- Próxima refeição (pode ser calculado com horários)
     NULL::TEXT, -- Nome próxima refeição
@@ -186,23 +227,47 @@ SELECT
   (
     SELECT ROUND(AVG(percentage), 0)
     FROM (
+      -- Refeições
       SELECT
         COALESCE(
-          (SELECT COUNT(*) * 100.0 / NULLIF((SELECT meals_per_day FROM dietas WHERE aluno_id = p.id AND active = true LIMIT 1) * 30, 0)
-           FROM meal_tracking WHERE aluno_id = p.id AND completed = true AND created_at >= CURRENT_DATE - 30),
+          (SELECT SUM(
+            (CASE WHEN cafe_da_manha THEN 1 ELSE 0 END) +
+            (CASE WHEN lanche_manha THEN 1 ELSE 0 END) +
+            (CASE WHEN almoco THEN 1 ELSE 0 END) +
+            (CASE WHEN lanche_tarde THEN 1 ELSE 0 END) +
+            (CASE WHEN janta THEN 1 ELSE 0 END) +
+            (CASE WHEN ceia THEN 1 ELSE 0 END)
+          ) * 100.0 / NULLIF((SELECT meals_per_day FROM dietas WHERE aluno_id = p.id AND active = true LIMIT 1) * 30, 0)
+           FROM meal_tracking WHERE aluno_id = p.id AND date >= CURRENT_DATE - 30),
           0
         ) as percentage
       UNION ALL
+      -- Treinos
       SELECT
         COALESCE(
           (SELECT COUNT(*) * 100.0 / 21
-           FROM workout_tracking WHERE aluno_id = p.id AND completed = true AND created_at >= CURRENT_DATE - 30),
+           FROM workout_tracking WHERE aluno_id = p.id AND completed = true AND date >= CURRENT_DATE - 30),
+          0
+        )
+      UNION ALL
+      -- Protocolos
+      SELECT
+        COALESCE(
+          (SELECT COUNT(*) * 100.0 / 30
+           FROM protocol_tracking WHERE aluno_id = p.id AND completed = true AND date >= CURRENT_DATE - 30),
           0
         )
     ) percentages
   ) as adesao_geral,
-  (SELECT COUNT(*) FROM meal_tracking WHERE aluno_id = p.id AND completed = true AND DATE(created_at) = CURRENT_DATE) as refeicoes_hoje,
-  (SELECT COUNT(*) FROM workout_tracking WHERE aluno_id = p.id AND completed = true AND DATE(created_at) = CURRENT_DATE) as treinos_hoje
+  (SELECT COALESCE(SUM(
+    (CASE WHEN cafe_da_manha THEN 1 ELSE 0 END) +
+    (CASE WHEN lanche_manha THEN 1 ELSE 0 END) +
+    (CASE WHEN almoco THEN 1 ELSE 0 END) +
+    (CASE WHEN lanche_tarde THEN 1 ELSE 0 END) +
+    (CASE WHEN janta THEN 1 ELSE 0 END) +
+    (CASE WHEN ceia THEN 1 ELSE 0 END)
+  ), 0) FROM meal_tracking WHERE aluno_id = p.id AND date = CURRENT_DATE) as refeicoes_hoje,
+  (SELECT COUNT(*) FROM workout_tracking WHERE aluno_id = p.id AND completed = true AND date = CURRENT_DATE) as treinos_hoje
 FROM profiles p
 WHERE p.role = 'aluno';
 
