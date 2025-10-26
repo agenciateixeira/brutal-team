@@ -70,19 +70,22 @@ export default function PaymentManagement({ alunos }: PaymentManagementProps) {
 
     try {
       // Verificar se o aluno já tem dia de vencimento definido
-      const { data: alunoData } = await supabase
+      if (!selectedAluno?.id) throw new Error('Aluno não selecionado');
+
+      const { data: alunoProfiles } = await supabase
         .from('profiles')
         .select('payment_due_day')
-        .eq('id', selectedAluno?.id)
-        .single();
+        .filter('id', 'eq', selectedAluno.id);
+
+      const alunoData = alunoProfiles?.[0];
 
       // Se não tiver dia de vencimento, definir baseado na data do pagamento
-      if (!alunoData?.payment_due_day) {
+      if (alunoData && 'payment_due_day' in alunoData && !alunoData.payment_due_day) {
         const paymentDay = new Date(paymentDate).getDate();
         await supabase
           .from('profiles')
           .update({ payment_due_day: paymentDay })
-          .eq('id', selectedAluno?.id);
+          .match({ id: selectedAluno.id });
       }
 
       // Inserir pagamento no histórico (o trigger vai atualizar status e last_payment_date automaticamente)

@@ -16,21 +16,24 @@ export default function AguardandoAprovacaoPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: profiles, error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('approved, role')
         .filter('id', 'eq', user.id);
 
-      if (error || !profiles || profiles.length === 0) return;
+      if (error || !data || data.length === 0) return;
 
-      const profile = profiles[0];
+      const profile = data[0];
 
-      if (profile.approved) {
-        // Foi aprovado, redirecionar para dashboard
-        if (profile.role === 'aluno') {
-          router.push('/aluno/dashboard');
-        } else {
-          router.push('/coach/dashboard');
+      // Type guard
+      if ('approved' in profile && 'role' in profile) {
+        if (profile.approved) {
+          // Foi aprovado, redirecionar para dashboard
+          if (profile.role === 'aluno') {
+            router.push('/aluno/dashboard');
+          } else {
+            router.push('/coach/dashboard');
+          }
         }
       }
     };

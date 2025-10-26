@@ -31,17 +31,18 @@ export default function LoginPage() {
       if (authError) throw authError;
 
       // Buscar o perfil do usuário para saber o role
-      const { data: profile, error: profileError } = await supabase
+      const { data: profiles, error: profileError } = await supabase
         .from('profiles')
         .select('role')
-        .eq('id', authData.user.id)
-        .single();
+        .filter('id', 'eq', authData.user.id);
 
-      if (profileError) throw profileError;
+      if (profileError || !profiles || profiles.length === 0) throw new Error('Perfil não encontrado');
+
+      const profile = profiles[0];
 
       // Redirecionar baseado no role
       showLoading('Preparando seu dashboard...', 3000);
-      if (profile.role === 'coach') {
+      if ('role' in profile && profile.role === 'coach') {
         router.push('/coach/dashboard');
       } else {
         router.push('/aluno/dashboard');
