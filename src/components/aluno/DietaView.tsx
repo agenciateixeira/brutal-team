@@ -8,6 +8,7 @@ import { ptBR } from 'date-fns/locale';
 import { useRealtimeDietas } from '@/hooks/useRealtimeDietas';
 import MealTracker from '@/components/aluno/MealTracker';
 import DietaParser from '@/components/aluno/DietaParser';
+import GuiaAlimentos from '@/components/aluno/GuiaAlimentos';
 
 interface DietaViewProps {
   alunoId: string;
@@ -77,6 +78,9 @@ export default function DietaView({ alunoId, dietaAtiva: initialDietaAtiva, hist
 
             {/* Conteúdo Parseado */}
             <DietaParser content={dietaAtiva.content} />
+
+            {/* Guia de Alimentos */}
+            <GuiaAlimentos />
           </div>
         ) : (
           <div className="text-center py-12">
