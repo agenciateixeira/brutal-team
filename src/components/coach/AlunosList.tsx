@@ -1,12 +1,13 @@
 'use client';
 
 import { Profile } from '@/types';
-import { User, MessageCircle, ChevronRight, Search, Filter, Calendar, Bell, CheckCircle, Clock } from 'lucide-react';
+import { User, MessageCircle, ChevronRight, Search, Filter, Calendar, Bell, CheckCircle, Clock, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useState, useMemo } from 'react';
 import AlunoNotificationIndicator from './AlunoNotificationIndicator';
+import AlunoStatistics from './AlunoStatistics';
 
 interface AlunosListProps {
   alunos: (Profile & {
@@ -28,12 +29,14 @@ interface AlunosListProps {
 type SortOption = 'newest' | 'oldest' | 'recent_activity' | 'name';
 type StatusFilter = 'all' | 'active' | 'inactive' | 'pending' | 'overdue';
 type UpdatesFilter = 'all' | 'unviewed' | 'viewed' | 'recent';
+type AdesaoFilter = 'all' | 'excelente' | 'bom' | 'atencao';
 
 export default function AlunosList({ alunos }: AlunosListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [updatesFilter, setUpdatesFilter] = useState<UpdatesFilter>('all');
+  const [adesaoFilter, setAdesaoFilter] = useState<AdesaoFilter>('all');
 
   const filteredAndSortedAlunos = useMemo(() => {
     let result = [...alunos];
@@ -125,7 +128,7 @@ export default function AlunosList({ alunos }: AlunosListProps) {
 
         {/* Filters */}
         {alunos.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Ordenação */}
             <div>
               <label className="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
@@ -178,6 +181,24 @@ export default function AlunosList({ alunos }: AlunosListProps) {
                 <option value="unviewed">Não visualizadas</option>
                 <option value="viewed">Já visualizadas</option>
                 <option value="recent">Últimos 7 dias</option>
+              </select>
+            </div>
+
+            {/* Adesão */}
+            <div>
+              <label className="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                <TrendingUp size={14} />
+                Adesão
+              </label>
+              <select
+                value={adesaoFilter}
+                onChange={(e) => setAdesaoFilter(e.target.value as AdesaoFilter)}
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="all">Todas</option>
+                <option value="excelente">Excelente (≥80%)</option>
+                <option value="bom">Bom (60-79%)</option>
+                <option value="atencao">Precisa atenção (&lt;60%)</option>
               </select>
             </div>
           </div>
@@ -247,6 +268,10 @@ export default function AlunosList({ alunos }: AlunosListProps) {
                         Ativo {formatDistanceToNow(new Date(aluno.last_activity), { addSuffix: true, locale: ptBR })}
                       </span>
                     )}
+                  </div>
+                  {/* Estatísticas do Aluno */}
+                  <div className="mt-3" onClick={(e) => e.preventDefault()}>
+                    <AlunoStatistics alunoId={aluno.id} compact={true} />
                   </div>
                 </div>
               </div>

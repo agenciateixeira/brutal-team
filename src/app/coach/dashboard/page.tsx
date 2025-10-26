@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import AppLayout from '@/components/layouts/AppLayout';
 import AlunosList from '@/components/coach/AlunosList';
 import PendingApprovals from '@/components/coach/PendingApprovals';
+import CoachKPIs from '@/components/coach/CoachKPIs';
+import AlertsList from '@/components/coach/AlertsList';
 
 // Forçar revalidação em cada request (sem cache)
 export const dynamic = 'force-dynamic';
@@ -131,6 +133,9 @@ export default async function CoachDashboard() {
 
   const alunosWithUnread = alunosWithData;
 
+  // Extrair IDs dos alunos para os KPIs
+  const alunosIds = (alunosWithUnread || []).map(a => a.id);
+
   return (
     <AppLayout profile={profile}>
       <div className="space-y-6">
@@ -142,6 +147,16 @@ export default async function CoachDashboard() {
         {/* Aprovações Pendentes */}
         {pendingAlunos && pendingAlunos.length > 0 && (
           <PendingApprovals pendingAlunos={pendingAlunos} coachId={session.user.id} />
+        )}
+
+        {/* KPIs do Coach */}
+        {alunosIds.length > 0 && (
+          <CoachKPIs alunosIds={alunosIds} />
+        )}
+
+        {/* Alertas - Alunos que Precisam de Atenção */}
+        {alunosIds.length > 0 && (
+          <AlertsList alunosIds={alunosIds} alunosData={alunosWithUnread || []} />
         )}
 
         {/* Lista de Alunos */}
