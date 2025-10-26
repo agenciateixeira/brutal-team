@@ -82,31 +82,6 @@ export default function CoachKPIs({ alunosIds }: CoachKPIsProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Total de Alunos */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-              Total de Alunos
-            </p>
-            <div className="flex items-baseline gap-2">
-              <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">
-                {alunosAtivos}
-              </p>
-              <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
-                ativos
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Alunos aprovados no sistema
-            </p>
-          </div>
-          <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-            <Users className="text-blue-600 dark:text-blue-400" size={28} />
-          </div>
-        </div>
-      </div>
-
       {/* Pendências (Resumos Semanais) */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
         <div className="flex items-center justify-between">
@@ -155,6 +130,31 @@ export default function CoachKPIs({ alunosIds }: CoachKPIsProps) {
           </div>
           <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
             <UserPlus className="text-purple-600 dark:text-purple-400" size={28} />
+          </div>
+        </div>
+      </div>
+
+      {/* Total de Alunos */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+              Total de Alunos
+            </p>
+            <div className="flex items-baseline gap-2">
+              <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">
+                {alunosAtivos}
+              </p>
+              <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                ativos
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Alunos aprovados no sistema
+            </p>
+          </div>
+          <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+            <Users className="text-blue-600 dark:text-blue-400" size={28} />
           </div>
         </div>
       </div>

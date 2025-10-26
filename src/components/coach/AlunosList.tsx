@@ -269,10 +269,6 @@ export default function AlunosList({ alunos }: AlunosListProps) {
                       </span>
                     )}
                   </div>
-                  {/* Estatísticas do Aluno */}
-                  <div className="mt-3" onClick={(e) => e.preventDefault()}>
-                    <AlunoStatistics alunoId={aluno.id} compact={true} />
-                  </div>
                 </div>
               </div>
 
