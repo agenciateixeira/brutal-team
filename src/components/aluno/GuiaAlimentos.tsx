@@ -247,20 +247,27 @@ export default function GuiaAlimentos({ isOpen, onClose }: GuiaAlimentosProps) {
       {/* Modal Container */}
       <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center p-0 md:p-4">
         {/* Modal - Fullscreen mobile, centralizado desktop */}
-        <div className="bg-white dark:bg-gray-800 w-full h-full md:h-auto md:max-w-4xl md:max-h-[90vh] md:rounded-xl md:shadow-2xl overflow-hidden flex flex-col animate-slideUp md:animate-fadeIn">
+        <div className="bg-white dark:bg-gray-800 w-full max-h-[95vh] md:h-auto md:max-w-4xl md:max-h-[90vh] rounded-t-3xl md:rounded-xl shadow-2xl overflow-hidden flex flex-col animate-slideUp md:animate-fadeIn">
+
+          {/* Handle Mobile - Barra de arrastar (padrão iOS/Android) */}
+          <div className="md:hidden pt-2 pb-1 flex justify-center bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
+            <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+          </div>
 
           {/* Header com botão fechar */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 px-4 py-3 md:py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <Info size={20} className="text-blue-600 dark:text-blue-400" />
-                <h3 className="font-semibold text-gray-900 dark:text-white">
-                  📖 Guia de Alimentos - Referências Nutricionais
-                </h3>
+                <Info size={20} className="text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white text-base md:text-lg">
+                    📖 Guia de Alimentos
+                  </h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5 md:mt-1">
+                    Valores nutricionais (TBCA)
+                  </p>
+                </div>
               </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                Valores médios baseados na TBCA (Tabela Brasileira de Composição de Alimentos)
-              </p>
             </div>
             <button
               onClick={onClose}

@@ -107,7 +107,7 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
   };
 
   const handleEdit = (dieta: Dieta) => {
-    setTitle(dieta.title + ' (Nova Versão)');
+    setTitle(dieta.title);
     setContent(dieta.content);
     setMealsPerDay(dieta.meals_per_day);
     setObservacoesNutricionais(dieta.observacoes_nutricionais || '');

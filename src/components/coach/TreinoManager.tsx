@@ -122,7 +122,7 @@ export default function TreinoManager({ alunoId, treinos }: TreinoManagerProps) 
   };
 
   const handleEdit = (treino: Treino) => {
-    setTitle(treino.title + ' (Nova Versão)');
+    setTitle(treino.title);
     setContent(treino.content);
     setWorkoutTypes(treino.workout_types);
     setSetAsActive(true);
