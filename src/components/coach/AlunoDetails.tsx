@@ -10,6 +10,7 @@ import CoachMessageList from './CoachMessageList';
 import DietaManager from './DietaManager';
 import TreinoManager from './TreinoManager';
 import ProtocoloManager from './ProtocoloManager';
+import AlunoStatistics from './AlunoStatistics';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -418,6 +419,9 @@ export default function AlunoDetails({
                   </div>
                 </div>
               </div>
+
+              {/* Estatísticas de Adesão do Aluno */}
+              <AlunoStatistics alunoId={aluno.id} />
             </div>
           )}
 
