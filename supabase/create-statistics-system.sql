@@ -183,7 +183,6 @@ SELECT
   p.full_name as aluno_name,
   p.email as aluno_email,
   p.avatar_url,
-  p.coach_id,
   (
     SELECT ROUND(AVG(percentage), 0)
     FROM (
