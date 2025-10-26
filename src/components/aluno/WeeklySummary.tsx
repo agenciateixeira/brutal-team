@@ -31,6 +31,7 @@ export default function WeeklySummary({ alunoId }: WeeklySummaryProps) {
   const [stats, setStats] = useState<Statistics | null>(null);
   const [today, setToday] = useState<TodaySummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
   const supabase = createClient();
 
   useEffect(() => {
@@ -49,8 +50,11 @@ export default function WeeklySummary({ alunoId }: WeeklySummaryProps) {
         },
         (payload) => {
           console.log('🍎 [WeeklySummary] Meal tracking changed:', payload);
-          // Reload statistics when meal tracking changes
-          loadStatistics();
+          // Aguarda 500ms para dar tempo do banco processar
+          setTimeout(() => {
+            console.log('🔄 [WeeklySummary] Recarregando após mudança em meal...');
+            loadStatistics();
+          }, 500);
         }
       )
       .subscribe((status) => {
@@ -69,8 +73,11 @@ export default function WeeklySummary({ alunoId }: WeeklySummaryProps) {
         },
         (payload) => {
           console.log('💪 [WeeklySummary] Workout tracking changed:', payload);
-          // Reload statistics when workout tracking changes
-          loadStatistics();
+          // Aguarda 500ms para dar tempo do banco processar
+          setTimeout(() => {
+            console.log('🔄 [WeeklySummary] Recarregando após mudança em workout...');
+            loadStatistics();
+          }, 500);
         }
       )
       .subscribe((status) => {
@@ -89,8 +96,11 @@ export default function WeeklySummary({ alunoId }: WeeklySummaryProps) {
         },
         (payload) => {
           console.log('💊 [WeeklySummary] Protocol tracking changed:', payload);
-          // Reload statistics when protocol tracking changes
-          loadStatistics();
+          // Aguarda 500ms para dar tempo do banco processar
+          setTimeout(() => {
+            console.log('🔄 [WeeklySummary] Recarregando após mudança em protocol...');
+            loadStatistics();
+          }, 500);
         }
       )
       .subscribe((status) => {
@@ -106,12 +116,19 @@ export default function WeeklySummary({ alunoId }: WeeklySummaryProps) {
 
   const loadStatistics = async () => {
     try {
+      console.log('📊 [WeeklySummary] Carregando estatísticas...');
+
       // Carrega estatísticas gerais
       const { data: statsData, error: statsError } = await supabase
         .rpc('get_aluno_statistics', { aluno_user_id: alunoId });
 
-      if (statsError) throw statsError;
+      if (statsError) {
+        console.error('❌ [WeeklySummary] Erro ao carregar stats:', statsError);
+        throw statsError;
+      }
+
       if (statsData && statsData.length > 0) {
+        console.log('✅ [WeeklySummary] Stats carregadas:', statsData[0]);
         setStats(statsData[0]);
       }
 
@@ -119,12 +136,17 @@ export default function WeeklySummary({ alunoId }: WeeklySummaryProps) {
       const { data: todayData, error: todayError } = await supabase
         .rpc('get_today_summary', { aluno_user_id: alunoId });
 
-      if (todayError) throw todayError;
+      if (todayError) {
+        console.error('❌ [WeeklySummary] Erro ao carregar today:', todayError);
+        throw todayError;
+      }
+
       if (todayData && todayData.length > 0) {
+        console.log('✅ [WeeklySummary] Today carregado:', todayData[0]);
         setToday(todayData[0]);
       }
     } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
+      console.error('❌ [WeeklySummary] Erro geral:', error);
     } finally {
       setLoading(false);
     }
