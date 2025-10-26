@@ -79,7 +79,7 @@ export default function AlertsList({ alunosIds, alunosData }: AlertsListProps) {
       });
 
       const results = await Promise.all(alertsPromises);
-      const validAlerts = results.filter((a): a is AlunoAlert => a !== null);
+      const validAlerts = results.filter((a): a is NonNullable<typeof a> => a !== null) as AlunoAlert[];
 
       // Ordenar por gravidade (menor adesão primeiro)
       validAlerts.sort((a, b) => a.adesao - b.adesao);
