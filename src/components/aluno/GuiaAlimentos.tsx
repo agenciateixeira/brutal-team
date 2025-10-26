@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ChevronDown, ChevronRight, Beef, Droplet, Salad, Wheat, Info } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronDown, ChevronRight, Beef, Droplet, Salad, Wheat, Info, X } from 'lucide-react';
 
 interface Alimento {
   nome: string;
@@ -17,8 +17,40 @@ interface Categoria {
   alimentos: Alimento[];
 }
 
-export default function GuiaAlimentos() {
+interface GuiaAlimentosProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function GuiaAlimentos({ isOpen, onClose }: GuiaAlimentosProps) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+
+  // Fecha modal ao pressionar ESC
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
+  // Previne scroll do body quando modal está aberto
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
 
   const toggleSection = (section: string) => {
     const newExpanded = new Set(expandedSections);
@@ -204,19 +236,40 @@ export default function GuiaAlimentos() {
   };
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800 mt-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2">
-          <Info size={20} className="text-blue-600 dark:text-blue-400" />
-          <h3 className="font-semibold text-gray-900 dark:text-white">
-            📖 Guia de Alimentos - Referências Nutricionais
-          </h3>
-        </div>
-        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-          Valores médios baseados na TBCA (Tabela Brasileira de Composição de Alimentos)
-        </p>
-      </div>
+    <>
+      {/* Overlay */}
+      <div
+        className="fixed inset-0 bg-black/50 z-50 transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="fixed inset-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-4xl md:max-h-[90vh] md:w-full z-50 flex flex-col">
+        <div className="bg-white dark:bg-gray-800 h-full md:rounded-xl md:shadow-2xl overflow-hidden flex flex-col">
+          {/* Header com botão fechar */}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <Info size={20} className="text-blue-600 dark:text-blue-400" />
+                <h3 className="font-semibold text-gray-900 dark:text-white">
+                  📖 Guia de Alimentos - Referências Nutricionais
+                </h3>
+              </div>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                Valores médios baseados na TBCA (Tabela Brasileira de Composição de Alimentos)
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors flex-shrink-0 ml-2"
+              aria-label="Fechar"
+            >
+              <X size={20} className="text-gray-600 dark:text-gray-400" />
+            </button>
+          </div>
+
+          {/* Conteúdo com scroll */}
+          <div className="flex-1 overflow-y-auto">
 
       {/* Seções */}
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -303,13 +356,16 @@ export default function GuiaAlimentos() {
         })}
       </div>
 
-      {/* Footer com Dicas */}
-      <div className="bg-gray-50 dark:bg-gray-900/50 px-4 py-3 border-t border-gray-200 dark:border-gray-700">
-        <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-          <p>💡 <strong>Dica:</strong> Varie os alimentos ao longo da semana para garantir todos os nutrientes</p>
-          <p>⚠️ <strong>Importante:</strong> Sempre consulte seu coach antes de substituir alimentos da sua dieta</p>
+          {/* Footer com Dicas */}
+          <div className="bg-gray-50 dark:bg-gray-900/50 px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+            <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+              <p>💡 <strong>Dica:</strong> Varie os alimentos ao longo da semana para garantir todos os nutrientes</p>
+              <p>⚠️ <strong>Importante:</strong> Sempre consulte seu coach antes de substituir alimentos da sua dieta</p>
+            </div>
+          </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
