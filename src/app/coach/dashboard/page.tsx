@@ -4,6 +4,7 @@ import AppLayout from '@/components/layouts/AppLayout';
 import AlunosList from '@/components/coach/AlunosList';
 import PendingApprovals from '@/components/coach/PendingApprovals';
 import CoachKPIs from '@/components/coach/CoachKPIs';
+import NewStudentsList from '@/components/coach/NewStudentsList';
 
 // Forçar revalidação em cada request (sem cache)
 export const dynamic = 'force-dynamic';
@@ -87,7 +88,7 @@ export default async function CoachDashboard() {
     return acc;
   }, {}) || {};
 
-  // Buscar última atividade de cada aluno
+  // Buscar última atividade de cada aluno + verificar se tem dieta/treino
   const alunosWithData = await Promise.all(
     (alunos || []).map(async (aluno) => {
       const { data: lastPhoto } = await supabase
@@ -119,6 +120,22 @@ export default async function CoachDashboard() {
                                   alunoNotifications.diet && alunoNotifications.workout &&
                                   alunoNotifications.protocol;
 
+      // Verificar se tem dieta ativa
+      const { data: activeDiet } = await supabase
+        .from('dietas')
+        .select('id')
+        .eq('aluno_id', aluno.id)
+        .eq('active', true)
+        .single();
+
+      // Verificar se tem treino ativo
+      const { data: activeWorkout } = await supabase
+        .from('treinos')
+        .select('id')
+        .eq('aluno_id', aluno.id)
+        .eq('active', true)
+        .single();
+
       return {
         ...aluno,
         unread_messages_count: unreadByAluno?.[aluno.id] || 0,
@@ -126,11 +143,19 @@ export default async function CoachDashboard() {
         has_unviewed_updates: hasUnviewedUpdates,
         notifications: alunoNotifications,
         has_all_notifications: hasAllNotifications,
+        has_diet: !!activeDiet,
+        has_workout: !!activeWorkout,
       };
     })
   );
 
-  const alunosWithUnread = alunosWithData;
+  // Separar alunos em duas categorias:
+  // 1. Novos alunos (sem dieta OU sem treino)
+  // 2. Alunos ativos (com dieta E treino)
+  const newStudents = alunosWithData.filter(a => !a.has_diet || !a.has_workout);
+  const activeStudents = alunosWithData.filter(a => a.has_diet && a.has_workout);
+
+  const alunosWithUnread = activeStudents;
 
   // Extrair IDs dos alunos para os KPIs
   const alunosIds = (alunosWithUnread || []).map(a => a.id);
@@ -146,6 +171,11 @@ export default async function CoachDashboard() {
         {/* Aprovações Pendentes */}
         {pendingAlunos && pendingAlunos.length > 0 && (
           <PendingApprovals pendingAlunos={pendingAlunos} coachId={session.user.id} />
+        )}
+
+        {/* Novos Alunos - Aguardando Dieta/Treino */}
+        {newStudents && newStudents.length > 0 && (
+          <NewStudentsList newStudents={newStudents} />
         )}
 
         {/* KPIs do Coach */}
