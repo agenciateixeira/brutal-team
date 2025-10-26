@@ -140,6 +140,45 @@ export default function ProtocoloManager({ alunoId, protocolos }: ProtocoloManag
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Conteúdo
             </label>
+
+            {/* Instruções de Formatação */}
+            <div className="mb-3 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg">
+              <h4 className="text-sm font-semibold text-purple-900 dark:text-purple-300 mb-2">
+                💉 Como formatar o protocolo para o sistema identificar automaticamente:
+              </h4>
+              <ul className="text-xs text-purple-800 dark:text-purple-200 space-y-1">
+                <li>• <strong>Fases/Ciclos:</strong> Use &quot;Protocolo:&quot;, &quot;Ciclo 1:&quot;, &quot;Fase 1:&quot;, &quot;Semana 1-4:&quot; para separar períodos</li>
+                <li>• <strong>Dosagens:</strong> Use &quot;250mg&quot;, &quot;2ml&quot;, &quot;4IU&quot; antes do medicamento</li>
+                <li>• <strong>Frequência:</strong> Use &quot;diariamente&quot;, &quot;EOD&quot;, &quot;2x por semana&quot;, &quot;semanal&quot;</li>
+                <li>• <strong>Horários:</strong> Use &quot;pela manhã&quot;, &quot;à noite&quot;, &quot;pré-treino&quot;, &quot;pós-treino&quot;</li>
+                <li>• <strong>Categorias automáticas:</strong> TRT 💉, HGH 🧬, Peptídeos 💧, AI 🛡️, SERMs 💊, HCG ⚕️</li>
+                <li>• <strong>Alternativas:</strong> Use &quot;ou&quot; no início da linha para opções</li>
+              </ul>
+              <details className="mt-3">
+                <summary className="cursor-pointer text-xs font-semibold text-purple-700 dark:text-purple-300 hover:underline">
+                  Ver exemplo completo
+                </summary>
+                <pre className="mt-2 text-xs bg-white dark:bg-gray-800 p-3 rounded border border-purple-200 dark:border-purple-600 text-gray-800 dark:text-gray-200 overflow-x-auto">
+{`Protocolo de TRT - Base
+
+Testosterona Cipionato 250mg 2x por semana
+ou Testosterona Enantato 250mg 2x por semana
+Anastrozol 0.5mg dia sim, dia não
+HCG 250IU 2x por semana
+
+Fase de Crescimento (Semana 1-12)
+
+HGH 4IU diariamente pela manhã
+BPC-157 250mcg 2x ao dia
+TB-500 2mg 2x por semana
+
+Suplementação de Suporte
+
+Levotiroxina 25mcg pela manhã em jejum
+ou Puran T4 25mcg pela manhã`}</pre>
+              </details>
+            </div>
+
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}

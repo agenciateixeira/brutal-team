@@ -75,7 +75,7 @@ export default function MonthlyPhotoProgress({ alunoId }: MonthlyPhotoProgressPr
   };
 
   const handleUploadClick = () => {
-    router.push('/aluno/fotos');
+    router.push('/aluno/progresso');
   };
 
   if (loading) {
@@ -167,7 +167,7 @@ export default function MonthlyPhotoProgress({ alunoId }: MonthlyPhotoProgressPr
             <div
               key={photo.id}
               className="relative aspect-square rounded-lg overflow-hidden border-2 border-primary-200 dark:border-primary-700 group cursor-pointer"
-              onClick={() => router.push('/aluno/fotos')}
+              onClick={() => router.push('/aluno/progresso')}
             >
               <img
                 src={photo.photo_url}

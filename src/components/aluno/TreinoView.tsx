@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useRealtimeTreinos } from '@/hooks/useRealtimeTreinos';
 import WorkoutTracker from '@/components/aluno/WorkoutTracker';
+import TreinoParser from '@/components/aluno/TreinoParser';
 
 interface TreinoViewProps {
   alunoId: string;
@@ -58,9 +59,7 @@ export default function TreinoView({ alunoId, treinoAtivo: initialTreinoAtivo, h
             </div>
 
             <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-              <pre className="whitespace-pre-wrap text-gray-900 dark:text-gray-100 font-sans text-sm leading-relaxed">
-                {treinoAtivo.content}
-              </pre>
+              <TreinoParser content={treinoAtivo.content} />
             </div>
           </div>
         ) : (
@@ -131,9 +130,7 @@ export default function TreinoView({ alunoId, treinoAtivo: initialTreinoAtivo, h
 
                   {selectedTreino?.id === treino.id && (
                     <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                      <pre className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 font-sans text-sm leading-relaxed">
-                        {treino.content}
-                      </pre>
+                      <TreinoParser content={treino.content} />
                     </div>
                   )}
                 </div>

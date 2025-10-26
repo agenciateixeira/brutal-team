@@ -6,6 +6,7 @@ import { Syringe, Calendar, FileText, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useRealtimeProtocolos } from '@/hooks/useRealtimeProtocolos';
+import ProtocoloParser from '@/components/aluno/ProtocoloParser';
 
 interface ProtocoloViewProps {
   alunoId: string;
@@ -57,9 +58,7 @@ export default function ProtocoloView({ alunoId, protocoloAtivo: initialProtocol
             </div>
 
             <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-              <pre className="whitespace-pre-wrap text-gray-900 dark:text-gray-100 font-sans text-sm leading-relaxed">
-                {protocoloAtivo.content}
-              </pre>
+              <ProtocoloParser content={protocoloAtivo.content} />
             </div>
           </div>
         ) : (
@@ -130,9 +129,7 @@ export default function ProtocoloView({ alunoId, protocoloAtivo: initialProtocol
 
                   {selectedProtocolo?.id === protocolo.id && (
                     <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                      <pre className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 font-sans text-sm leading-relaxed">
-                        {protocolo.content}
-                      </pre>
+                      <ProtocoloParser content={protocolo.content} />
                     </div>
                   )}
                 </div>

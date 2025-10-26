@@ -192,6 +192,43 @@ export default function TreinoManager({ alunoId, treinos }: TreinoManagerProps) 
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Conteúdo
             </label>
+
+            {/* Instruções de Formatação */}
+            <div className="mb-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+              <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">
+                📝 Como formatar o treino para o sistema identificar automaticamente:
+              </h4>
+              <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
+                <li>• <strong>Dias/Sessões:</strong> Use &quot;Treino A:&quot;, &quot;Dia 1:&quot;, &quot;Segunda-feira:&quot; para separar sessões</li>
+                <li>• <strong>Séries e Reps:</strong> Use &quot;3x12&quot;, &quot;4 x 15&quot; ou &quot;3 séries de 12 reps&quot;</li>
+                <li>• <strong>Exercícios:</strong> O sistema categoriza automaticamente em superior 🏋️, inferior 🎯, cardio 💓 e core 🎯</li>
+                <li>• <strong>Alternativas:</strong> Use &quot;ou&quot; no início da linha para opções de substituição</li>
+              </ul>
+              <details className="mt-3">
+                <summary className="cursor-pointer text-xs font-semibold text-blue-700 dark:text-blue-300 hover:underline">
+                  Ver exemplo completo
+                </summary>
+                <pre className="mt-2 text-xs bg-white dark:bg-gray-800 p-3 rounded border border-blue-200 dark:border-blue-600 text-gray-800 dark:text-gray-200 overflow-x-auto">
+{`Treino A - Peito e Tríceps
+
+Supino reto 4x12
+ou Supino inclinado 4x12
+Crucifixo 3x15
+Tríceps testa 3x12
+ou Tríceps corda 3x15
+
+Treino B - Costas e Bíceps
+
+Barra fixa 4x10
+Remada curvada 4x12
+ou Remada cavalinho 4x12
+Rosca direta 3x12
+Rosca martelo 3x15
+
+Cardio 20 minutos esteira`}</pre>
+              </details>
+            </div>
+
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
