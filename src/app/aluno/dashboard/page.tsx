@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import Sidebar from '@/components/ui/Sidebar';
 import ProgressChart from '@/components/aluno/ProgressChart';
 import WeeklySummary from '@/components/aluno/WeeklySummary';
+import MonthlyPhotoProgress from '@/components/aluno/MonthlyPhotoProgress';
 import { TrendingUp, Calendar, Apple, AlertCircle } from 'lucide-react';
 
 export default async function AlunoDashboard() {
@@ -126,6 +127,9 @@ export default async function AlunoDashboard() {
 
             {/* Weekly Summary - Resumo Semanal */}
             <WeeklySummary alunoId={session.user.id} />
+
+            {/* Monthly Photo Progress - Progresso Mensal de Fotos */}
+            <MonthlyPhotoProgress alunoId={session.user.id} />
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
