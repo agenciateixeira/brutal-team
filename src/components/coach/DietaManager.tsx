@@ -184,14 +184,52 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Conteúdo
+              Conteúdo da Dieta
             </label>
+
+            {/* Instruções de Formatação */}
+            <div className="mb-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+              <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">
+                📝 Como formatar a dieta para o sistema identificar automaticamente:
+              </h4>
+              <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
+                <li>• <strong>Títulos de refeições:</strong> Comece com "Refeição 1:", "Café da manhã:", "Almoço:", etc</li>
+                <li>• <strong>Quantidades:</strong> Use "150g", "200ml", "2 ovos" antes do alimento</li>
+                <li>• <strong>Alternativas:</strong> Use "ou" no início da linha para opções</li>
+                <li>• <strong>Categorias automáticas:</strong> Sistema identifica proteínas 🥩, gorduras 💧 e vegetais 🥗</li>
+              </ul>
+
+              <details className="mt-3">
+                <summary className="text-xs font-semibold text-blue-900 dark:text-blue-300 cursor-pointer hover:underline">
+                  Ver exemplo completo
+                </summary>
+                <pre className="mt-2 p-3 bg-white dark:bg-gray-800 rounded text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap border border-blue-200 dark:border-blue-600">
+{`Refeição 1 - Café da manhã (8h)
+3 ovos inteiros mexidos
+ou 150g frango desfiado
+2 colheres de azeite
+Vegetais à vontade
+
+Refeição 2 - Lanche da manhã (11h)
+150g peito de frango grelhado
+1 colher de pasta de amendoim
+Salada verde
+
+Refeição 3 - Almoço (14h)
+200g carne vermelha magra
+ou 200g salmão
+2 colheres de azeite extra virgem
+Brócolis e couve-flor à vontade`}
+                </pre>
+              </details>
+            </div>
+
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={20}
               className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white font-mono text-sm min-h-[500px]"
-              placeholder="Cole aqui o conteúdo da dieta..."
+              placeholder="Cole ou digite a dieta aqui seguindo o formato acima..."
               required
             />
           </div>

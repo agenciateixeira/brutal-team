@@ -36,6 +36,8 @@ export default function CoachMessageList({
 
   // Realtime subscription
   useEffect(() => {
+    console.log('📱 [Coach] Iniciando subscription de mensagens para aluno:', alunoId);
+
     const channel = supabase
       .channel('messages-realtime')
       .on(
@@ -47,6 +49,8 @@ export default function CoachMessageList({
           filter: `aluno_id=eq.${alunoId}`,
         },
         async (payload) => {
+          console.log('💬 [Coach] Nova mensagem recebida:', payload);
+
           // Buscar dados completos da mensagem com o sender
           const { data: newMessage, error } = await supabase
             .from('messages')
@@ -55,14 +59,35 @@ export default function CoachMessageList({
             .single();
 
           if (!error && newMessage) {
+            console.log('✅ [Coach] Mensagem completa carregada:', newMessage);
             // Adicionar nova mensagem ao state
             setMessages((prev) => [...prev, newMessage as Message]);
+          } else {
+            console.error('❌ [Coach] Erro ao carregar mensagem:', error);
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 [Coach] Status da subscription:', status);
+      });
+
+    // Reconectar quando a página volta a ficar visível (importante para mobile)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('👁️ [Coach] Página voltou a ficar visível, verificando conexão...');
+        const channelState = channel.state;
+        if (channelState === 'closed' || channelState === 'errored') {
+          console.log('🔄 [Coach] Reconectando canal...');
+          supabase.removeChannel(channel);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
+      console.log('🔌 [Coach] Removendo subscription de mensagens');
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       supabase.removeChannel(channel);
     };
   }, [alunoId, supabase]);

@@ -31,6 +31,8 @@ export default function MessageList({ alunoId, messages: initialMessages }: Mess
 
   // Realtime subscription
   useEffect(() => {
+    console.log('📱 [Aluno] Iniciando subscription de mensagens para:', alunoId);
+
     const channel = supabase
       .channel('messages-aluno-realtime')
       .on(
@@ -42,6 +44,8 @@ export default function MessageList({ alunoId, messages: initialMessages }: Mess
           filter: `aluno_id=eq.${alunoId}`,
         },
         async (payload) => {
+          console.log('💬 [Aluno] Nova mensagem recebida:', payload);
+
           // Buscar dados completos da mensagem com o sender
           const { data: newMessage, error } = await supabase
             .from('messages')
@@ -50,14 +54,37 @@ export default function MessageList({ alunoId, messages: initialMessages }: Mess
             .single();
 
           if (!error && newMessage) {
+            console.log('✅ [Aluno] Mensagem completa carregada:', newMessage);
             // Adicionar nova mensagem ao state
             setMessages((prev) => [...prev, newMessage as Message]);
+          } else {
+            console.error('❌ [Aluno] Erro ao carregar mensagem:', error);
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 [Aluno] Status da subscription:', status);
+      });
+
+    // Reconectar quando a página volta a ficar visível (importante para mobile)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('👁️ [Aluno] Página voltou a ficar visível, verificando conexão...');
+        // Força reconexão se necessário
+        const channelState = channel.state;
+        if (channelState === 'closed' || channelState === 'errored') {
+          console.log('🔄 [Aluno] Reconectando canal...');
+          supabase.removeChannel(channel);
+          // O useEffect será executado novamente na próxima renderização
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
+      console.log('🔌 [Aluno] Removendo subscription de mensagens');
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       supabase.removeChannel(channel);
     };
   }, [alunoId, supabase]);

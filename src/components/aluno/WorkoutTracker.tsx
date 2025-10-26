@@ -40,6 +40,37 @@ export default function WorkoutTracker({ alunoId, workoutTypes = ['musculacao'] 
     loadHistoricalData();
   }, [alunoId, filterPeriod, customStartDate, customEndDate]);
 
+  // Realtime subscription para auto-refresh
+  useEffect(() => {
+    console.log('💪 [WorkoutTracker] Iniciando subscription para:', alunoId);
+
+    const channel = supabase
+      .channel('workout-tracking-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'workout_tracking',
+          filter: `aluno_id=eq.${alunoId}`,
+        },
+        (payload) => {
+          console.log('💪 [WorkoutTracker] Workout tracking changed:', payload);
+          // Recarrega dados quando houver mudança
+          loadTodayTracking();
+          loadHistoricalData();
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 [WorkoutTracker] Subscription status:', status);
+      });
+
+    return () => {
+      console.log('🔌 [WorkoutTracker] Removendo subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [alunoId]);
+
   const loadTodayTracking = async () => {
     try {
       const { data, error } = await supabase
