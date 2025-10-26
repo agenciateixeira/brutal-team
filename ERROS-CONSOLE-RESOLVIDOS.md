@@ -1,19 +1,25 @@
 # Erros de Console Resolvidos
 
-## 1. ✅ Erro: "column 'link' of relation 'notifications' does not exist"
+## 1. ✅ Erro: "column 'link'/'related_id'/'icon' of relation 'notifications' does not exist"
 
 ### Problema
-Ao salvar uma dieta, o trigger de notificação tentava inserir uma coluna "link" que não existia na tabela.
+Ao salvar uma dieta, o trigger de notificação tentava inserir colunas que não existiam na tabela:
+- `link` - URL para onde a notificação leva
+- `related_id` - ID do registro relacionado (dieta, treino, etc)
+- `icon` - Nome do ícone a exibir
 
 ### Solução
 Execute o SQL: `supabase/fix-notifications-table.sql`
 
+Ele adiciona todas as 3 colunas:
 ```sql
 ALTER TABLE notifications ADD COLUMN link VARCHAR(500);
+ALTER TABLE notifications ADD COLUMN related_id UUID;
+ALTER TABLE notifications ADD COLUMN icon VARCHAR(50);
 ```
 
 ### Status
-✅ **Resolvido** - SQL criado, precisa executar no Supabase
+✅ **Resolvido** - SQL completo criado, precisa executar no Supabase
 
 ---
 
