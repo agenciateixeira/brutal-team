@@ -6,6 +6,7 @@ import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
 import { LoadingProvider } from "@/components/providers/LoadingProvider";
 import { RouteLoadingProvider } from "@/components/providers/RouteLoadingProvider";
 import PageTransition from "@/components/ui/PageTransition";
+import NotificationToast from "@/components/ui/NotificationToast";
 import { Suspense } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -53,6 +54,7 @@ export default function RootLayout({
               </RouteLoadingProvider>
             </Suspense>
             <PWAInstallPrompt />
+            <NotificationToast />
           </LoadingProvider>
         </ThemeProvider>
       </body>

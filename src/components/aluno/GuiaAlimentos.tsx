@@ -245,9 +245,15 @@ export default function GuiaAlimentos({ isOpen, onClose }: GuiaAlimentosProps) {
       />
 
       {/* Modal Container */}
-      <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center p-0 md:p-4">
+      <div
+        className="fixed inset-0 z-[60] flex items-end md:items-center justify-center p-0 md:p-4"
+        onClick={onClose}
+      >
         {/* Modal - Fullscreen mobile, centralizado desktop */}
-        <div className="bg-white dark:bg-gray-800 w-full max-h-[95vh] md:h-auto md:max-w-4xl md:max-h-[90vh] rounded-t-3xl md:rounded-xl shadow-2xl overflow-hidden flex flex-col animate-slideUp md:animate-fadeIn">
+        <div
+          className="bg-white dark:bg-gray-800 w-full max-h-[95vh] md:h-auto md:max-w-4xl md:max-h-[90vh] rounded-t-3xl md:rounded-xl shadow-2xl overflow-hidden flex flex-col animate-slideUp md:animate-fadeIn"
+          onClick={(e) => e.stopPropagation()}
+        >
 
           {/* Handle Mobile - Barra de arrastar (padrão iOS/Android) */}
           <div className="md:hidden pt-2 pb-1 flex justify-center bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
