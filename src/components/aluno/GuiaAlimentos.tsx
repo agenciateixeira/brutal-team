@@ -237,15 +237,18 @@ export default function GuiaAlimentos({ isOpen, onClose }: GuiaAlimentosProps) {
 
   return (
     <>
-      {/* Overlay */}
+      {/* Overlay - Fundo escuro */}
       <div
-        className="fixed inset-0 bg-black/50 z-50 transition-opacity"
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 animate-fadeIn"
         onClick={onClose}
+        aria-hidden="true"
       />
 
-      {/* Modal */}
-      <div className="fixed inset-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-4xl md:max-h-[90vh] md:w-full z-50 flex flex-col">
-        <div className="bg-white dark:bg-gray-800 h-full md:rounded-xl md:shadow-2xl overflow-hidden flex flex-col">
+      {/* Modal Container */}
+      <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center p-0 md:p-4">
+        {/* Modal - Fullscreen mobile, centralizado desktop */}
+        <div className="bg-white dark:bg-gray-800 w-full h-full md:h-auto md:max-w-4xl md:max-h-[90vh] md:rounded-xl md:shadow-2xl overflow-hidden flex flex-col animate-slideUp md:animate-fadeIn">
+
           {/* Header com botão fechar */}
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <div className="flex-1">
