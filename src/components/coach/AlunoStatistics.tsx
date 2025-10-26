@@ -28,6 +28,61 @@ export default function AlunoStatistics({ alunoId, compact = false }: AlunoStati
 
   useEffect(() => {
     loadStatistics();
+
+    // Subscribe to realtime changes in tracking tables
+    const mealChannel = supabase
+      .channel(`meal-tracking-${alunoId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'meal_tracking',
+          filter: `aluno_id=eq.${alunoId}`,
+        },
+        () => {
+          loadStatistics();
+        }
+      )
+      .subscribe();
+
+    const workoutChannel = supabase
+      .channel(`workout-tracking-${alunoId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'workout_tracking',
+          filter: `aluno_id=eq.${alunoId}`,
+        },
+        () => {
+          loadStatistics();
+        }
+      )
+      .subscribe();
+
+    const protocolChannel = supabase
+      .channel(`protocol-tracking-${alunoId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'protocol_tracking',
+          filter: `aluno_id=eq.${alunoId}`,
+        },
+        () => {
+          loadStatistics();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(mealChannel);
+      supabase.removeChannel(workoutChannel);
+      supabase.removeChannel(protocolChannel);
+    };
   }, [alunoId]);
 
   const loadStatistics = async () => {

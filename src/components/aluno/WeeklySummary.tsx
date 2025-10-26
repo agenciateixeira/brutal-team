@@ -35,6 +35,64 @@ export default function WeeklySummary({ alunoId }: WeeklySummaryProps) {
 
   useEffect(() => {
     loadStatistics();
+
+    // Subscribe to realtime changes in tracking tables
+    const mealChannel = supabase
+      .channel('meal-tracking-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'meal_tracking',
+          filter: `aluno_id=eq.${alunoId}`,
+        },
+        () => {
+          // Reload statistics when meal tracking changes
+          loadStatistics();
+        }
+      )
+      .subscribe();
+
+    const workoutChannel = supabase
+      .channel('workout-tracking-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'workout_tracking',
+          filter: `aluno_id=eq.${alunoId}`,
+        },
+        () => {
+          // Reload statistics when workout tracking changes
+          loadStatistics();
+        }
+      )
+      .subscribe();
+
+    const protocolChannel = supabase
+      .channel('protocol-tracking-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'protocol_tracking',
+          filter: `aluno_id=eq.${alunoId}`,
+        },
+        () => {
+          // Reload statistics when protocol tracking changes
+          loadStatistics();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(mealChannel);
+      supabase.removeChannel(workoutChannel);
+      supabase.removeChannel(protocolChannel);
+    };
   }, [alunoId]);
 
   const loadStatistics = async () => {
