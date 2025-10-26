@@ -37,7 +37,7 @@ export default function CoachMessageList({
   // Realtime subscription
   useEffect(() => {
     const channel = supabase
-      .channel('messages')
+      .channel('messages-realtime')
       .on(
         'postgres_changes',
         {
@@ -46,8 +46,18 @@ export default function CoachMessageList({
           table: 'messages',
           filter: `aluno_id=eq.${alunoId}`,
         },
-        (payload) => {
-          router.refresh();
+        async (payload) => {
+          // Buscar dados completos da mensagem com o sender
+          const { data: newMessage, error } = await supabase
+            .from('messages')
+            .select('*, sender:profiles!messages_sender_id_fkey(*)')
+            .eq('id', payload.new.id)
+            .single();
+
+          if (!error && newMessage) {
+            // Adicionar nova mensagem ao state
+            setMessages((prev) => [...prev, newMessage as Message]);
+          }
         }
       )
       .subscribe();
@@ -55,7 +65,7 @@ export default function CoachMessageList({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [alunoId, router, supabase]);
+  }, [alunoId, supabase]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +83,8 @@ export default function CoachMessageList({
       if (error) throw error;
 
       setNewMessage('');
-      router.refresh();
+      // Não precisa mais de router.refresh()
+      // A mensagem será adicionada automaticamente via realtime
     } catch (error: any) {
       alert('Erro ao enviar mensagem: ' + error.message);
     } finally {
