@@ -27,14 +27,18 @@ interface MealTrackingData {
 }
 
 export default function MealTracker({ alunoId, mealsPerDay = 6 }: MealTrackerProps) {
-  const mealFields = [
-    { key: 'cafe_da_manha', label: 'Café da manhã' },
-    { key: 'lanche_manha', label: 'Lanche da manhã' },
-    { key: 'almoco', label: 'Almoço' },
-    { key: 'lanche_tarde', label: 'Lanche da tarde' },
-    { key: 'janta', label: 'Janta' },
-    { key: 'ceia', label: 'Ceia' },
+  // Gerar labels dinamicamente baseado no número de refeições
+  const allMealFields = [
+    { key: 'cafe_da_manha', label: 'Refeição 1' },
+    { key: 'lanche_manha', label: 'Refeição 2' },
+    { key: 'almoco', label: 'Refeição 3' },
+    { key: 'lanche_tarde', label: 'Refeição 4' },
+    { key: 'janta', label: 'Refeição 5' },
+    { key: 'ceia', label: 'Refeição 6' },
   ];
+
+  // Usar apenas o número de refeições configurado
+  const mealFields = allMealFields.slice(0, mealsPerDay);
 
   const [todayTracking, setTodayTracking] = useState<MealTrackingData | null>(null);
   const [historicalTracking, setHistoricalTracking] = useState<MealTrackingData[]>([]);

@@ -56,11 +56,14 @@ export default function AlunoStatistics({ alunoId, compact = false }: AlunoStati
           table: 'workout_tracking',
           filter: `aluno_id=eq.${alunoId}`,
         },
-        () => {
+        (payload) => {
+          console.log(`💪 [Coach] Workout tracking changed for ${alunoId}:`, payload);
           loadStatistics();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`📡 [Coach] Workout tracking subscription for ${alunoId}:`, status);
+      });
 
     const protocolChannel = supabase
       .channel(`protocol-tracking-${alunoId}`)
@@ -72,11 +75,14 @@ export default function AlunoStatistics({ alunoId, compact = false }: AlunoStati
           table: 'protocol_tracking',
           filter: `aluno_id=eq.${alunoId}`,
         },
-        () => {
+        (payload) => {
+          console.log(`💊 [Coach] Protocol tracking changed for ${alunoId}:`, payload);
           loadStatistics();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`📡 [Coach] Protocol tracking subscription for ${alunoId}:`, status);
+      });
 
     return () => {
       supabase.removeChannel(mealChannel);

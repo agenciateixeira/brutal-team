@@ -67,12 +67,15 @@ export default function WeeklySummary({ alunoId }: WeeklySummaryProps) {
           table: 'workout_tracking',
           filter: `aluno_id=eq.${alunoId}`,
         },
-        () => {
+        (payload) => {
+          console.log('💪 Workout tracking changed:', payload);
           // Reload statistics when workout tracking changes
           loadStatistics();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Workout tracking subscription status:', status);
+      });
 
     const protocolChannel = supabase
       .channel('protocol-tracking-changes')
@@ -84,12 +87,15 @@ export default function WeeklySummary({ alunoId }: WeeklySummaryProps) {
           table: 'protocol_tracking',
           filter: `aluno_id=eq.${alunoId}`,
         },
-        () => {
+        (payload) => {
+          console.log('💊 Protocol tracking changed:', payload);
           // Reload statistics when protocol tracking changes
           loadStatistics();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Protocol tracking subscription status:', status);
+      });
 
     return () => {
       supabase.removeChannel(mealChannel);
