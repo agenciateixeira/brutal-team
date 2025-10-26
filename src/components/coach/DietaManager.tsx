@@ -193,9 +193,9 @@ export default function DietaManager({ alunoId, dietas }: DietaManagerProps) {
                 📝 Como formatar a dieta para o sistema identificar automaticamente:
               </h4>
               <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
-                <li>• <strong>Títulos de refeições:</strong> Comece com "Refeição 1:", "Café da manhã:", "Almoço:", etc</li>
-                <li>• <strong>Quantidades:</strong> Use "150g", "200ml", "2 ovos" antes do alimento</li>
-                <li>• <strong>Alternativas:</strong> Use "ou" no início da linha para opções</li>
+                <li>• <strong>Títulos de refeições:</strong> Comece com &quot;Refeição 1:&quot;, &quot;Café da manhã:&quot;, &quot;Almoço:&quot;, etc</li>
+                <li>• <strong>Quantidades:</strong> Use &quot;150g&quot;, &quot;200ml&quot;, &quot;2 ovos&quot; antes do alimento</li>
+                <li>• <strong>Alternativas:</strong> Use &quot;ou&quot; no início da linha para opções</li>
                 <li>• <strong>Categorias automáticas:</strong> Sistema identifica proteínas 🥩, gorduras 💧 e vegetais 🥗</li>
               </ul>
 

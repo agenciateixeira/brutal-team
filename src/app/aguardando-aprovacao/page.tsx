@@ -16,13 +16,16 @@ export default function AguardandoAprovacaoPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: profile } = await supabase
+      const { data: profiles, error } = await supabase
         .from('profiles')
         .select('approved, role')
-        .eq('id', user.id)
-        .single();
+        .filter('id', 'eq', user.id);
 
-      if (profile?.approved) {
+      if (error || !profiles || profiles.length === 0) return;
+
+      const profile = profiles[0];
+
+      if (profile.approved) {
         // Foi aprovado, redirecionar para dashboard
         if (profile.role === 'aluno') {
           router.push('/aluno/dashboard');
