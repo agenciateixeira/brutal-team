@@ -47,12 +47,15 @@ export default function WeeklySummary({ alunoId }: WeeklySummaryProps) {
           table: 'meal_tracking',
           filter: `aluno_id=eq.${alunoId}`,
         },
-        () => {
+        (payload) => {
+          console.log('🍎 Meal tracking changed:', payload);
           // Reload statistics when meal tracking changes
           loadStatistics();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Meal tracking subscription status:', status);
+      });
 
     const workoutChannel = supabase
       .channel('workout-tracking-changes')

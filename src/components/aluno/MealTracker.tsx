@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { MealTracking } from '@/types';
 import { Calendar, Filter, CheckCircle, Circle } from 'lucide-react';
 import { format, startOfDay, subDays, isToday, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -15,14 +14,30 @@ interface MealTrackerProps {
 
 type FilterPeriod = '7days' | '30days' | 'custom';
 
+interface MealTrackingData {
+  id?: string;
+  aluno_id: string;
+  date: string;
+  cafe_da_manha: boolean;
+  lanche_manha: boolean;
+  almoco: boolean;
+  lanche_tarde: boolean;
+  janta: boolean;
+  ceia: boolean;
+}
+
 export default function MealTracker({ alunoId, mealsPerDay = 6 }: MealTrackerProps) {
-  // Gerar array dinâmico de refeições baseado em mealsPerDay
-  const meals = Array.from({ length: mealsPerDay }, (_, i) => ({
-    index: i,
-    label: `Refeição ${i + 1}`
-  }));
-  const [todayTracking, setTodayTracking] = useState<MealTracking | null>(null);
-  const [historicalTracking, setHistoricalTracking] = useState<MealTracking[]>([]);
+  const mealFields = [
+    { key: 'cafe_da_manha', label: 'Café da manhã' },
+    { key: 'lanche_manha', label: 'Lanche da manhã' },
+    { key: 'almoco', label: 'Almoço' },
+    { key: 'lanche_tarde', label: 'Lanche da tarde' },
+    { key: 'janta', label: 'Janta' },
+    { key: 'ceia', label: 'Ceia' },
+  ];
+
+  const [todayTracking, setTodayTracking] = useState<MealTrackingData | null>(null);
+  const [historicalTracking, setHistoricalTracking] = useState<MealTrackingData[]>([]);
   const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('7days');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
@@ -88,32 +103,38 @@ export default function MealTracker({ alunoId, mealsPerDay = 6 }: MealTrackerPro
     }
   };
 
-  const toggleMeal = async (mealIndex: number) => {
+  const toggleMeal = async (mealKey: string) => {
     try {
-      const currentCompleted = (todayTracking?.meals_completed as any) || [];
-      const newCompleted = currentCompleted.includes(mealIndex)
-        ? currentCompleted.filter((i: number) => i !== mealIndex)
-        : [...currentCompleted, mealIndex];
+      const currentValue = todayTracking?.[mealKey as keyof MealTrackingData] || false;
+      const newValue = !currentValue;
 
       if (todayTracking) {
         // Atualizar registro existente
         const { error } = await supabase
           .from('meal_tracking')
-          .update({ meals_completed: newCompleted })
+          .update({ [mealKey]: newValue })
           .eq('id', todayTracking.id);
 
         if (error) throw error;
 
-        setTodayTracking({ ...todayTracking, meals_completed: newCompleted as any });
+        setTodayTracking({ ...todayTracking, [mealKey]: newValue });
       } else {
         // Criar novo registro
+        const newTracking: any = {
+          aluno_id: alunoId,
+          date: today,
+          cafe_da_manha: false,
+          lanche_manha: false,
+          almoco: false,
+          lanche_tarde: false,
+          janta: false,
+          ceia: false,
+          [mealKey]: true,
+        };
+
         const { data, error } = await supabase
           .from('meal_tracking')
-          .insert({
-            aluno_id: alunoId,
-            date: today,
-            meals_completed: newCompleted,
-          })
+          .insert(newTracking)
           .select()
           .single();
 
@@ -130,8 +151,13 @@ export default function MealTracker({ alunoId, mealsPerDay = 6 }: MealTrackerPro
     }
   };
 
-  const calculateDayCompletion = (tracking: MealTracking) => {
-    const completed = (tracking.meals_completed as any || []).length;
+  const calculateDayCompletion = (tracking: MealTrackingData | null) => {
+    if (!tracking) return 0;
+
+    const completed = mealFields.filter(meal =>
+      tracking[meal.key as keyof MealTrackingData] === true
+    ).length;
+
     return Math.round((completed / mealsPerDay) * 100);
   };
 
@@ -149,18 +175,17 @@ export default function MealTracker({ alunoId, mealsPerDay = 6 }: MealTrackerPro
             Hoje - {format(new Date(), "dd 'de' MMMM", { locale: ptBR })}
           </h3>
           <div className="text-sm font-medium text-primary-600 dark:text-primary-400">
-            {calculateDayCompletion(todayTracking || {} as MealTracking)}% completo
+            {calculateDayCompletion(todayTracking)}% completo
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {meals.map((meal) => {
-            const completedMeals = (todayTracking?.meals_completed as any) || [];
-            const isChecked = completedMeals.includes(meal.index);
+          {mealFields.map((meal) => {
+            const isChecked = todayTracking?.[meal.key as keyof MealTrackingData] || false;
             return (
               <button
-                key={meal.index}
-                onClick={() => toggleMeal(meal.index)}
+                key={meal.key}
+                onClick={() => toggleMeal(meal.key)}
                 className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all ${
                   isChecked
                     ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
@@ -289,12 +314,11 @@ export default function MealTracker({ alunoId, mealsPerDay = 6 }: MealTrackerPro
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {meals.map((meal) => {
-                    const completedMeals = (tracking.meals_completed as any) || [];
-                    const isChecked = completedMeals.includes(meal.index);
+                  {mealFields.map((meal) => {
+                    const isChecked = tracking[meal.key as keyof MealTrackingData] || false;
                     return (
                       <div
-                        key={meal.index}
+                        key={meal.key}
                         className={`flex items-center gap-2 p-2 rounded text-xs ${
                           isChecked
                             ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
