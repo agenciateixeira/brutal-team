@@ -4,6 +4,7 @@ import Sidebar from '@/components/ui/Sidebar';
 import ProgressChart from '@/components/aluno/ProgressChart';
 import WeeklySummary from '@/components/aluno/WeeklySummary';
 import MonthlyPhotoProgress from '@/components/aluno/MonthlyPhotoProgress';
+import DashboardWithFirstAccess from '@/components/aluno/DashboardWithFirstAccess';
 import { TrendingUp, Calendar, Apple, AlertCircle } from 'lucide-react';
 
 export default async function AlunoDashboard() {
@@ -91,116 +92,121 @@ export default async function AlunoDashboard() {
   const overallCompletionPercentage = Math.round((mealCompletionPercentage + workoutCompletionPercentage) / 2);
 
   return (
-    <div className="flex h-screen bg-white">
-      <Sidebar profile={profile} />
+    <DashboardWithFirstAccess
+      alunoId={session.user.id}
+      initialFirstAccessCompleted={profile.first_access_completed || false}
+    >
+      <div className="flex h-screen bg-white">
+        <Sidebar profile={profile} />
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto lg:ml-64 bg-gray-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16 lg:mt-0">
-          <div className="space-y-6">
-            {/* Header */}
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-700 mt-1">
-                Bem-vindo de volta, {profile.full_name || 'Atleta'}!
-              </p>
-            </div>
-
-            {/* Aviso de Vencimento */}
-            {hasPaymentReminder && reminderData && (
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" size={24} />
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-300 mb-1">
-                      Lembrete de Pagamento
-                    </h3>
-                    <p className="text-yellow-700 dark:text-yellow-200">
-                      Sua mensalidade vence em {new Date(reminderData.due_date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
-                      ({reminderData.days_before} {reminderData.days_before === 1 ? 'dia' : 'dias'} restantes).
-                      Não esqueça de realizar o pagamento para manter seu acesso ativo!
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Weekly Summary - Resumo Semanal */}
-            <WeeklySummary alunoId={session.user.id} />
-
-            {/* Monthly Photo Progress - Progresso Mensal de Fotos */}
-            <MonthlyPhotoProgress alunoId={session.user.id} />
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Total de Fotos */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      Fotos de Progresso
-                    </p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                      {photos?.length || 0}
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
-                    <TrendingUp className="text-primary-600 dark:text-primary-400" size={24} />
-                  </div>
-                </div>
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto lg:ml-64 bg-gray-50">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16 lg:mt-0">
+            <div className="space-y-6">
+              {/* Header */}
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+                <p className="text-gray-700 mt-1">
+                  Bem-vindo de volta, {profile.full_name || 'Atleta'}!
+                </p>
               </div>
 
-              {/* Semanas de Progresso */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      Semanas de Treino
-                    </p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                      {photos && photos.length > 0 ? Math.max(...photos.map(p => p.week_number)) : 0}
-                    </p>
-                  </div>
-                  <div className="w-12 h-12 bg-secondary-100 dark:bg-secondary-900/30 rounded-lg flex items-center justify-center">
-                    <Calendar className="text-secondary-600 dark:text-secondary-400" size={24} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Progresso Anual */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      Progresso Anual
-                    </p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                      {overallCompletionPercentage}%
-                    </p>
-                    <div className="mt-2 space-y-1">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        🍎 Dieta: {mealCompletionPercentage}% ({completedMeals}/{expectedMeals})
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        💪 Treino: {workoutCompletionPercentage}% ({completedWorkouts}/{expectedWorkouts})
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Dia {daysPassedInYear} de 365
+              {/* Aviso de Vencimento */}
+              {hasPaymentReminder && reminderData && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" size={24} />
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-300 mb-1">
+                        Lembrete de Pagamento
+                      </h3>
+                      <p className="text-yellow-700 dark:text-yellow-200">
+                        Sua mensalidade vence em {new Date(reminderData.due_date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                        ({reminderData.days_before} {reminderData.days_before === 1 ? 'dia' : 'dias'} restantes).
+                        Não esqueça de realizar o pagamento para manter seu acesso ativo!
                       </p>
                     </div>
                   </div>
-                  <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                    <Apple className="text-green-600 dark:text-green-400" size={24} />
+                </div>
+              )}
+
+              {/* Weekly Summary - Resumo Semanal */}
+              <WeeklySummary alunoId={session.user.id} />
+
+              {/* Monthly Photo Progress - Progresso Mensal de Fotos */}
+              <MonthlyPhotoProgress alunoId={session.user.id} />
+
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Total de Fotos */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        Fotos de Progresso
+                      </p>
+                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                        {photos?.length || 0}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
+                      <TrendingUp className="text-primary-600 dark:text-primary-400" size={24} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Semanas de Progresso */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        Semanas de Treino
+                      </p>
+                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                        {photos && photos.length > 0 ? Math.max(...photos.map(p => p.week_number)) : 0}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-secondary-100 dark:bg-secondary-900/30 rounded-lg flex items-center justify-center">
+                      <Calendar className="text-secondary-600 dark:text-secondary-400" size={24} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progresso Anual */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        Progresso Anual
+                      </p>
+                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                        {overallCompletionPercentage}%
+                      </p>
+                      <div className="mt-2 space-y-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          🍎 Dieta: {mealCompletionPercentage}% ({completedMeals}/{expectedMeals})
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          💪 Treino: {workoutCompletionPercentage}% ({completedWorkouts}/{expectedWorkouts})
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Dia {daysPassedInYear} de 365
+                        </p>
+                      </div>
+                    </div>
+                    <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                      <Apple className="text-green-600 dark:text-green-400" size={24} />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Gráfico de Progresso */}
-            <ProgressChart photos={photos || []} />
+              {/* Gráfico de Progresso */}
+              <ProgressChart photos={photos || []} />
+            </div>
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </DashboardWithFirstAccess>
   );
 }
