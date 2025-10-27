@@ -121,20 +121,28 @@ export default async function CoachDashboard() {
                                   alunoNotifications.protocol;
 
       // Verificar se tem dieta ativa
-      const { data: activeDiet } = await supabase
+      const { data: activeDiet, error: dietError } = await supabase
         .from('dietas')
         .select('id')
         .eq('aluno_id', aluno.id)
         .eq('active', true)
-        .single();
+        .maybeSingle();
+
+      if (dietError) {
+        console.error('Erro ao buscar dieta ativa:', dietError);
+      }
 
       // Verificar se tem treino ativo
-      const { data: activeWorkout } = await supabase
+      const { data: activeWorkout, error: workoutError } = await supabase
         .from('treinos')
         .select('id')
         .eq('aluno_id', aluno.id)
         .eq('active', true)
-        .single();
+        .maybeSingle();
+
+      if (workoutError) {
+        console.error('Erro ao buscar treino ativo:', workoutError);
+      }
 
       return {
         ...aluno,
