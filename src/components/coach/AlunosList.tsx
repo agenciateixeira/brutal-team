@@ -243,8 +243,8 @@ export default function AlunosList({ alunos }: AlunosListProps) {
         {activeTab === 'new' && alunosNovos.length > 0 && !searchTerm && (
           <div className="p-4 bg-purple-50 dark:bg-purple-900/20 border-b border-purple-200 dark:border-purple-800">
             <p className="text-sm text-purple-800 dark:text-purple-300">
-              💡 <strong>Novos Alunos:</strong> Configure dieta e treino para que apareçam na lista "Meus Alunos".
-              Clique em "Configurar Dieta e Treino" para gerenciar.
+              💡 <strong>Novos Alunos:</strong> Configure dieta e treino para que apareçam na lista de Meus Alunos.
+              Clique no botão Configurar para gerenciar.
             </p>
           </div>
         )}
