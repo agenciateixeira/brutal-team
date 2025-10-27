@@ -20,23 +20,7 @@ Este script vai:
 
 ---
 
-### 2️⃣ SEGUNDO - Criar Bucket para Documentos
-**Arquivo:** `supabase/create-student-documents-bucket.sql`
-
-Este script vai:
-- ✅ Criar bucket `student-documents` para PDFs de dieta/treino
-- ✅ Configurar políticas RLS de acesso
-- ✅ Limitar uploads a 10MB por arquivo
-- ✅ Permitir apenas arquivos PDF
-
-**Como executar:**
-1. No Supabase SQL Editor
-2. Cole o conteúdo do arquivo
-3. Clique em "Run"
-
----
-
-### 3️⃣ TERCEIRO (OPCIONAL) - Criar Tabela de Resumos Semanais
+### 2️⃣ SEGUNDO (OPCIONAL) - Criar Tabela de Resumos Semanais
 **Arquivo:** `supabase/create-weekly-updates-table.sql`
 
 Este script cria a tabela para os alunos enviarem resumos semanais.
@@ -63,14 +47,13 @@ Este script cria a tabela para os alunos enviarem resumos semanais.
 4. Aprove o aluno configurando pagamento
 5. Aluno deve aparecer em "Novos Alunos - Aguardando Dieta/Treino"
 
-### Teste 3: Upload de Dieta e Treino
-1. Na seção "Novos Alunos", clique em "Enviar Dieta (PDF)"
-2. Faça upload de um PDF
-3. Badge "Dieta OK" deve aparecer
-4. Clique em "Enviar Treino (PDF)"
-5. Faça upload de um PDF
-6. Badge "Treino OK" deve aparecer
-7. Aluno move automaticamente para "Meus Alunos" (lista principal)
+### Teste 3: Configurar Dieta e Treino
+1. Na seção "Novos Alunos", clique em "Configurar Dieta e Treino"
+2. Você será levado para a página de detalhes do aluno
+3. Na aba "Dieta", crie uma nova dieta e ative-a
+4. Na aba "Treino", crie um novo treino e ative-o
+5. Volte ao dashboard
+6. Aluno deve aparecer automaticamente em "Meus Alunos" (lista principal)
 
 ---
 
@@ -81,15 +64,14 @@ Este script cria a tabela para os alunos enviarem resumos semanais.
 - Verifique se o trigger foi criado corretamente
 - Crie um novo aluno para testar
 
-### Upload de PDF não funciona
-- Execute o script 2️⃣ (`create-student-documents-bucket.sql`)
-- Verifique se o bucket foi criado em Storage > Buckets
-- Confirme que as políticas RLS estão ativas
-
-### Aluno não move para lista principal após upload
-- Verifique se AMBOS (dieta E treino) foram enviados
-- O aluno só move quando tiver os dois arquivos
+### Aluno não move para lista principal após criar dieta/treino
+- Verifique se AMBOS (dieta E treino) estão **ativos**
+- O aluno só move quando tiver os dois ativos
 - Recarregue a página do dashboard
+
+### Coach não consegue criar dieta/treino
+- Verifique as políticas RLS nas tabelas `dietas` e `treinos`
+- Certifique-se de que o usuário logado tem `role = 'coach'`
 
 ---
 
@@ -115,10 +97,19 @@ SELECT * FROM profiles
 WHERE role = 'aluno' AND approved = false;
 ```
 
-### Verificar Bucket
+### Verificar Dietas e Treinos Ativos
 ```sql
-SELECT * FROM storage.buckets
-WHERE id = 'student-documents';
+-- Alunos com dieta ativa
+SELECT p.full_name, p.email, d.title
+FROM profiles p
+JOIN dietas d ON d.aluno_id = p.id AND d.active = true
+WHERE p.role = 'aluno';
+
+-- Alunos com treino ativo
+SELECT p.full_name, p.email, t.title
+FROM profiles p
+JOIN treinos t ON t.aluno_id = p.id AND t.active = true
+WHERE p.role = 'aluno';
 ```
 
 ---
@@ -128,12 +119,46 @@ WHERE id = 'student-documents';
 - [ ] Script 1️⃣ executado (`fix-signup-completo.sql`)
 - [ ] Trigger criado e funcionando
 - [ ] Usuários existentes migrados
-- [ ] Script 2️⃣ executado (`create-student-documents-bucket.sql`)
-- [ ] Bucket criado no Storage
-- [ ] Políticas RLS configuradas
 - [ ] Teste de cadastro realizado
 - [ ] Teste de aprovação realizado
-- [ ] Teste de upload realizado
+- [ ] Teste de criação de dieta realizado
+- [ ] Teste de criação de treino realizado
+- [ ] Aluno moveu para lista principal
+
+---
+
+## 🔄 Como Funciona o Fluxo Completo
+
+```
+1. CADASTRO
+   ↓
+   Usuário cria conta em /cadastro
+   ↓
+   Trigger cria perfil com approved=false
+   ↓
+
+2. APROVAÇÃO
+   ↓
+   Coach vê em "Cadastros Pendentes"
+   ↓
+   Coach aprova e configura pagamento
+   ↓
+   Aluno vai para "Novos Alunos"
+   ↓
+
+3. CONFIGURAÇÃO
+   ↓
+   Coach cria e ativa DIETA
+   ↓
+   Coach cria e ativa TREINO
+   ↓
+
+4. ATIVO
+   ↓
+   Aluno aparece em "Meus Alunos"
+   ↓
+   Sistema completo funcionando! 🎉
+```
 
 ---
 
@@ -143,3 +168,4 @@ Se algo não funcionar:
 1. Verifique os logs no Supabase Dashboard
 2. Execute as queries de verificação acima
 3. Certifique-se de que todos os scripts foram executados na ordem
+4. Verifique se as dietas e treinos estão marcados como `active = true`
