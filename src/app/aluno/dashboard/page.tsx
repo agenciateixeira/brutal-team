@@ -91,10 +91,14 @@ export default async function AlunoDashboard() {
   // Progresso anual combinado (média de refeições e treinos)
   const overallCompletionPercentage = Math.round((mealCompletionPercentage + workoutCompletionPercentage) / 2);
 
+  // Se o aluno tem fotos antigas, considerar primeiro acesso como completo
+  const hasOldPhotos = photos && photos.length > 0;
+  const shouldShowFirstAccessModal = !profile.first_access_completed && !hasOldPhotos;
+
   return (
     <DashboardWithFirstAccess
       alunoId={session.user.id}
-      initialFirstAccessCompleted={profile.first_access_completed || false}
+      initialFirstAccessCompleted={!shouldShowFirstAccessModal}
     >
       <div className="flex h-screen bg-white">
         <Sidebar profile={profile} />
