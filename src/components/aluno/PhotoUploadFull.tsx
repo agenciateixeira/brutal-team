@@ -24,6 +24,23 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
   const [bicepsContraido, setBicepsContraido] = useState('');
   const [pernas, setPernas] = useState('');
   const [panturrilha, setPanturrilha] = useState('');
+
+  // Perguntas condicionais - Dieta
+  const [seguiuDieta, setSeguiuDieta] = useState<boolean | null>(null);
+  const [problemaRefeicao, setProblemaRefeicao] = useState('');
+  const [consumoAguaSim, setConsumoAguaSim] = useState('');
+  const [qualidadeSonoSim, setQualidadeSonoSim] = useState('');
+  const [diaNaoSeguiu, setDiaNaoSeguiu] = useState('');
+  const [refeicoesFora, setRefeicoesFora] = useState('');
+  const [consumoAguaNao, setConsumoAguaNao] = useState('');
+  const [qualidadeSonoNao, setQualidadeSonoNao] = useState('');
+
+  // Perguntas sobre Treino
+  const [faltouTreino, setFaltouTreino] = useState<boolean | null>(null);
+  const [quantosDiasFaltou, setQuantosDiasFaltou] = useState('');
+  const [desempenhoTreino, setDesempenhoTreino] = useState('');
+  const [horarioProximaSemana, setHorarioProximaSemana] = useState('');
+
   const [selectedPhoto, setSelectedPhoto] = useState<ProgressPhoto | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -65,7 +82,11 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
   const openCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1080 },
+          height: { ideal: 1920 }
+        },
         audio: false
       });
 
@@ -153,6 +174,16 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
       return;
     }
 
+    if (seguiuDieta === null) {
+      setToast({ type: 'error', message: 'Por favor, responda se seguiu a dieta' });
+      return;
+    }
+
+    if (faltouTreino === null) {
+      setToast({ type: 'error', message: 'Por favor, responda se faltou treino' });
+      return;
+    }
+
     // Verificar se pode enviar (7 dias)
     const { data: lastPhoto } = await supabase
       .from('progress_photos')
@@ -203,6 +234,8 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
       console.log('🔗 URL pública:', publicUrl);
 
       console.log('💾 Salvando no banco de dados...');
+
+      // 1. Salvar foto no progress_photos
       const { error: dbError } = await supabase.from('progress_photos').insert({
         aluno_id: alunoId,
         photo_url: publicUrl,
@@ -216,10 +249,53 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
       });
 
       if (dbError) {
-        console.error('❌ Erro no banco:', dbError);
+        console.error('❌ Erro no banco progress_photos:', dbError);
         throw dbError;
       }
-      console.log('✅ Salvo no banco com sucesso');
+      console.log('✅ Salvo em progress_photos com sucesso');
+
+      // 2. Salvar resumo semanal no weekly_summary
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+      const dayOfMonth = now.getDate();
+      let weekOfMonth = 1;
+      if (dayOfMonth > 21) weekOfMonth = 4;
+      else if (dayOfMonth > 14) weekOfMonth = 3;
+      else if (dayOfMonth > 7) weekOfMonth = 2;
+
+      const { error: summaryError } = await supabase.from('weekly_summary').insert({
+        aluno_id: alunoId,
+        week_of_month: weekOfMonth,
+        month: currentMonth,
+        year: currentYear,
+        weight: parseFloat(peso),
+        waist_measurement: parseFloat(cintura),
+        arm_measurement: parseFloat(bicepsContraido),
+        leg_measurement: parseFloat(pernas),
+        seguiu_dieta: seguiuDieta,
+        problema_refeicao: seguiuDieta ? problemaRefeicao : null,
+        consumo_agua_sim: seguiuDieta ? consumoAguaSim : null,
+        qualidade_sono_sim: seguiuDieta ? qualidadeSonoSim : null,
+        dia_nao_seguiu: !seguiuDieta ? diaNaoSeguiu : null,
+        refeicoes_fora_casa: !seguiuDieta && refeicoesFora ? parseInt(refeicoesFora) : null,
+        consumo_agua_nao: !seguiuDieta ? consumoAguaNao : null,
+        qualidade_sono_nao: !seguiuDieta ? qualidadeSonoNao : null,
+        faltou_treino: faltouTreino,
+        quantos_dias_faltou: faltouTreino && quantosDiasFaltou ? parseInt(quantosDiasFaltou) : null,
+        desempenho_treino: desempenhoTreino,
+        horario_treino_proxima_semana: horarioProximaSemana || null,
+        front_photo_url: publicUrl, // Usando a mesma foto
+        completed: true,
+      });
+
+      if (summaryError) {
+        console.error('❌ Erro no banco weekly_summary:', summaryError);
+        // Não throw aqui porque foto já foi salva
+        console.log('⚠️ Foto salva, mas resumo semanal falhou');
+      } else {
+        console.log('✅ Salvo em weekly_summary com sucesso');
+      }
 
       setToast({ type: 'success', message: 'Foto enviada com sucesso!' });
       setWeekNumber('');
@@ -229,6 +305,18 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
       setBicepsContraido('');
       setPernas('');
       setPanturrilha('');
+      setSeguiuDieta(null);
+      setProblemaRefeicao('');
+      setConsumoAguaSim('');
+      setQualidadeSonoSim('');
+      setDiaNaoSeguiu('');
+      setRefeicoesFora('');
+      setConsumoAguaNao('');
+      setQualidadeSonoNao('');
+      setFaltouTreino(null);
+      setQuantosDiasFaltou('');
+      setDesempenhoTreino('');
+      setHorarioProximaSemana('');
       setSelectedFile(null);
       setPreviewUrl(null);
 
@@ -404,6 +492,256 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
                   required
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Perguntas sobre Dieta */}
+          <div className="bg-green-50 dark:bg-green-900/10 border-2 border-green-200 dark:border-green-800 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+              Sobre a Dieta
+            </h3>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Seguiu a dieta esta semana? *
+              </label>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSeguiuDieta(true)}
+                  disabled={uploading}
+                  className={`flex-1 py-2 px-4 rounded-lg border-2 transition-colors disabled:opacity-50 ${
+                    seguiuDieta === true
+                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
+                      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  ✅ SIM
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSeguiuDieta(false)}
+                  disabled={uploading}
+                  className={`flex-1 py-2 px-4 rounded-lg border-2 transition-colors disabled:opacity-50 ${
+                    seguiuDieta === false
+                      ? 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'
+                      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  ❌ NÃO
+                </button>
+              </div>
+            </div>
+
+            {seguiuDieta === true && (
+              <div className="space-y-3 pl-3 border-l-4 border-green-500">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Teve problema em alguma refeição?
+                  </label>
+                  <textarea
+                    value={problemaRefeicao}
+                    onChange={(e) => setProblemaRefeicao(e.target.value)}
+                    disabled={uploading}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                    placeholder="Ex: Dificuldade no jantar"
+                    rows={2}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Consumo de água?
+                  </label>
+                  <select
+                    value={consumoAguaSim}
+                    onChange={(e) => setConsumoAguaSim(e.target.value)}
+                    disabled={uploading}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                  >
+                    <option value="">Selecione</option>
+                    <option value="excelente">Excelente (2L+)</option>
+                    <option value="bom">Bom (1.5L - 2L)</option>
+                    <option value="regular">Regular (1L - 1.5L)</option>
+                    <option value="ruim">Ruim (&lt;1L)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Qualidade do sono?
+                  </label>
+                  <select
+                    value={qualidadeSonoSim}
+                    onChange={(e) => setQualidadeSonoSim(e.target.value)}
+                    disabled={uploading}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                  >
+                    <option value="">Selecione</option>
+                    <option value="excelente">Excelente (8h+)</option>
+                    <option value="bom">Bom (6-8h)</option>
+                    <option value="regular">Regular (4-6h)</option>
+                    <option value="ruim">Ruim (&lt;4h)</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {seguiuDieta === false && (
+              <div className="space-y-3 pl-3 border-l-4 border-red-500">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Em qual(is) dia(s) não seguiu?
+                  </label>
+                  <input
+                    type="text"
+                    value={diaNaoSeguiu}
+                    onChange={(e) => setDiaNaoSeguiu(e.target.value)}
+                    disabled={uploading}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                    placeholder="Ex: Segunda e Sábado"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Quantas refeições fora de casa?
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={refeicoesFora}
+                    onChange={(e) => setRefeicoesFora(e.target.value)}
+                    disabled={uploading}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                    placeholder="Ex: 3"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Consumo de água?
+                  </label>
+                  <select
+                    value={consumoAguaNao}
+                    onChange={(e) => setConsumoAguaNao(e.target.value)}
+                    disabled={uploading}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                  >
+                    <option value="">Selecione</option>
+                    <option value="excelente">Excelente (2L+)</option>
+                    <option value="bom">Bom (1.5L - 2L)</option>
+                    <option value="regular">Regular (1L - 1.5L)</option>
+                    <option value="ruim">Ruim (&lt;1L)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Qualidade do sono?
+                  </label>
+                  <select
+                    value={qualidadeSonoNao}
+                    onChange={(e) => setQualidadeSonoNao(e.target.value)}
+                    disabled={uploading}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                  >
+                    <option value="">Selecione</option>
+                    <option value="excelente">Excelente (8h+)</option>
+                    <option value="bom">Bom (6-8h)</option>
+                    <option value="regular">Regular (4-6h)</option>
+                    <option value="ruim">Ruim (&lt;4h)</option>
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Perguntas sobre Treino */}
+          <div className="bg-blue-50 dark:bg-blue-900/10 border-2 border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+              Sobre o Treino
+            </h3>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Faltou algum treino esta semana? *
+              </label>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFaltouTreino(true)}
+                  disabled={uploading}
+                  className={`flex-1 py-2 px-4 rounded-lg border-2 transition-colors disabled:opacity-50 ${
+                    faltouTreino === true
+                      ? 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'
+                      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  SIM
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFaltouTreino(false)}
+                  disabled={uploading}
+                  className={`flex-1 py-2 px-4 rounded-lg border-2 transition-colors disabled:opacity-50 ${
+                    faltouTreino === false
+                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
+                      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  NÃO
+                </button>
+              </div>
+            </div>
+
+            {faltouTreino === true && (
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Quantos dias faltou?
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="7"
+                  value={quantosDiasFaltou}
+                  onChange={(e) => setQuantosDiasFaltou(e.target.value)}
+                  disabled={uploading}
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                  placeholder="Ex: 2"
+                />
+              </div>
+            )}
+
+            <div className="mb-3">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Como foi o desempenho nos treinos?
+              </label>
+              <select
+                value={desempenhoTreino}
+                onChange={(e) => setDesempenhoTreino(e.target.value)}
+                disabled={uploading}
+                className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+              >
+                <option value="">Selecione</option>
+                <option value="excelente">Excelente - Superei expectativas</option>
+                <option value="bom">Bom - Cumpri o planejado</option>
+                <option value="regular">Regular - Abaixo do esperado</option>
+                <option value="ruim">Ruim - Muito fraco</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Horário de treino para próxima semana?
+              </label>
+              <input
+                type="time"
+                value={horarioProximaSemana}
+                onChange={(e) => setHorarioProximaSemana(e.target.value)}
+                disabled={uploading}
+                className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+              />
             </div>
           </div>
 
@@ -622,8 +960,8 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
       {/* Modal da Câmera */}
       {showCamera && (
         <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
-          <div className="max-w-4xl w-full">
-            <div className="relative aspect-video bg-black rounded-lg overflow-hidden mb-4">
+          <div className="max-w-lg w-full">
+            <div className="relative aspect-[9/16] bg-black rounded-lg overflow-hidden mb-4">
               <video
                 ref={videoRef}
                 autoPlay
