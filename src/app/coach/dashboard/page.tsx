@@ -4,7 +4,6 @@ import AppLayout from '@/components/layouts/AppLayout';
 import AlunosList from '@/components/coach/AlunosList';
 import PendingApprovals from '@/components/coach/PendingApprovals';
 import CoachKPIs from '@/components/coach/CoachKPIs';
-import NewStudentsList from '@/components/coach/NewStudentsList';
 
 // Forçar revalidação em cada request (sem cache)
 export const dynamic = 'force-dynamic';
@@ -149,16 +148,12 @@ export default async function CoachDashboard() {
     })
   );
 
-  // Separar alunos em duas categorias:
-  // 1. Novos alunos (sem dieta OU sem treino)
-  // 2. Alunos ativos (com dieta E treino)
-  const newStudents = alunosWithData.filter(a => !a.has_diet || !a.has_workout);
-  const activeStudents = alunosWithData.filter(a => a.has_diet && a.has_workout);
+  // Todos os alunos com dados (a separação será feita no componente AlunosList)
+  const alunosWithUnread = alunosWithData;
 
-  const alunosWithUnread = activeStudents;
-
-  // Extrair IDs dos alunos para os KPIs
-  const alunosIds = (alunosWithUnread || []).map(a => a.id);
+  // Extrair IDs dos alunos ativos (com dieta E treino) para os KPIs
+  const alunosAtivos = alunosWithData.filter(a => a.has_diet && a.has_workout);
+  const alunosIds = alunosAtivos.map(a => a.id);
 
   return (
     <AppLayout profile={profile}>
@@ -171,11 +166,6 @@ export default async function CoachDashboard() {
         {/* Aprovações Pendentes */}
         {pendingAlunos && pendingAlunos.length > 0 && (
           <PendingApprovals pendingAlunos={pendingAlunos} coachId={session.user.id} />
-        )}
-
-        {/* Novos Alunos - Aguardando Dieta/Treino */}
-        {newStudents && newStudents.length > 0 && (
-          <NewStudentsList newStudents={newStudents} />
         )}
 
         {/* KPIs do Coach */}
