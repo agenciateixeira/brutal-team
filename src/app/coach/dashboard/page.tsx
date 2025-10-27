@@ -4,6 +4,7 @@ import AppLayout from '@/components/layouts/AppLayout';
 import AlunosList from '@/components/coach/AlunosList';
 import PendingApprovals from '@/components/coach/PendingApprovals';
 import CoachKPIs from '@/components/coach/CoachKPIs';
+import WeeklySummaryReview from '@/components/coach/WeeklySummaryReview';
 
 // Forçar revalidação em cada request (sem cache)
 export const dynamic = 'force-dynamic';
@@ -155,6 +156,25 @@ export default async function CoachDashboard() {
   const alunosAtivos = alunosWithData.filter(a => a.has_diet && a.has_workout);
   const alunosIds = alunosAtivos.map(a => a.id);
 
+  // Buscar resumos semanais pendentes e concluídos
+  const { data: weeklySummaries } = await supabase
+    .from('weekly_summary')
+    .select(`
+      *,
+      profiles!weekly_summary_aluno_id_fkey (
+        full_name,
+        avatar_url
+      )
+    `)
+    .order('submission_order', { ascending: true });
+
+  // Transformar dados para o componente
+  const summariesWithAlunoData = (weeklySummaries || []).map((summary: any) => ({
+    ...summary,
+    aluno_name: summary.profiles?.full_name || 'Sem nome',
+    aluno_photo: summary.profiles?.avatar_url,
+  }));
+
   return (
     <AppLayout profile={profile}>
       <div className="space-y-6">
@@ -171,6 +191,16 @@ export default async function CoachDashboard() {
         {/* KPIs do Coach */}
         {alunosIds.length > 0 && (
           <CoachKPIs alunosIds={alunosIds} />
+        )}
+
+        {/* Resumos Semanais para Revisão */}
+        {summariesWithAlunoData.length > 0 && (
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Resumos Semanais
+            </h2>
+            <WeeklySummaryReview summaries={summariesWithAlunoData} />
+          </div>
         )}
 
         {/* Lista de Alunos */}
