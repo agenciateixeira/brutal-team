@@ -17,7 +17,8 @@ import {
   LogOut,
   Users,
   DollarSign,
-  FileText
+  FileText,
+  BookOpen
 } from 'lucide-react';
 import { Profile } from '@/types';
 import ThemeToggle from './ThemeToggle';
@@ -110,6 +111,7 @@ export default function Sidebar({ profile }: SidebarProps) {
     { icon: Apple, label: 'Dieta', href: '/aluno/dieta' },
     { icon: Dumbbell, label: 'Treino', href: '/aluno/treino' },
     { icon: Syringe, label: 'Protocolo', href: '/aluno/protocolo' },
+    { icon: BookOpen, label: 'Guia Nutricional', href: '/aluno/guia-nutricional' },
     { icon: User, label: 'Perfil', href: '/aluno/perfil' },
   ];
 
