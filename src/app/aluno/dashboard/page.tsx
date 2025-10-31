@@ -7,7 +7,8 @@ import WeeklySummary from '@/components/aluno/WeeklySummary';
 import MonthlyPhotoProgress from '@/components/aluno/MonthlyPhotoProgress';
 import DashboardWithFirstAccess from '@/components/aluno/DashboardWithFirstAccess';
 import WelcomeMessage from '@/components/aluno/WelcomeMessage';
-import { TrendingUp, Calendar, Apple, AlertCircle } from 'lucide-react';
+import { TrendingUp, Calendar, Apple, AlertCircle, FileQuestion } from 'lucide-react';
+import Link from 'next/link';
 
 export default async function AlunoDashboard() {
   const supabase = createServerClient();
@@ -114,6 +115,15 @@ export default async function AlunoDashboard() {
   const hasOldPhotos = photos && photos.length > 0;
   const shouldShowFirstAccessModal = !profile.first_access_completed && !hasOldPhotos;
 
+  // Verificar se o aluno completou o questionário (anamnese)
+  const { data: anamneseResponse } = await supabase
+    .from('anamnese_responses')
+    .select('id, completed')
+    .or(`temp_email.eq.${profile.email}`)
+    .maybeSingle();
+
+  const hasCompletedQuestionnaire = anamneseResponse && anamneseResponse.completed;
+
   return (
     <DashboardWithFirstAccess
       alunoId={session.user.id}
@@ -151,6 +161,31 @@ export default async function AlunoDashboard() {
                         ({reminderData.days_before} {reminderData.days_before === 1 ? 'dia' : 'dias'} restantes).
                         Não esqueça de realizar o pagamento para manter seu acesso ativo!
                       </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Aviso de Questionário Não Preenchido */}
+              {!hasCompletedQuestionnaire && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-400 dark:border-blue-600 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <FileQuestion className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" size={24} />
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-300 mb-1">
+                        Complete seu Questionário
+                      </h3>
+                      <p className="text-blue-700 dark:text-blue-200 mb-3">
+                        Seu coach precisa das informações do questionário para montar sua dieta e treino personalizados.
+                        Preencha agora para acelerar o processo!
+                      </p>
+                      <Link
+                        href="/questionario"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                      >
+                        <FileQuestion size={18} />
+                        Preencher Questionário
+                      </Link>
                     </div>
                   </div>
                 </div>

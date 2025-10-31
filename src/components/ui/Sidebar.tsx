@@ -102,7 +102,7 @@ export default function Sidebar({ profile }: SidebarProps) {
     { icon: LayoutDashboard, label: 'Dashboard', href: '/coach/dashboard' },
     { icon: Users, label: 'Alunos', href: '/coach/alunos' },
     { icon: FileText, label: 'Templates', href: '/coach/templates' },
-    { icon: DollarSign, label: 'Pagamentos', href: '/admin/dashboard' },
+    { icon: DollarSign, label: 'Pagamentos', href: '/coach/pagamentos' },
     { icon: User, label: 'Perfil', href: '/coach/perfil' },
   ] : [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/aluno/dashboard' },
