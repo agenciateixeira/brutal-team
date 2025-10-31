@@ -19,14 +19,8 @@ interface FoodOptionsModalProps {
   amount: number;
 }
 
-export default function FoodOptionsModal({ isOpen, onClose, nutrientType, amount }: FoodOptionsModalProps) {
-  const [options, setOptions] = useState<FoodOption[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [hardcodedData, setHardcodedData] = useState<{options: string[], liquidas?: string[], notes?: string[], praticas?: string, sugestoes?: string, aviso?: string} | null>(null);
-  const supabase = createClient();
-
-  // Dados hardcoded de proteínas
-  const proteinData: Record<number, { options: string[]; liquidas: string[]; notes: string[] }> = {
+// Dados hardcoded de proteínas (movidos para fora do componente)
+const proteinData: Record<number, { options: string[]; liquidas: string[]; notes: string[] }> = {
     20: {
       options: [
         '75g de carne magra pronta (grelhada ou cozida) - equivalente a 100g crua',
@@ -128,8 +122,8 @@ export default function FoodOptionsModal({ isOpen, onClose, nutrientType, amount
     }
   };
 
-  // Dados hardcoded de gorduras
-  const fatData: Record<number, { options: string[]; praticas: string; sugestoes: string; aviso: string }> = {
+// Dados hardcoded de gorduras (movidos para fora do componente)
+const fatData: Record<number, { options: string[]; praticas: string; sugestoes: string; aviso: string }> = {
     10: {
       options: [
         'Azeite de oliva extra virgem - 1 colher de sopa (≈11g)',
@@ -157,6 +151,12 @@ export default function FoodOptionsModal({ isOpen, onClose, nutrientType, amount
       aviso: 'Evite óleos refinados (soja, milho, canola) - ricos em ômega-6 e inflamatórios'
     }
   };
+
+export default function FoodOptionsModal({ isOpen, onClose, nutrientType, amount }: FoodOptionsModalProps) {
+  const [options, setOptions] = useState<FoodOption[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [hardcodedData, setHardcodedData] = useState<{options: string[], liquidas?: string[], notes?: string[], praticas?: string, sugestoes?: string, aviso?: string} | null>(null);
+  const supabase = createClient();
 
   useEffect(() => {
     if (isOpen) {
