@@ -48,8 +48,8 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
     : [
         { href: '/coach/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { href: '/coach/alunos', icon: User, label: 'Alunos' },
-        { href: '/coach/mensagens', icon: MessageCircle, label: 'Mensagens' },
-        { href: '/coach/relatorios', icon: FileText, label: 'Relatórios' },
+        { href: '/coach/templates', icon: FileText, label: 'Templates' },
+        { href: '/coach/pagamentos', icon: DollarSign, label: 'Pagamentos' },
       ];
 
   const menuItems = isAluno
@@ -59,8 +59,6 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
         { href: '/aluno/progresso', icon: Calendar, label: 'Progresso' },
       ]
     : [
-        { href: '/coach/templates', icon: FileText, label: 'Templates' },
-        { href: '/coach/pagamentos', icon: DollarSign, label: 'Pagamentos' },
         { href: '/coach/perfil', icon: User, label: 'Perfil' },
       ];
 
