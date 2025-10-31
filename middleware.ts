@@ -5,15 +5,25 @@ import { Database } from '@/types/database.types';
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
+  const hostname = req.headers.get('host') || '';
+
+  // Se o acesso vier de questionario.brutalteam.blog.br
+  if (hostname === 'questionario.brutalteam.blog.br') {
+    // Se estiver acessando a raiz, reescrever para /questionario
+    if (req.nextUrl.pathname === '/') {
+      return NextResponse.rewrite(new URL('/questionario', req.url));
+    }
+  }
+
   const supabase = createMiddlewareClient<Database>({ req, res });
 
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
-  // Rotas públicas
-  const publicRoutes = ['/login', '/cadastro', '/aguardando-aprovacao'];
-  const isPublicRoute = publicRoutes.some(route => req.nextUrl.pathname === route);
+  // Rotas públicas (não requerem autenticação)
+  const publicRoutes = ['/login', '/cadastro', '/aguardando-aprovacao', '/questionario'];
+  const isPublicRoute = publicRoutes.some(route => req.nextUrl.pathname === route || req.nextUrl.pathname.startsWith(route + '/'));
 
   // Se não está logado e tenta acessar rota privada
   if (!session && !isPublicRoute) {

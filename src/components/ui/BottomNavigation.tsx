@@ -61,8 +61,8 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
   return (
     <>
       {/* Bottom Navigation - Fixed */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50 safe-area-bottom">
-        <div className="grid grid-cols-5 h-16">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50 pb-safe">
+        <div className="grid grid-cols-5 h-20 px-1">
           {mainNavItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -71,14 +71,14 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+                className={`flex flex-col items-center justify-center gap-0.5 transition-colors ${
                   active
                     ? 'text-primary-600 dark:text-primary-400'
                     : 'text-gray-600 dark:text-gray-400 active:text-primary-600'
                 }`}
               >
-                <Icon size={22} strokeWidth={active ? 2.5 : 2} />
-                <span className={`text-xs ${active ? 'font-semibold' : 'font-medium'}`}>
+                <Icon size={24} strokeWidth={active ? 2.5 : 2} />
+                <span className={`text-[10px] leading-tight ${active ? 'font-semibold' : 'font-medium'}`}>
                   {item.label}
                 </span>
               </Link>
@@ -88,18 +88,18 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
           {/* Menu Button */}
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+            className={`flex flex-col items-center justify-center gap-0.5 transition-colors ${
               showMenu
                 ? 'text-primary-600 dark:text-primary-400'
                 : 'text-gray-600 dark:text-gray-400 active:text-primary-600'
             }`}
           >
             {showMenu ? (
-              <X size={22} strokeWidth={showMenu ? 2.5 : 2} />
+              <X size={24} strokeWidth={showMenu ? 2.5 : 2} />
             ) : (
-              <Menu size={22} strokeWidth={2} />
+              <Menu size={24} strokeWidth={2} />
             )}
-            <span className={`text-xs ${showMenu ? 'font-semibold' : 'font-medium'}`}>
+            <span className={`text-[10px] leading-tight ${showMenu ? 'font-semibold' : 'font-medium'}`}>
               Menu
             </span>
           </button>
@@ -116,7 +116,7 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
           />
 
           {/* Menu Panel */}
-          <div className="md:hidden fixed bottom-16 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50 animate-in slide-in-from-bottom duration-300">
+          <div className="md:hidden fixed bottom-20 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50 animate-in slide-in-from-bottom duration-300">
             <div className="max-h-[60vh] overflow-y-auto">
               <div className="p-4">
                 <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
@@ -179,7 +179,7 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
       )}
 
       {/* Spacer para evitar que o conteúdo fique atrás da barra */}
-      <div className="md:hidden h-16" />
+      <div className="md:hidden h-20" />
     </>
   );
 }

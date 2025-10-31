@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation';
 import AppLayout from '@/components/layouts/AppLayout';
 import AlunosList from '@/components/coach/AlunosList';
 
+// Forçar revalidação em cada request (sem cache)
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function CoachAlunosPage() {
   const supabase = createServerClient();
 
@@ -79,11 +83,29 @@ export default async function CoachAlunosPage() {
       // Verificar se tem atualizações não visualizadas (fotos ou mensagens não lidas)
       const hasUnviewedUpdates = (unreadByAluno?.[aluno.id] || 0) > 0;
 
+      // Verificar se tem dieta ativa
+      const { data: activeDiet } = await supabase
+        .from('dietas')
+        .select('id')
+        .eq('aluno_id', aluno.id)
+        .eq('active', true)
+        .maybeSingle();
+
+      // Verificar se tem treino ativo
+      const { data: activeWorkout } = await supabase
+        .from('treinos')
+        .select('id')
+        .eq('aluno_id', aluno.id)
+        .eq('active', true)
+        .maybeSingle();
+
       return {
         ...aluno,
         unread_messages_count: unreadByAluno?.[aluno.id] || 0,
         last_activity: lastActivity > 0 ? new Date(lastActivity).toISOString() : null,
         has_unviewed_updates: hasUnviewedUpdates,
+        has_diet: !!activeDiet,
+        has_workout: !!activeWorkout,
       };
     })
   );
