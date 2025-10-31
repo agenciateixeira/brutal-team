@@ -124,6 +124,25 @@ export default async function AlunoDashboard() {
 
   const hasCompletedQuestionnaire = anamneseResponse && anamneseResponse.completed;
 
+  // Buscar observação pública do coach (últimos 7 dias)
+  const { data: coachObservation } = await supabase
+    .from('weekly_summary')
+    .select('coach_public_observation, coach_public_observation_sent_at')
+    .eq('aluno_id', session.user.id)
+    .not('coach_public_observation', 'is', null)
+    .not('coach_public_observation_sent_at', 'is', null)
+    .order('coach_public_observation_sent_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  // Verificar se a observação foi enviada nos últimos 7 dias
+  let showCoachObservation = false;
+  if (coachObservation?.coach_public_observation_sent_at) {
+    const sentDate = new Date(coachObservation.coach_public_observation_sent_at);
+    const daysSinceSent = Math.floor((now.getTime() - sentDate.getTime()) / (1000 * 60 * 60 * 24));
+    showCoachObservation = daysSinceSent < 7;
+  }
+
   return (
     <DashboardWithFirstAccess
       alunoId={session.user.id}
@@ -186,6 +205,28 @@ export default async function AlunoDashboard() {
                         <FileQuestion size={18} />
                         Preencher Questionário
                       </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Observação do Coach (7 dias) */}
+              {showCoachObservation && coachObservation && (
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 border-2 border-purple-400 dark:border-purple-600 rounded-xl p-5 shadow-lg">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-white font-bold text-lg">💬</span>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-purple-900 dark:text-purple-300 mb-2">
+                        Mensagem do seu Coach
+                      </h3>
+                      <p className="text-purple-800 dark:text-purple-200 leading-relaxed text-base">
+                        {coachObservation.coach_public_observation}
+                      </p>
+                      <p className="text-xs text-purple-600 dark:text-purple-400 mt-3">
+                        📅 Enviado em {new Date(coachObservation.coach_public_observation_sent_at!).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                      </p>
                     </div>
                   </div>
                 </div>

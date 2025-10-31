@@ -82,6 +82,8 @@ export default function WeeklySummaryReview({ summaries }: WeeklySummaryReviewPr
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [feedbacks, setFeedbacks] = useState<Record<string, string>>({});
+  const [privateNotes, setPrivateNotes] = useState<Record<string, string>>({});
+  const [publicObservations, setPublicObservations] = useState<Record<string, string>>({});
   const [processing, setProcessing] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
@@ -131,6 +133,8 @@ export default function WeeklySummaryReview({ summaries }: WeeklySummaryReviewPr
 
   const handleSendFeedback = async (summaryId: string) => {
     const feedback = feedbacks[summaryId];
+    const privateNote = privateNotes[summaryId];
+    const publicObservation = publicObservations[summaryId];
 
     if (!feedback || feedback.trim() === '') {
       setToast({ type: 'error', message: 'Por favor, escreva um feedback' });
@@ -140,17 +144,30 @@ export default function WeeklySummaryReview({ summaries }: WeeklySummaryReviewPr
     setProcessing(summaryId);
 
     try {
+      const updateData: any = {
+        coach_feedback: feedback,
+        coach_feedback_sent_at: new Date().toISOString(),
+      };
+
+      // Adicionar notas privadas se existirem
+      if (privateNote !== undefined) {
+        updateData.coach_private_notes = privateNote.trim() || null;
+      }
+
+      // Adicionar observação pública se existir
+      if (publicObservation !== undefined && publicObservation.trim()) {
+        updateData.coach_public_observation = publicObservation.trim();
+        updateData.coach_public_observation_sent_at = new Date().toISOString();
+      }
+
       const { error } = await supabase
         .from('weekly_summary')
-        .update({
-          coach_feedback: feedback,
-          coach_feedback_sent_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', summaryId);
 
       if (error) throw error;
 
-      setToast({ type: 'success', message: 'Feedback enviado com sucesso!' });
+      setToast({ type: 'success', message: 'Feedback e observações enviados com sucesso!' });
       router.refresh();
     } catch (error: any) {
       console.error('Erro ao enviar feedback:', error);
@@ -599,6 +616,44 @@ export default function WeeklySummaryReview({ summaries }: WeeklySummaryReviewPr
                           rows={4}
                           className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
                           placeholder="Escreva um feedback personalizado sobre o progresso do aluno..."
+                          disabled={processing === summary.id}
+                        />
+                      </div>
+
+                      {/* Notas Privadas (apenas para o coach) */}
+                      <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                        <label className="block text-sm font-semibold text-amber-900 dark:text-amber-300 mb-2 flex items-center gap-2">
+                          <FileText size={16} />
+                          📝 Notas Privadas (Apenas para você)
+                        </label>
+                        <p className="text-xs text-amber-700 dark:text-amber-400 mb-3">
+                          ⚠️ O aluno NÃO verá estas anotações. Use este campo para suas observações pessoais de análise.
+                        </p>
+                        <textarea
+                          value={privateNotes[summary.id] || ''}
+                          onChange={(e) => setPrivateNotes({ ...privateNotes, [summary.id]: e.target.value })}
+                          rows={3}
+                          className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-amber-300 dark:border-amber-700 rounded-lg text-gray-900 dark:text-white"
+                          placeholder="Exemplo: Atenção para próxima semana aumentar proteína... Verificar se está seguindo horários..."
+                          disabled={processing === summary.id}
+                        />
+                      </div>
+
+                      {/* Observação Pública (aparece para o aluno por 7 dias) */}
+                      <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                        <label className="block text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2 flex items-center gap-2">
+                          <Send size={16} />
+                          💬 Observação para o Aluno (7 dias na Dashboard)
+                        </label>
+                        <p className="text-xs text-blue-700 dark:text-blue-400 mb-3">
+                          📢 Esta observação aparecerá na dashboard do aluno por 7 dias ou até ele enviar o próximo resumo semanal.
+                        </p>
+                        <textarea
+                          value={publicObservations[summary.id] || ''}
+                          onChange={(e) => setPublicObservations({ ...publicObservations, [summary.id]: e.target.value })}
+                          rows={3}
+                          className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-blue-300 dark:border-blue-700 rounded-lg text-gray-900 dark:text-white"
+                          placeholder="Exemplo: Parabéns pelo progresso! Continue focado na dieta esta semana..."
                           disabled={processing === summary.id}
                         />
                       </div>

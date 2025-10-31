@@ -24,7 +24,7 @@ export default function DietaParser({ content }: DietaParserProps) {
   const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set([0]));
   const [expandedAlternatives, setExpandedAlternatives] = useState<Set<string>>(new Set());
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedNutrient, setSelectedNutrient] = useState<{ type: 'carboidrato' | 'proteina', amount: number } | null>(null);
+  const [selectedNutrient, setSelectedNutrient] = useState<{ type: 'carboidrato' | 'proteina' | 'gordura', amount: number } | null>(null);
 
   const toggleSection = (index: number) => {
     const newExpanded = new Set(expandedSections);
@@ -46,31 +46,69 @@ export default function DietaParser({ content }: DietaParserProps) {
     setExpandedAlternatives(newExpanded);
   };
 
-  const handleNutrientClick = (type: 'carboidrato' | 'proteina', amount: number) => {
+  const handleNutrientClick = (type: 'carboidrato' | 'proteina' | 'gordura', amount: number) => {
     setSelectedNutrient({ type, amount });
     setModalOpen(true);
   };
 
   const renderTextWithNutrientLinks = (text: string) => {
-    // Detectar padrões como:
-    // "30gs de proteínas", "50g de carboidratos"
-    // "30g proteína", "50g carbo" (sem o "de")
-    const pattern = /(\d+)\s*g?s?\s*(?:de\s*)?(carboidrato|carboidratos|proteína|proteínas|proteina|proteinas|carbo|carbos)/gi;
     const parts = [];
     let lastIndex = 0;
+
+    // PADRÃO 1: Códigos curtos (P30, G10, C40)
+    const codePattern = /\b([PCG])(\d+)\b/gi;
+
+    // PADRÃO 2: Texto por extenso (30g de proteína, 50g carboidratos, 10g gordura)
+    const textPattern = /(\d+)\s*g?s?\s*(?:de\s*)?(carboidrato|carboidratos|proteína|proteínas|proteina|proteinas|carbo|carbos|gordura|gorduras)/gi;
+
+    // Combinar ambos os padrões
+    const combinedPattern = new RegExp(`(${codePattern.source})|(${textPattern.source})`, 'gi');
     let match;
 
-    while ((match = pattern.exec(text)) !== null) {
-
+    while ((match = combinedPattern.exec(text)) !== null) {
       // Adicionar texto antes do match
       if (match.index > lastIndex) {
         parts.push(text.substring(lastIndex, match.index));
       }
 
-      const amount = parseInt(match[1]);
-      const nutrientRaw = match[2].toLowerCase();
-      const nutrientType: 'carboidrato' | 'proteina' =
-        nutrientRaw.includes('carb') ? 'carboidrato' : 'proteina';
+      let amount: number;
+      let nutrientType: 'carboidrato' | 'proteina' | 'gordura';
+      let displayText = match[0];
+
+      // Verificar qual padrão foi encontrado
+      if (match[1]) {
+        // Código curto (P30, G10, C40)
+        const code = match[1].toUpperCase();
+        amount = parseInt(match[2]);
+
+        if (code === 'P') {
+          nutrientType = 'proteina';
+        } else if (code === 'G') {
+          nutrientType = 'gordura';
+        } else { // C
+          nutrientType = 'carboidrato';
+        }
+      } else {
+        // Texto por extenso
+        amount = parseInt(match[3]);
+        const nutrientRaw = match[4].toLowerCase();
+
+        if (nutrientRaw.includes('carb')) {
+          nutrientType = 'carboidrato';
+        } else if (nutrientRaw.includes('gord')) {
+          nutrientType = 'gordura';
+        } else {
+          nutrientType = 'proteina';
+        }
+      }
+
+      // Determinar cor do badge baseado no tipo
+      let badgeColor = 'bg-primary-100 dark:bg-primary-900/30 hover:bg-primary-200 dark:hover:bg-primary-900/50 text-primary-700 dark:text-primary-300';
+      if (nutrientType === 'proteina') {
+        badgeColor = 'bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-700 dark:text-red-300';
+      } else if (nutrientType === 'gordura') {
+        badgeColor = 'bg-yellow-100 dark:bg-yellow-900/30 hover:bg-yellow-200 dark:hover:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300';
+      }
 
       // Adicionar link clicável
       parts.push(
@@ -80,15 +118,15 @@ export default function DietaParser({ content }: DietaParserProps) {
             e.stopPropagation();
             handleNutrientClick(nutrientType, amount);
           }}
-          className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary-100 dark:bg-primary-900/30 hover:bg-primary-200 dark:hover:bg-primary-900/50 text-primary-700 dark:text-primary-300 rounded font-medium transition-colors cursor-pointer underline decoration-dotted"
-          title={`Ver opcoes de ${nutrientType}`}
+          className={`inline-flex items-center gap-1 px-2 py-0.5 ${badgeColor} rounded font-medium transition-colors cursor-pointer underline decoration-dotted`}
+          title={`Ver opções de ${nutrientType}`}
         >
-          {match[0]}
+          {displayText}
           <HelpCircle size={14} />
         </button>
       );
 
-      lastIndex = pattern.lastIndex;
+      lastIndex = combinedPattern.lastIndex;
     }
 
     // Adicionar texto restante

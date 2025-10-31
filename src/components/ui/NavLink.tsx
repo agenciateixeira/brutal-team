@@ -10,6 +10,7 @@ interface NavLinkProps {
   className?: string;
   loadingMessage?: string;
   onClick?: () => void;
+  disableLoading?: boolean;
 }
 
 export default function NavLink({
@@ -18,6 +19,7 @@ export default function NavLink({
   className = '',
   loadingMessage = 'Carregando...',
   onClick,
+  disableLoading = false,
 }: NavLinkProps) {
   const { showLoading } = useLoading();
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -26,9 +28,11 @@ export default function NavLink({
     // Iniciar transição suave
     setIsTransitioning(true);
 
-    // Pequeno delay antes de mostrar o loading
+    // Pequeno delay antes de mostrar o loading (se não estiver desabilitado)
     setTimeout(() => {
-      showLoading(loadingMessage);
+      if (!disableLoading) {
+        showLoading(loadingMessage);
+      }
       if (onClick) {
         onClick();
       }
