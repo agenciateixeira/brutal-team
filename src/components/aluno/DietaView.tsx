@@ -60,17 +60,17 @@ export default function DietaView({ alunoId, dietaAtiva: initialDietaAtiva, hist
             </div>
 
             {/* Observações Nutricionais */}
-            {dietaAtiva.observacoes_nutricionais && (
+            {dietaAtiva.observacoes_nutricionais && dietaAtiva.observacoes_nutricionais.split('\n').length <= 5 && (
               <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <Apple size={20} className="text-blue-600 dark:text-blue-400 mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">
                       📊 Observações Nutricionais
                     </h4>
-                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                    <div className="text-sm text-blue-800 dark:text-blue-200 whitespace-pre-wrap">
                       {dietaAtiva.observacoes_nutricionais}
-                    </p>
+                    </div>
                   </div>
                 </div>
               </div>

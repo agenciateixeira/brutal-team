@@ -55,8 +55,9 @@ export default function DietaParser({ content }: DietaParserProps) {
     // Detectar padrões como:
     // "20g de carboidrato", "30g de proteína"
     // "20g carboidrato", "30g proteína" (sem o "de")
+    // "20gde carboidrato" (grudado)
     // "20 gramas de carbo", etc
-    const pattern = /(\d+)\s*(?:g|gramas?)?\s*(?:de\s+)?(carboidrato|carboidratos|proteína|proteínas|proteina|proteinas|carbo|carbos|ptn)/gi;
+    const pattern = /(\d+)\s*(?:g|gramas?)?\s*(?:de\s*)?(carboidrato|carboidratos|proteína|proteínas|proteina|proteinas|carbo|carbos|ptn)/gi;
     const parts = [];
     let lastIndex = 0;
     let match;
