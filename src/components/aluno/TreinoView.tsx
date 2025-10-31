@@ -8,6 +8,7 @@ import { ptBR } from 'date-fns/locale';
 import { useRealtimeTreinos } from '@/hooks/useRealtimeTreinos';
 import WorkoutTracker from '@/components/aluno/WorkoutTracker';
 import TreinoParser from '@/components/aluno/TreinoParser';
+import WelcomeMessage from '@/components/aluno/WelcomeMessage';
 
 interface TreinoViewProps {
   alunoId: string;
@@ -63,15 +64,7 @@ export default function TreinoView({ alunoId, treinoAtivo: initialTreinoAtivo, h
             </div>
           </div>
         ) : (
-          <div className="text-center py-12">
-            <Dumbbell size={48} className="mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-500 dark:text-gray-400 mb-2">
-              Nenhum treino ativo no momento
-            </p>
-            <p className="text-sm text-gray-400 dark:text-gray-500">
-              Aguarde seu coach enviar seu treino personalizado
-            </p>
-          </div>
+          <WelcomeMessage type="workout" />
         )}
       </div>
 

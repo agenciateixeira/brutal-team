@@ -9,6 +9,7 @@ import { useRealtimeDietas } from '@/hooks/useRealtimeDietas';
 import MealTracker from '@/components/aluno/MealTracker';
 import DietaParser from '@/components/aluno/DietaParser';
 import GuiaAlimentos from '@/components/aluno/GuiaAlimentos';
+import WelcomeMessage from '@/components/aluno/WelcomeMessage';
 
 interface DietaViewProps {
   alunoId: string;
@@ -92,15 +93,7 @@ export default function DietaView({ alunoId, dietaAtiva: initialDietaAtiva, hist
             </button>
           </div>
         ) : (
-          <div className="text-center py-12">
-            <Apple size={48} className="mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-500 dark:text-gray-400 mb-2">
-              Nenhuma dieta ativa no momento
-            </p>
-            <p className="text-sm text-gray-400 dark:text-gray-500">
-              Aguarde seu coach enviar sua dieta personalizada
-            </p>
-          </div>
+          <WelcomeMessage type="diet" />
         )}
       </div>
 

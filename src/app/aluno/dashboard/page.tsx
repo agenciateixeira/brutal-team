@@ -6,6 +6,7 @@ import ProgressChart from '@/components/aluno/ProgressChart';
 import WeeklySummary from '@/components/aluno/WeeklySummary';
 import MonthlyPhotoProgress from '@/components/aluno/MonthlyPhotoProgress';
 import DashboardWithFirstAccess from '@/components/aluno/DashboardWithFirstAccess';
+import WelcomeMessage from '@/components/aluno/WelcomeMessage';
 import { TrendingUp, Calendar, Apple, AlertCircle } from 'lucide-react';
 
 export default async function AlunoDashboard() {
@@ -29,6 +30,23 @@ export default async function AlunoDashboard() {
   if (profile?.role !== 'aluno') {
     redirect('/coach/dashboard');
   }
+
+  // Buscar dieta e treino ativos
+  const { data: dietaAtiva } = await supabase
+    .from('dietas')
+    .select('*')
+    .eq('aluno_id', session.user.id)
+    .eq('active', true)
+    .single();
+
+  const { data: treinoAtivo } = await supabase
+    .from('treinos')
+    .select('*')
+    .eq('aluno_id', session.user.id)
+    .eq('active', true)
+    .single();
+
+  const showWelcomeMessage = !dietaAtiva || !treinoAtivo;
 
   // Buscar lembretes de vencimento (3 dias antes)
   const { data: paymentReminders } = await supabase
@@ -115,6 +133,9 @@ export default async function AlunoDashboard() {
                   Bem-vindo de volta, {profile.full_name || 'Atleta'}!
                 </p>
               </div>
+
+              {/* Mensagem de Boas-Vindas (7 dias) */}
+              {showWelcomeMessage && <WelcomeMessage type="dashboard" />}
 
               {/* Aviso de Vencimento */}
               {hasPaymentReminder && reminderData && (
