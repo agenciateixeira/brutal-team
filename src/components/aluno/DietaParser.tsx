@@ -47,6 +47,7 @@ export default function DietaParser({ content }: DietaParserProps) {
   };
 
   const handleNutrientClick = (type: 'carboidrato' | 'proteina', amount: number) => {
+    console.log('Nutriente clicado:', type, amount);
     setSelectedNutrient({ type, amount });
     setModalOpen(true);
   };
@@ -62,7 +63,10 @@ export default function DietaParser({ content }: DietaParserProps) {
     let lastIndex = 0;
     let match;
 
+    console.log('Texto sendo analisado:', text);
+
     while ((match = pattern.exec(text)) !== null) {
+      console.log('Match encontrado:', match[0], 'Quantidade:', match[1], 'Nutriente:', match[2]);
       // Adicionar texto antes do match
       if (match.index > lastIndex) {
         parts.push(text.substring(lastIndex, match.index));
