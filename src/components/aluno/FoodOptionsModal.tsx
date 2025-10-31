@@ -75,7 +75,7 @@ export default function FoodOptionsModal({ isOpen, onClose, nutrientType, amount
             >
               <div className="flex items-start gap-2">
                 <div className="flex-1">
-                  <p className="text-sm text-gray-900 dark:text-white">
+                  <p className="text-sm text-gray-900 dark:text-white font-normal">
                     {option.food_name}
                   </p>
                 </div>
@@ -131,10 +131,10 @@ export default function FoodOptionsModal({ isOpen, onClose, nutrientType, amount
               <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                 Estamos construindo seu guia de alimento perfeito!
               </h4>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-600 dark:text-gray-400 font-light">
                 Em breve voce tera todas as opcoes de proteinas disponiveis aqui.
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-500 mt-4">
+              <p className="text-sm text-gray-500 dark:text-gray-500 font-light mt-4">
                 Enquanto isso, consulte seu coach para as melhores opcoes de proteinas.
               </p>
             </div>
@@ -152,8 +152,8 @@ export default function FoodOptionsModal({ isOpen, onClose, nutrientType, amount
 
               {/* Nota */}
               <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 p-3 rounded-lg">
-                <p className="text-xs text-blue-800 dark:text-blue-200">
-                  <strong>Importante:</strong> Todos os alimentos devem ser pesados ja cozidos, exceto quando indicado medida caseira.
+                <p className="text-xs text-blue-800 dark:text-blue-200 font-light">
+                  <strong className="font-semibold">Importante:</strong> Todos os alimentos devem ser pesados ja cozidos, exceto quando indicado medida caseira.
                 </p>
               </div>
             </>

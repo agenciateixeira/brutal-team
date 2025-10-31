@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
@@ -9,7 +9,11 @@ import PageTransition from "@/components/ui/PageTransition";
 import NotificationToast from "@/components/ui/NotificationToast";
 import { Suspense } from "react";
 
-const inter = Inter({ subsets: ["latin"] });
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-montserrat",
+});
 
 export const metadata: Metadata = {
   title: "Brutal Team - Consultoria Fitness",
@@ -43,7 +47,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
       </head>
-      <body className={`${inter.className} bg-white`}>
+      <body className={`${montserrat.className} ${montserrat.variable} bg-white`}>
         <ThemeProvider>
           <LoadingProvider>
             <Suspense fallback={null}>

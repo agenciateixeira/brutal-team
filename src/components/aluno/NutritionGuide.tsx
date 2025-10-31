@@ -50,11 +50,11 @@ export default function NutritionGuide({ carbOptions }: NutritionGuideProps) {
             >
               <div className="flex items-start gap-3">
                 <div className="flex-1">
-                  <p className="text-gray-900 dark:text-white font-medium">
+                  <p className="text-gray-900 dark:text-white font-normal">
                     {option.food_name}
                   </p>
                   {option.portion_text && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 font-light mt-1">
                       {option.portion_text}
                     </p>
                   )}
@@ -123,7 +123,7 @@ export default function NutritionGuide({ carbOptions }: NutritionGuideProps) {
                       <h4 className="text-sm font-semibold text-yellow-800 dark:text-yellow-300 mb-1">
                         Observacao Importante
                       </h4>
-                      <p className="text-sm text-yellow-700 dark:text-yellow-200">
+                      <p className="text-sm text-yellow-700 dark:text-yellow-200 font-light">
                         {observation.notes}
                       </p>
                     </div>
@@ -133,8 +133,8 @@ export default function NutritionGuide({ carbOptions }: NutritionGuideProps) {
 
               {/* Nota geral */}
               <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 p-4 rounded-lg">
-                <p className="text-sm text-blue-800 dark:text-blue-200">
-                  <strong>Importante:</strong> Todos os alimentos devem ser pesados ja cozidos, exceto quando indicado medida caseira (colher de sopa, etc).
+                <p className="text-sm text-blue-800 dark:text-blue-200 font-light">
+                  <strong className="font-semibold">Importante:</strong> Todos os alimentos devem ser pesados ja cozidos, exceto quando indicado medida caseira (colher de sopa, etc).
                 </p>
               </div>
             </>
