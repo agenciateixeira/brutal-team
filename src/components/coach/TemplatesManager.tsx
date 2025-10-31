@@ -349,10 +349,10 @@ export default function TemplatesManager({
   return (
     <div className="space-y-6">
       <div className="border-b border-gray-200 dark:border-gray-700">
-        <nav className="flex gap-4">
+        <nav className="flex gap-4 overflow-x-auto">
           <button
             onClick={() => { setActiveTab('diet'); resetForm(); }}
-            className={`px-4 py-3 border-b-2 font-medium transition-colors ${
+            className={`px-4 py-3 border-b-2 font-medium transition-colors whitespace-nowrap ${
               activeTab === 'diet'
                 ? 'border-primary-600 text-primary-600 dark:text-primary-400'
                 : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -362,7 +362,7 @@ export default function TemplatesManager({
           </button>
           <button
             onClick={() => { setActiveTab('workout'); resetForm(); }}
-            className={`px-4 py-3 border-b-2 font-medium transition-colors ${
+            className={`px-4 py-3 border-b-2 font-medium transition-colors whitespace-nowrap ${
               activeTab === 'workout'
                 ? 'border-primary-600 text-primary-600 dark:text-primary-400'
                 : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -372,7 +372,7 @@ export default function TemplatesManager({
           </button>
           <button
             onClick={() => { setActiveTab('protocol'); resetForm(); }}
-            className={`px-4 py-3 border-b-2 font-medium transition-colors ${
+            className={`px-4 py-3 border-b-2 font-medium transition-colors whitespace-nowrap ${
               activeTab === 'protocol'
                 ? 'border-primary-600 text-primary-600 dark:text-primary-400'
                 : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'

@@ -8,7 +8,6 @@ import { ptBR } from 'date-fns/locale';
 import { useRealtimeDietas } from '@/hooks/useRealtimeDietas';
 import MealTracker from '@/components/aluno/MealTracker';
 import DietaParser from '@/components/aluno/DietaParser';
-import GuiaAlimentos from '@/components/aluno/GuiaAlimentos';
 import WelcomeMessage from '@/components/aluno/WelcomeMessage';
 
 interface DietaViewProps {
@@ -20,7 +19,6 @@ interface DietaViewProps {
 export default function DietaView({ alunoId, dietaAtiva: initialDietaAtiva, historico: initialHistorico }: DietaViewProps) {
   const [showHistorico, setShowHistorico] = useState(false);
   const [selectedDieta, setSelectedDieta] = useState<Dieta | null>(null);
-  const [showGuiaAlimentos, setShowGuiaAlimentos] = useState(false);
 
   // Hook de realtime
   const { dietas, dietaAtiva } = useRealtimeDietas(alunoId, initialHistorico);
@@ -80,17 +78,6 @@ export default function DietaView({ alunoId, dietaAtiva: initialDietaAtiva, hist
 
             {/* Conteúdo Parseado */}
             <DietaParser content={dietaAtiva.content} />
-
-            {/* Botão Guia de Alimentos */}
-            <button
-              onClick={() => setShowGuiaAlimentos(true)}
-              className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg transition-colors w-full sm:w-auto"
-            >
-              <Apple size={16} className="text-blue-600 dark:text-blue-400" />
-              <span className="text-sm text-blue-700 dark:text-blue-300 font-medium">
-                Guia de Alimentos
-              </span>
-            </button>
           </div>
         ) : (
           <WelcomeMessage type="diet" />
@@ -177,9 +164,6 @@ export default function DietaView({ alunoId, dietaAtiva: initialDietaAtiva, hist
 
       {/* Tracking de Refeições */}
       <MealTracker alunoId={alunoId} mealsPerDay={dietaAtiva?.meals_per_day || 6} />
-
-      {/* Modal Guia de Alimentos */}
-      <GuiaAlimentos isOpen={showGuiaAlimentos} onClose={() => setShowGuiaAlimentos(false)} />
     </div>
   );
 }
