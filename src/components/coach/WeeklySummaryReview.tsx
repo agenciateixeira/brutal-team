@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, Send, Image as ImageIcon, Calendar, Scale, Activity, Dumbbell, Droplet, Moon, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckCircle, Send, Image as ImageIcon, Calendar, Scale, Activity, Dumbbell, Droplet, Moon, Clock, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import Toast from '@/components/ui/Toast';
 
 interface WeeklySummary {
@@ -42,6 +42,36 @@ interface WeeklySummary {
   created_at: string;
 }
 
+interface AnamneseResponse {
+  id: string;
+  temp_email: string;
+  nome_completo?: string;
+  idade?: number;
+  altura?: number;
+  peso?: number;
+  cintura?: number;
+  braco?: number;
+  perna?: number;
+  profissao?: string;
+  rotina_trabalho?: string;
+  estuda?: boolean;
+  horarios_estudo?: string;
+  pratica_atividade_fisica?: boolean;
+  modalidades_exercicio?: string;
+  dias_horarios_atividade?: string;
+  horarios_sono?: string;
+  trajetoria_objetivos?: string;
+  mudancas_esperadas?: string;
+  resultado_estetico_final?: string;
+  tempo_treino_continuo?: string;
+  resultados_estagnados?: boolean;
+  percepcao_pump?: string;
+  uso_esteroides?: boolean;
+  quais_esteroides?: string;
+  outras_substancias?: string;
+  completed?: boolean;
+}
+
 interface WeeklySummaryReviewProps {
   summaries: WeeklySummary[];
 }
@@ -55,6 +85,8 @@ export default function WeeklySummaryReview({ summaries }: WeeklySummaryReviewPr
   const [processing, setProcessing] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [questionnaireExpanded, setQuestionnaireExpanded] = useState<Record<string, boolean>>({});
+  const [questionnaireData, setQuestionnaireData] = useState<Record<string, AnamneseResponse | null>>({});
 
   const monthNames = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -62,6 +94,40 @@ export default function WeeklySummaryReview({ summaries }: WeeklySummaryReviewPr
   ];
 
   const weekNames = ['1ª', '2ª', '3ª', '4ª'];
+
+  // Buscar questionários dos alunos
+  useEffect(() => {
+    const loadQuestionnaires = async () => {
+      const alunoIds = [...new Set(summaries.map(s => s.aluno_id))];
+
+      for (const alunoId of alunoIds) {
+        // Buscar perfil para pegar email
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('id', alunoId)
+          .single();
+
+        if (!profile) continue;
+
+        // Buscar questionário
+        const { data: anamnese } = await supabase
+          .from('anamnese_responses')
+          .select('*')
+          .eq('temp_email', profile.email)
+          .maybeSingle();
+
+        setQuestionnaireData(prev => ({
+          ...prev,
+          [alunoId]: anamnese
+        }));
+      }
+    };
+
+    if (summaries.length > 0) {
+      loadQuestionnaires();
+    }
+  }, [summaries]);
 
   const handleSendFeedback = async (summaryId: string) => {
     const feedback = feedbacks[summaryId];
@@ -391,6 +457,134 @@ export default function WeeklySummaryReview({ summaries }: WeeklySummaryReviewPr
                               </div>
                             )}
                           </div>
+                        </div>
+                      )}
+
+                      {/* Questionário */}
+                      {questionnaireData[summary.aluno_id] && (
+                        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-lg border-2 border-purple-200 dark:border-purple-800 overflow-hidden">
+                          <button
+                            onClick={() => setQuestionnaireExpanded(prev => ({ ...prev, [summary.id]: !prev[summary.id] }))}
+                            className="w-full p-4 flex items-center justify-between hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+                          >
+                            <div className="flex items-center gap-2">
+                              <FileText size={20} className="text-purple-600 dark:text-purple-400" />
+                              <h5 className="text-sm font-semibold text-gray-900 dark:text-white">
+                                Questionário do Aluno
+                              </h5>
+                            </div>
+                            {questionnaireExpanded[summary.id] ? (
+                              <ChevronUp size={18} className="text-gray-600" />
+                            ) : (
+                              <ChevronDown size={18} className="text-gray-600" />
+                            )}
+                          </button>
+
+                          {questionnaireExpanded[summary.id] && (
+                            <div className="p-4 space-y-4 border-t border-purple-200 dark:border-purple-800">
+                              {/* Informações Gerais */}
+                              <div>
+                                <h6 className="font-semibold text-purple-900 dark:text-purple-300 mb-2">📋 Informações Gerais</h6>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                  {questionnaireData[summary.aluno_id]?.idade && (
+                                    <div>
+                                      <span className="text-gray-500 dark:text-gray-400">Idade:</span>
+                                      <span className="text-gray-900 dark:text-white ml-2">{questionnaireData[summary.aluno_id]?.idade} anos</span>
+                                    </div>
+                                  )}
+                                  {questionnaireData[summary.aluno_id]?.altura && (
+                                    <div>
+                                      <span className="text-gray-500 dark:text-gray-400">Altura:</span>
+                                      <span className="text-gray-900 dark:text-white ml-2">{questionnaireData[summary.aluno_id]?.altura} cm</span>
+                                    </div>
+                                  )}
+                                  {questionnaireData[summary.aluno_id]?.peso && (
+                                    <div>
+                                      <span className="text-gray-500 dark:text-gray-400">Peso:</span>
+                                      <span className="text-gray-900 dark:text-white ml-2">{questionnaireData[summary.aluno_id]?.peso} kg</span>
+                                    </div>
+                                  )}
+                                  {questionnaireData[summary.aluno_id]?.peso && questionnaireData[summary.aluno_id]?.altura && (
+                                    <div>
+                                      <span className="text-gray-500 dark:text-gray-400">IMC:</span>
+                                      <span className="text-gray-900 dark:text-white ml-2">
+                                        {(questionnaireData[summary.aluno_id]!.peso! / Math.pow(questionnaireData[summary.aluno_id]!.altura! / 100, 2)).toFixed(1)}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Medidas */}
+                              {(questionnaireData[summary.aluno_id]?.cintura || questionnaireData[summary.aluno_id]?.braco || questionnaireData[summary.aluno_id]?.perna) && (
+                                <div>
+                                  <h6 className="font-semibold text-purple-900 dark:text-purple-300 mb-2">📏 Medidas</h6>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                                    {questionnaireData[summary.aluno_id]?.cintura && (
+                                      <div>
+                                        <span className="text-gray-500 dark:text-gray-400">Cintura:</span>
+                                        <span className="text-gray-900 dark:text-white ml-2">{questionnaireData[summary.aluno_id]?.cintura} cm</span>
+                                      </div>
+                                    )}
+                                    {questionnaireData[summary.aluno_id]?.braco && (
+                                      <div>
+                                        <span className="text-gray-500 dark:text-gray-400">Braço:</span>
+                                        <span className="text-gray-900 dark:text-white ml-2">{questionnaireData[summary.aluno_id]?.braco} cm</span>
+                                      </div>
+                                    )}
+                                    {questionnaireData[summary.aluno_id]?.perna && (
+                                      <div>
+                                        <span className="text-gray-500 dark:text-gray-400">Perna:</span>
+                                        <span className="text-gray-900 dark:text-white ml-2">{questionnaireData[summary.aluno_id]?.perna} cm</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Rotina */}
+                              {(questionnaireData[summary.aluno_id]?.profissao || questionnaireData[summary.aluno_id]?.rotina_trabalho) && (
+                                <div>
+                                  <h6 className="font-semibold text-purple-900 dark:text-purple-300 mb-2">💼 Rotina</h6>
+                                  <div className="space-y-2 text-sm">
+                                    {questionnaireData[summary.aluno_id]?.profissao && (
+                                      <div>
+                                        <span className="text-gray-500 dark:text-gray-400">Profissão:</span>
+                                        <p className="text-gray-900 dark:text-white">{questionnaireData[summary.aluno_id]?.profissao}</p>
+                                      </div>
+                                    )}
+                                    {questionnaireData[summary.aluno_id]?.rotina_trabalho && (
+                                      <div>
+                                        <span className="text-gray-500 dark:text-gray-400">Rotina de Trabalho:</span>
+                                        <p className="text-gray-900 dark:text-white">{questionnaireData[summary.aluno_id]?.rotina_trabalho}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Objetivos */}
+                              {(questionnaireData[summary.aluno_id]?.trajetoria_objetivos || questionnaireData[summary.aluno_id]?.mudancas_esperadas) && (
+                                <div>
+                                  <h6 className="font-semibold text-purple-900 dark:text-purple-300 mb-2">🎯 Objetivos</h6>
+                                  <div className="space-y-2 text-sm">
+                                    {questionnaireData[summary.aluno_id]?.trajetoria_objetivos && (
+                                      <div>
+                                        <span className="text-gray-500 dark:text-gray-400">Trajetória e objetivos:</span>
+                                        <p className="text-gray-900 dark:text-white">{questionnaireData[summary.aluno_id]?.trajetoria_objetivos}</p>
+                                      </div>
+                                    )}
+                                    {questionnaireData[summary.aluno_id]?.mudancas_esperadas && (
+                                      <div>
+                                        <span className="text-gray-500 dark:text-gray-400">Mudanças esperadas:</span>
+                                        <p className="text-gray-900 dark:text-white">{questionnaireData[summary.aluno_id]?.mudancas_esperadas}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
 
