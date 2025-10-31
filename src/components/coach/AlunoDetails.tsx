@@ -22,6 +22,9 @@ interface AlunoDetailsProps {
   treinos: Treino[];
   protocolos: ProtocoloHormonal[];
   coachId: string;
+  accessCode?: any;
+  anamneseResponse?: any;
+  firstAccessPhotos?: any;
 }
 
 type Tab = 'perfil' | 'fotos' | 'mensagens' | 'dieta' | 'treino' | 'protocolo';
@@ -33,7 +36,10 @@ export default function AlunoDetails({
   dietas,
   treinos,
   protocolos,
-  coachId
+  coachId,
+  accessCode,
+  anamneseResponse,
+  firstAccessPhotos
 }: AlunoDetailsProps) {
   const [activeTab, setActiveTab] = useState<Tab>('perfil');
   const [selectedPhoto, setSelectedPhoto] = useState<ProgressPhoto | null>(null);
@@ -419,6 +425,281 @@ export default function AlunoDetails({
                   </div>
                 </div>
               </div>
+
+              {/* Código de Primeiro Acesso */}
+              {accessCode && (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-6 border-2 border-blue-200 dark:border-blue-800">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <FileText size={20} className="text-blue-600" />
+                    Código de Primeiro Acesso
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Código</label>
+                      <div className="mt-1 text-3xl font-mono font-bold text-blue-600 dark:text-blue-400 tracking-widest">
+                        {accessCode.code}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Status</label>
+                      <div className="mt-1">
+                        <span className={`inline-flex px-4 py-2 rounded-full text-sm font-semibold ${
+                          accessCode.is_used
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                            : accessCode.is_active
+                            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                            : 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400'
+                        }`}>
+                          {accessCode.is_used ? 'Usado' : accessCode.is_active ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Plano</label>
+                      <p className="text-gray-900 dark:text-white font-medium mt-1">
+                        {accessCode.plan_name || 'Não especificado'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Valor</label>
+                      <p className="text-gray-900 dark:text-white font-medium mt-1">
+                        R$ {accessCode.plan_price ? Number(accessCode.plan_price).toFixed(2) : '0.00'}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Data de Criação</label>
+                      <p className="text-gray-900 dark:text-white font-medium mt-1">
+                        {accessCode.created_at ? format(new Date(accessCode.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : 'N/A'}
+                      </p>
+                    </div>
+                    {accessCode.used_at && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Data de Uso</label>
+                        <p className="text-gray-900 dark:text-white font-medium mt-1">
+                          {format(new Date(accessCode.used_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Fotos de Primeiro Acesso */}
+              {firstAccessPhotos && (
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-6 border-2 border-purple-200 dark:border-purple-800">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <ImageIcon size={20} className="text-purple-600" />
+                    Fotos de Primeiro Acesso
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {firstAccessPhotos.front_photo_url && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Frontal</p>
+                        <div className="relative aspect-[3/4] bg-gray-200 dark:bg-gray-800 rounded-lg overflow-hidden">
+                          <Image
+                            src={firstAccessPhotos.front_photo_url}
+                            alt="Foto frontal"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {firstAccessPhotos.side_photo_url && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Lateral</p>
+                        <div className="relative aspect-[3/4] bg-gray-200 dark:bg-gray-800 rounded-lg overflow-hidden">
+                          <Image
+                            src={firstAccessPhotos.side_photo_url}
+                            alt="Foto lateral"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {firstAccessPhotos.back_photo_url && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Costas</p>
+                        <div className="relative aspect-[3/4] bg-gray-200 dark:bg-gray-800 rounded-lg overflow-hidden">
+                          <Image
+                            src={firstAccessPhotos.back_photo_url}
+                            alt="Foto de costas"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
+                    Enviado em: {firstAccessPhotos.uploaded_at ? format(new Date(firstAccessPhotos.uploaded_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : 'N/A'}
+                  </p>
+                </div>
+              )}
+
+              {/* Questionário de Anamnese */}
+              {anamneseResponse && (
+                <div className="bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 rounded-lg p-6 border-2 border-green-200 dark:border-green-800">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <FileText size={20} className="text-green-600" />
+                    Questionário de Anamnese
+                  </h3>
+                  <div className="space-y-4">
+                    {/* Informações Básicas */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Informações Básicas</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Idade:</span>
+                          <span className="text-gray-900 dark:text-white ml-2">{anamneseResponse.idade} anos</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Altura:</span>
+                          <span className="text-gray-900 dark:text-white ml-2">{anamneseResponse.altura} cm</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Peso:</span>
+                          <span className="text-gray-900 dark:text-white ml-2">{anamneseResponse.peso} kg</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">IMC:</span>
+                          <span className="text-gray-900 dark:text-white ml-2">
+                            {(anamneseResponse.peso / Math.pow(anamneseResponse.altura / 100, 2)).toFixed(1)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Medidas */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Medidas</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Cintura:</span>
+                          <span className="text-gray-900 dark:text-white ml-2">{anamneseResponse.cintura} cm</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Braço:</span>
+                          <span className="text-gray-900 dark:text-white ml-2">{anamneseResponse.braco} cm</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Perna:</span>
+                          <span className="text-gray-900 dark:text-white ml-2">{anamneseResponse.perna} cm</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Rotina */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Rotina</h4>
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Profissão:</span>
+                          <p className="text-gray-900 dark:text-white">{anamneseResponse.profissao}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Rotina de Trabalho:</span>
+                          <p className="text-gray-900 dark:text-white">{anamneseResponse.rotina_trabalho}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Estuda:</span>
+                          <span className="text-gray-900 dark:text-white ml-2">{anamneseResponse.estuda ? 'Sim' : 'Não'}</span>
+                          {anamneseResponse.estuda && anamneseResponse.horarios_estudo && (
+                            <p className="text-gray-900 dark:text-white mt-1">Horários: {anamneseResponse.horarios_estudo}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Atividade Física */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Atividade Física</h4>
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Pratica atividade física:</span>
+                          <span className="text-gray-900 dark:text-white ml-2">{anamneseResponse.pratica_atividade_fisica ? 'Sim' : 'Não'}</span>
+                        </div>
+                        {anamneseResponse.pratica_atividade_fisica && (
+                          <>
+                            {anamneseResponse.modalidades_exercicio && (
+                              <div>
+                                <span className="text-gray-500 dark:text-gray-400">Modalidades:</span>
+                                <p className="text-gray-900 dark:text-white">{anamneseResponse.modalidades_exercicio}</p>
+                              </div>
+                            )}
+                            {anamneseResponse.dias_horarios_atividade && (
+                              <div>
+                                <span className="text-gray-500 dark:text-gray-400">Dias e horários:</span>
+                                <p className="text-gray-900 dark:text-white">{anamneseResponse.dias_horarios_atividade}</p>
+                              </div>
+                            )}
+                          </>
+                        )}
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Horários de sono:</span>
+                          <p className="text-gray-900 dark:text-white">{anamneseResponse.horarios_sono}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Objetivos */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Objetivos</h4>
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Trajetória e objetivos:</span>
+                          <p className="text-gray-900 dark:text-white">{anamneseResponse.trajetoria_objetivos}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Mudanças esperadas:</span>
+                          <p className="text-gray-900 dark:text-white">{anamneseResponse.mudancas_esperadas}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Resultado estético final:</span>
+                          <p className="text-gray-900 dark:text-white">{anamneseResponse.resultado_estetico_final}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Histórico de Treino */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Histórico de Treino</h4>
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Tempo de treino contínuo:</span>
+                          <p className="text-gray-900 dark:text-white">{anamneseResponse.tempo_treino_continuo}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Resultados estagnados:</span>
+                          <span className="text-gray-900 dark:text-white ml-2">{anamneseResponse.resultados_estagnados ? 'Sim' : 'Não'}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Percepção de pump:</span>
+                          <p className="text-gray-900 dark:text-white">{anamneseResponse.percepcao_pump}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Uso de esteroides:</span>
+                          <span className="text-gray-900 dark:text-white ml-2">{anamneseResponse.uso_esteroides ? 'Sim' : 'Não'}</span>
+                          {anamneseResponse.uso_esteroides && anamneseResponse.quais_esteroides && (
+                            <p className="text-gray-900 dark:text-white mt-1">Quais: {anamneseResponse.quais_esteroides}</p>
+                          )}
+                        </div>
+                        {anamneseResponse.outras_substancias && (
+                          <div>
+                            <span className="text-gray-500 dark:text-gray-400">Outras substâncias:</span>
+                            <p className="text-gray-900 dark:text-white">{anamneseResponse.outras_substancias}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
+                      Respondido em: {anamneseResponse.completed_at ? format(new Date(anamneseResponse.completed_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : 'N/A'}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Estatísticas de Adesão do Aluno */}
               <AlunoStatistics alunoId={aluno.id} />

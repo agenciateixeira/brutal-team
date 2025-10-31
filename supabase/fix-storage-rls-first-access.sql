@@ -29,13 +29,19 @@ CREATE POLICY "Alunos podem fazer upload de suas fotos"
     bucket_id = 'progress-photos'
     AND (
       -- Permitir upload em first-access/{aluno_id}/
-      (storage.foldername(name))[1] = 'first-access'
-      AND (storage.foldername(name))[2] = auth.uid()::text
-    )
-    OR (
+      (
+        (storage.foldername(name))[1] = 'first-access'
+        AND (storage.foldername(name))[2] = auth.uid()::text
+      )
+      OR
       -- Permitir upload em weekly-photos/{aluno_id}/
-      (storage.foldername(name))[1] = 'weekly-photos'
-      AND (storage.foldername(name))[2] = auth.uid()::text
+      (
+        (storage.foldername(name))[1] = 'weekly-photos'
+        AND (storage.foldername(name))[2] = auth.uid()::text
+      )
+      OR
+      -- Permitir upload direto em {aluno_id}/ (formato antigo - retrocompatibilidade)
+      (storage.foldername(name))[1] = auth.uid()::text
     )
   );
 
@@ -59,6 +65,9 @@ CREATE POLICY "Alunos podem ver suas próprias fotos"
         AND (storage.foldername(name))[2] = auth.uid()::text
       )
       OR
+      -- Ver fotos no formato antigo {aluno_id}/
+      (storage.foldername(name))[1] = auth.uid()::text
+      OR
       -- Coaches podem ver TODAS as fotos
       EXISTS (
         SELECT 1 FROM profiles
@@ -76,8 +85,13 @@ CREATE POLICY "Usuários podem atualizar metadados de suas fotos"
   USING (
     bucket_id = 'progress-photos'
     AND (
+      -- Formato com subpasta: first-access/{aluno_id}/ ou weekly-photos/{aluno_id}/
       (storage.foldername(name))[2] = auth.uid()::text
       OR
+      -- Formato antigo: {aluno_id}/
+      (storage.foldername(name))[1] = auth.uid()::text
+      OR
+      -- Coaches podem atualizar qualquer foto
       EXISTS (
         SELECT 1 FROM profiles
         WHERE profiles.id = auth.uid()

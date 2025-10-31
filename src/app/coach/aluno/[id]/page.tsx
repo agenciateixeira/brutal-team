@@ -71,6 +71,29 @@ export default async function AlunoDetailPage({ params }: { params: { id: string
     .eq('aluno_id', params.id)
     .order('created_at', { ascending: false });
 
+  // Buscar código de primeiro acesso
+  const { data: accessCode } = await supabase
+    .from('access_codes')
+    .select('*')
+    .eq('aluno_id', params.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  // Buscar respostas do questionário de anamnese
+  const { data: anamneseResponse } = await supabase
+    .from('anamnese_responses')
+    .select('*')
+    .eq('temp_email', alunoProfile.email)
+    .maybeSingle();
+
+  // Buscar fotos de primeiro acesso
+  const { data: firstAccessPhotos } = await supabase
+    .from('first_access_photos')
+    .select('*')
+    .eq('aluno_id', params.id)
+    .maybeSingle();
+
   // Marcar mensagens como lidas
   await supabase
     .from('messages')
@@ -88,6 +111,9 @@ export default async function AlunoDetailPage({ params }: { params: { id: string
         treinos={treinos || []}
         protocolos={protocolos || []}
         coachId={session.user.id}
+        accessCode={accessCode}
+        anamneseResponse={anamneseResponse}
+        firstAccessPhotos={firstAccessPhotos}
       />
     </AppLayout>
   );
