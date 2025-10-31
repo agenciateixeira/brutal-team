@@ -54,11 +54,9 @@ export default function DietaParser({ content }: DietaParserProps) {
 
   const renderTextWithNutrientLinks = (text: string) => {
     // Detectar padrões como:
-    // "20g de carboidrato", "30g de proteína"
-    // "20g carboidrato", "30g proteína" (sem o "de")
-    // "20gde carboidrato" (grudado)
-    // "20 gramas de carbo", etc
-    const pattern = /(\d+)\s*(?:g|gramas?)?\s*(?:de\s*)?(carboidrato|carboidratos|proteína|proteínas|proteina|proteinas|carbo|carbos|ptn)/gi;
+    // "30gs de proteínas", "50g de carboidratos"
+    // "30g proteína", "50g carbo" (sem o "de")
+    const pattern = /(\d+)\s*g?s?\s*(?:de\s*)?(carboidrato|carboidratos|proteína|proteínas|proteina|proteinas|carbo|carbos)/gi;
     const parts = [];
     let lastIndex = 0;
     let match;
@@ -66,7 +64,8 @@ export default function DietaParser({ content }: DietaParserProps) {
     console.log('Texto sendo analisado:', text);
 
     while ((match = pattern.exec(text)) !== null) {
-      console.log('Match encontrado:', match[0], 'Quantidade:', match[1], 'Nutriente:', match[2]);
+      console.log('✅ Match encontrado:', match[0], 'Quantidade:', match[1], 'Nutriente:', match[2]);
+
       // Adicionar texto antes do match
       if (match.index > lastIndex) {
         parts.push(text.substring(lastIndex, match.index));
@@ -343,13 +342,8 @@ export default function DietaParser({ content }: DietaParserProps) {
                       <div className="flex items-start gap-2">
                         {getCategoryIcon(item.category)}
                         <div className="flex-1">
-                          {item.quantity && (
-                            <span className="inline-block px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 rounded mr-2">
-                              {item.quantity}
-                            </span>
-                          )}
                           <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {renderTextWithNutrientLinks(item.text)}
+                            {renderTextWithNutrientLinks(item.quantity ? `${item.quantity} ${item.text}` : item.text)}
                           </span>
                         </div>
                       </div>
@@ -380,13 +374,8 @@ export default function DietaParser({ content }: DietaParserProps) {
                                 key={altIndex}
                                 className="pl-3 py-1.5 bg-gray-50 dark:bg-gray-800/50 rounded text-sm border-l-2 border-gray-300 dark:border-gray-600"
                               >
-                                {alt.quantity && (
-                                  <span className="inline-block px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 rounded mr-2">
-                                    {alt.quantity}
-                                  </span>
-                                )}
                                 <span className="text-gray-700 dark:text-gray-300">
-                                  {renderTextWithNutrientLinks(alt.text)}
+                                  {renderTextWithNutrientLinks(alt.quantity ? `${alt.quantity} ${alt.text}` : alt.text)}
                                 </span>
                               </div>
                             ))}
