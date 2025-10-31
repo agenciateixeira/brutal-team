@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Users, Clock, CheckCircle, AlertCircle, DollarSign } from 'lucide-react';
+import { Users, Clock, CheckCircle, AlertCircle, DollarSign, Plus, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import ManagePaymentModal from './ManagePaymentModal';
+import { useRouter } from 'next/navigation';
 
 interface PaymentsListProps {
   students: any[];
@@ -13,7 +15,29 @@ interface PaymentsListProps {
 type TabType = 'students' | 'history';
 
 export default function PaymentsList({ students, recentPayments }: PaymentsListProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('students');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<any>(null);
+
+  const handleEdit = (student: any) => {
+    setEditingStudent(student);
+    setModalOpen(true);
+  };
+
+  const handleAddNew = () => {
+    setEditingStudent(null);
+    setModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setEditingStudent(null);
+  };
+
+  const handleSuccess = () => {
+    router.refresh();
+  };
 
   const getStatusBadge = (status: string) => {
     const styles = {
@@ -65,10 +89,25 @@ export default function PaymentsList({ students, recentPayments }: PaymentsListP
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-      {/* Tabs */}
-      <div className="border-b border-gray-200 dark:border-gray-700">
-        <div className="flex">
+    <>
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        {/* Header com botão de adicionar */}
+        <div className="p-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Gerenciamento de Pagamentos
+          </h3>
+          <button
+            onClick={handleAddNew}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors"
+          >
+            <Plus size={18} />
+            Adicionar Plano Manual
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <div className="flex">
           <button
             onClick={() => setActiveTab('students')}
             className={`flex-1 px-6 py-4 text-sm font-medium transition-colors border-b-2 ${
@@ -136,6 +175,16 @@ export default function PaymentsList({ students, recentPayments }: PaymentsListP
                       </p>
                     </div>
                     {getStatusBadge(student.profiles?.payment_status || 'pending')}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(student);
+                      }}
+                      className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                      title="Editar plano"
+                    >
+                      <Edit size={18} className="text-gray-600 dark:text-gray-400" />
+                    </button>
                   </div>
                 </div>
               ))
@@ -191,5 +240,14 @@ export default function PaymentsList({ students, recentPayments }: PaymentsListP
         )}
       </div>
     </div>
+
+      {/* Modal de Gerenciamento */}
+      <ManagePaymentModal
+        isOpen={modalOpen}
+        onClose={handleModalClose}
+        editingStudent={editingStudent}
+        onSuccess={handleSuccess}
+      />
+    </>
   );
 }
