@@ -58,7 +58,6 @@ export default function TemplatesManager({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Form states
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [content, setContent] = useState('');
@@ -93,7 +92,7 @@ export default function TemplatesManager({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !content.trim()) {
-      alert('Nome e conteúdo são obrigatórios');
+      alert('Nome e conteudo sao obrigatorios');
       return;
     }
 
@@ -116,7 +115,6 @@ export default function TemplatesManager({
         : baseData;
 
       if (editingId) {
-        // Update existing template
         const { error } = await supabase
           .from(tableName)
           .update(data)
@@ -124,7 +122,6 @@ export default function TemplatesManager({
 
         if (error) throw error;
       } else {
-        // Create new template
         const { error } = await supabase
           .from(tableName)
           .insert(data);
@@ -171,7 +168,7 @@ export default function TemplatesManager({
       return (
         <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
           <p className="text-gray-500 dark:text-gray-400">
-            Nenhum template criado ainda. Clique em &quot;Novo Template&quot; para começar.
+            Nenhum template criado ainda. Clique em Novo Template para comecar.
           </p>
         </div>
       );
@@ -207,7 +204,7 @@ export default function TemplatesManager({
                 </div>
                 {activeTab === 'diet' && 'meals_per_day' in template && (
                   <div className="flex gap-4 text-xs text-gray-500 dark:text-gray-400">
-                    <span>Refeições/dia: {template.meals_per_day}</span>
+                    <span>Refeicoes/dia: {template.meals_per_day}</span>
                     {template.observacoes_nutricionais && (
                       <span>Obs: {template.observacoes_nutricionais.substring(0, 50)}...</span>
                     )}
@@ -263,21 +260,21 @@ export default function TemplatesManager({
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
-              placeholder="Ex: Dieta Bulking Básica"
+              placeholder="Ex: Dieta Bulking Basica"
               required
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Descrição
+              Descricao
             </label>
             <input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
-              placeholder="Descrição opcional do template"
+              placeholder="Descricao opcional do template"
             />
           </div>
 
@@ -285,7 +282,7 @@ export default function TemplatesManager({
             <>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Refeições por Dia
+                  Refeicoes por Dia
                 </label>
                 <select
                   value={mealsPerDay}
@@ -293,21 +290,21 @@ export default function TemplatesManager({
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                 >
                   {[3, 4, 5, 6, 7, 8].map((num) => (
-                    <option key={num} value={num}>{num} refeições</option>
+                    <option key={num} value={num}>{num} refeicoes</option>
                   ))}
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Observações Nutricionais
+                  Observacoes Nutricionais
                 </label>
                 <textarea
                   value={observacoesNutricionais}
                   onChange={(e) => setObservacoesNutricionais(e.target.value)}
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Observações gerais sobre a dieta"
+                  placeholder="Observacoes gerais sobre a dieta"
                 />
               </div>
             </>
@@ -315,14 +312,14 @@ export default function TemplatesManager({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Conteúdo do Template *
+              Conteudo do Template *
             </label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={12}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white font-mono text-sm"
-              placeholder="Digite o conteúdo completo do template..."
+              placeholder="Digite o conteudo completo do template..."
               required
             />
           </div>
@@ -351,7 +348,6 @@ export default function TemplatesManager({
 
   return (
     <div className="space-y-6">
-      {/* Tabs */}
       <div className="border-b border-gray-200 dark:border-gray-700">
         <nav className="flex gap-4">
           <button
@@ -387,7 +383,6 @@ export default function TemplatesManager({
         </nav>
       </div>
 
-      {/* New Template Button */}
       {!showForm && (
         <button
           onClick={() => setShowForm(true)}
@@ -398,10 +393,8 @@ export default function TemplatesManager({
         </button>
       )}
 
-      {/* Form */}
       {showForm && renderForm()}
 
-      {/* Templates List */}
       {renderTemplatesList()}
     </div>
   );
