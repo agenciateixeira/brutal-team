@@ -33,7 +33,47 @@ export async function POST() {
 
     // Deletar dados relacionados (em ordem devido a foreign keys)
 
-    // 1. Deletar mensagens do chat
+    // 1. Deletar notificações
+    const { error: notificationsError } = await supabaseAdmin
+      .from('notifications')
+      .delete()
+      .eq('user_id', userId);
+
+    if (notificationsError) {
+      console.error('Erro ao deletar notifications:', notificationsError);
+    }
+
+    // 2. Deletar mensagens (sistema de mensagens)
+    const { error: messagesError } = await supabaseAdmin
+      .from('messages')
+      .delete()
+      .or(`sender_id.eq.${userId},aluno_id.eq.${userId}`);
+
+    if (messagesError) {
+      console.error('Erro ao deletar messages:', messagesError);
+    }
+
+    // 3. Deletar fotos de progresso
+    const { error: photosError } = await supabaseAdmin
+      .from('progress_photos')
+      .delete()
+      .eq('aluno_id', userId);
+
+    if (photosError) {
+      console.error('Erro ao deletar progress_photos:', photosError);
+    }
+
+    // 4. Deletar lembretes de pagamento
+    const { error: remindersError } = await supabaseAdmin
+      .from('payment_reminders')
+      .delete()
+      .eq('aluno_id', userId);
+
+    if (remindersError) {
+      console.error('Erro ao deletar payment_reminders:', remindersError);
+    }
+
+    // 5. Deletar mensagens do chat
     const { error: chatError } = await supabaseAdmin
       .from('chat_messages')
       .delete()
@@ -43,7 +83,7 @@ export async function POST() {
       console.error('Erro ao deletar chat_messages:', chatError);
     }
 
-    // 2. Deletar tracking de refeições
+    // 6. Deletar tracking de refeições
     const { error: mealTrackingError } = await supabaseAdmin
       .from('meal_tracking')
       .delete()
@@ -53,7 +93,7 @@ export async function POST() {
       console.error('Erro ao deletar meal_tracking:', mealTrackingError);
     }
 
-    // 3. Deletar tracking de treinos
+    // 7. Deletar tracking de treinos
     const { error: workoutTrackingError } = await supabaseAdmin
       .from('workout_tracking')
       .delete()
@@ -63,7 +103,7 @@ export async function POST() {
       console.error('Erro ao deletar workout_tracking:', workoutTrackingError);
     }
 
-    // 4. Deletar resumos semanais
+    // 8. Deletar resumos semanais
     const { error: resumosError } = await supabaseAdmin
       .from('resumos_semanais')
       .delete()
@@ -73,7 +113,7 @@ export async function POST() {
       console.error('Erro ao deletar resumos_semanais:', resumosError);
     }
 
-    // 5. Deletar dietas
+    // 9. Deletar dietas
     const { error: dietasError } = await supabaseAdmin
       .from('dietas')
       .delete()
@@ -83,7 +123,7 @@ export async function POST() {
       console.error('Erro ao deletar dietas:', dietasError);
     }
 
-    // 6. Deletar treinos
+    // 10. Deletar treinos
     const { error: treinosError } = await supabaseAdmin
       .from('treinos')
       .delete()
@@ -93,7 +133,7 @@ export async function POST() {
       console.error('Erro ao deletar treinos:', treinosError);
     }
 
-    // 7. Deletar protocolos hormonais
+    // 11. Deletar protocolos hormonais
     const { error: protocolosError } = await supabaseAdmin
       .from('protocolos_hormonais')
       .delete()
@@ -103,7 +143,7 @@ export async function POST() {
       console.error('Erro ao deletar protocolos_hormonais:', protocolosError);
     }
 
-    // 8. Deletar solicitações de acesso (como aluno ou coach)
+    // 12. Deletar solicitações de acesso (como aluno ou coach)
     const { error: solicitacoesAlunoError } = await supabaseAdmin
       .from('solicitacoes_acesso')
       .delete()
@@ -122,7 +162,7 @@ export async function POST() {
       console.error('Erro ao deletar solicitacoes_acesso (coach):', solicitacoesCoachError);
     }
 
-    // 9. Deletar perfil
+    // 13. Deletar perfil
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .delete()
@@ -136,7 +176,7 @@ export async function POST() {
       );
     }
 
-    // 10. Deletar usuário do Auth
+    // 14. Deletar usuário do Auth
     const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (authError) {

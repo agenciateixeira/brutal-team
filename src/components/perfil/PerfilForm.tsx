@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Profile } from '@/types';
-import { User, Mail, Save, Phone, Camera, Trash2, ExternalLink } from 'lucide-react';
+import { User, Mail, Save, Phone, Camera, Trash2, ExternalLink, Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -19,6 +19,7 @@ export default function PerfilForm({ profile }: PerfilFormProps) {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -143,6 +144,38 @@ export default function PerfilForm({ profile }: PerfilFormProps) {
       setShowDeleteConfirm(false);
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleExportData = async () => {
+    try {
+      setExporting(true);
+      setMessage(null);
+
+      const response = await fetch('/api/export-data', {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao exportar dados');
+      }
+
+      // Criar blob e fazer download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `brutal-team-dados-${profile.id}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      setMessage({ type: 'success', text: 'Dados exportados com sucesso!' });
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message || 'Erro ao exportar dados' });
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -300,6 +333,25 @@ export default function PerfilForm({ profile }: PerfilFormProps) {
             Política de Privacidade
           </Link>
         </div>
+      </div>
+
+      {/* Exportação de Dados (LGPD) */}
+      <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          Seus Dados
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          Baixe uma cópia de todos os seus dados armazenados na plataforma (LGPD).
+        </p>
+        <button
+          type="button"
+          onClick={handleExportData}
+          disabled={exporting}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+        >
+          <Download size={18} />
+          {exporting ? 'Exportando...' : 'Baixar Meus Dados'}
+        </button>
       </div>
 
       {/* Zona de Perigo - Exclusão de Conta */}
