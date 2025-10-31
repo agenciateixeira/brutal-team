@@ -685,7 +685,7 @@ export default function QuestionarioPage() {
 
               <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
                 <p className="text-sm text-green-800 dark:text-green-300">
-                  ✅ Última etapa! Clique em "Finalizar e Ir para Cadastro" para enviar suas respostas.
+                  ✅ Última etapa! Clique em &quot;Finalizar e Ir para Cadastro&quot; para enviar suas respostas.
                 </p>
               </div>
             </div>
