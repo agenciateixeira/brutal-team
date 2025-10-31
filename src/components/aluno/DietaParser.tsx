@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Beef, Droplet, Salad, Info } from 'lucide-react';
+import { ChevronDown, ChevronRight, Beef, Droplet, Salad, Info, HelpCircle } from 'lucide-react';
+import FoodOptionsModal from './FoodOptionsModal';
 
 interface DietaParserProps {
   content: string;
@@ -22,6 +23,8 @@ interface ParsedItem {
 export default function DietaParser({ content }: DietaParserProps) {
   const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set([0]));
   const [expandedAlternatives, setExpandedAlternatives] = useState<Set<string>>(new Set());
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedNutrient, setSelectedNutrient] = useState<{ type: 'carboidrato' | 'proteina', amount: number } | null>(null);
 
   const toggleSection = (index: number) => {
     const newExpanded = new Set(expandedSections);
@@ -41,6 +44,56 @@ export default function DietaParser({ content }: DietaParserProps) {
       newExpanded.add(key);
     }
     setExpandedAlternatives(newExpanded);
+  };
+
+  const handleNutrientClick = (type: 'carboidrato' | 'proteina', amount: number) => {
+    setSelectedNutrient({ type, amount });
+    setModalOpen(true);
+  };
+
+  const renderTextWithNutrientLinks = (text: string) => {
+    // Detectar padrões como "20g de carboidrato", "30g de proteína", etc
+    const pattern = /(\d+)g?\s+de\s+(carboidrato|proteína|proteina|carbo)/gi;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = pattern.exec(text)) !== null) {
+      // Adicionar texto antes do match
+      if (match.index > lastIndex) {
+        parts.push(text.substring(lastIndex, match.index));
+      }
+
+      const amount = parseInt(match[1]);
+      const nutrientRaw = match[2].toLowerCase();
+      const nutrientType: 'carboidrato' | 'proteina' =
+        nutrientRaw.includes('carb') ? 'carboidrato' : 'proteina';
+
+      // Adicionar link clicável
+      parts.push(
+        <button
+          key={match.index}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleNutrientClick(nutrientType, amount);
+          }}
+          className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary-100 dark:bg-primary-900/30 hover:bg-primary-200 dark:hover:bg-primary-900/50 text-primary-700 dark:text-primary-300 rounded font-medium transition-colors cursor-pointer underline decoration-dotted"
+          title={`Ver opcoes de ${nutrientType}`}
+        >
+          {match[0]}
+          <HelpCircle size={14} />
+        </button>
+      );
+
+      lastIndex = pattern.lastIndex;
+    }
+
+    // Adicionar texto restante
+    if (lastIndex < text.length) {
+      parts.push(text.substring(lastIndex));
+    }
+
+    return parts.length > 0 ? parts : text;
   };
 
   const getCategoryIcon = (category: string) => {
@@ -288,7 +341,7 @@ export default function DietaParser({ content }: DietaParserProps) {
                             </span>
                           )}
                           <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {item.text}
+                            {renderTextWithNutrientLinks(item.text)}
                           </span>
                         </div>
                       </div>
@@ -325,7 +378,7 @@ export default function DietaParser({ content }: DietaParserProps) {
                                   </span>
                                 )}
                                 <span className="text-gray-700 dark:text-gray-300">
-                                  {alt.text}
+                                  {renderTextWithNutrientLinks(alt.text)}
                                 </span>
                               </div>
                             ))}
@@ -340,6 +393,16 @@ export default function DietaParser({ content }: DietaParserProps) {
           )}
         </div>
       ))}
+
+      {/* Modal de Opcoes de Alimentos */}
+      {selectedNutrient && (
+        <FoodOptionsModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          nutrientType={selectedNutrient.type}
+          amount={selectedNutrient.amount}
+        />
+      )}
     </div>
   );
 }
