@@ -840,17 +840,17 @@ export default function AlunoDetails({
 
           {/* Dieta Tab */}
           {activeTab === 'dieta' && (
-            <DietaManager alunoId={aluno.id} dietas={dietas} />
+            <DietaManager alunoId={aluno.id} dietas={dietas} coachId={coachId} />
           )}
 
           {/* Treino Tab */}
           {activeTab === 'treino' && (
-            <TreinoManager alunoId={aluno.id} treinos={treinos} />
+            <TreinoManager alunoId={aluno.id} treinos={treinos} coachId={coachId} />
           )}
 
           {/* Protocolo Tab */}
           {activeTab === 'protocolo' && (
-            <ProtocoloManager alunoId={aluno.id} protocolos={protocolos} />
+            <ProtocoloManager alunoId={aluno.id} protocolos={protocolos} coachId={coachId} />
           )}
         </div>
       </div>

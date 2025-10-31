@@ -15,7 +15,8 @@ import {
   Calendar,
   FileText,
   Settings,
-  LogOut
+  LogOut,
+  DollarSign
 } from 'lucide-react';
 import { Profile } from '@/types';
 import { createClient } from '@/lib/supabase/client';
@@ -56,13 +57,11 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
         { href: '/aluno/perfil', icon: User, label: 'Perfil' },
         { href: '/aluno/mensagens', icon: MessageCircle, label: 'Mensagens' },
         { href: '/aluno/progresso', icon: Calendar, label: 'Progresso' },
-        { href: '/aluno/relatorios', icon: FileText, label: 'Relatórios' },
-        { href: '/configuracoes', icon: Settings, label: 'Configurações' },
       ]
     : [
-        { href: '/coach/estatisticas', icon: Calendar, label: 'Estatísticas' },
         { href: '/coach/templates', icon: FileText, label: 'Templates' },
-        { href: '/configuracoes', icon: Settings, label: 'Configurações' },
+        { href: '/coach/pagamentos', icon: DollarSign, label: 'Pagamentos' },
+        { href: '/coach/perfil', icon: User, label: 'Perfil' },
       ];
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');

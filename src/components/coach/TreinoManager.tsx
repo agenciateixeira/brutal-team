@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Treino } from '@/types';
-import { Plus, CheckCircle, XCircle, Trash2, Edit } from 'lucide-react';
+import { Plus, CheckCircle, XCircle, Trash2, Edit, Copy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -11,6 +11,16 @@ import { ptBR } from 'date-fns/locale';
 interface TreinoManagerProps {
   alunoId: string;
   treinos: Treino[];
+  coachId: string;
+}
+
+interface WorkoutTemplate {
+  id: string;
+  name: string;
+  description: string | null;
+  content: string;
+  workout_types: string[];
+  times_used: number;
 }
 
 const workoutTypeOptions = [
@@ -20,15 +30,58 @@ const workoutTypeOptions = [
   { value: 'outros', label: 'Outros' },
 ];
 
-export default function TreinoManager({ alunoId, treinos }: TreinoManagerProps) {
+export default function TreinoManager({ alunoId, treinos, coachId }: TreinoManagerProps) {
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [workoutTypes, setWorkoutTypes] = useState<string[]>(['musculacao']);
   const [setAsActive, setSetAsActive] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const router = useRouter();
   const supabase = createClient();
+
+  // Buscar templates ao abrir o formulário
+  useEffect(() => {
+    if (showForm) {
+      loadTemplates();
+    }
+  }, [showForm]);
+
+  const loadTemplates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('treino_templates')
+        .select('*')
+        .eq('coach_id', coachId)
+        .order('times_used', { ascending: false });
+
+      if (error) throw error;
+      setTemplates(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar templates:', error);
+    }
+  };
+
+  const handleTemplateSelect = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+
+    if (!templateId) {
+      // Limpar formulário se desselecionar template
+      setTitle('');
+      setContent('');
+      setWorkoutTypes(['musculacao']);
+      return;
+    }
+
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      setTitle(template.name);
+      setContent(template.content);
+      setWorkoutTypes(template.workout_types);
+    }
+  };
 
   const toggleWorkoutType = (type: string) => {
     setWorkoutTypes(prev =>
@@ -63,6 +116,7 @@ export default function TreinoManager({ alunoId, treinos }: TreinoManagerProps) 
         content: content.trim(),
         workout_types: workoutTypes,
         active: setAsActive,
+        template_id: selectedTemplateId || null,
       });
 
       if (error) throw error;
@@ -71,6 +125,7 @@ export default function TreinoManager({ alunoId, treinos }: TreinoManagerProps) 
       setContent('');
       setWorkoutTypes(['musculacao']);
       setSetAsActive(true);
+      setSelectedTemplateId('');
       setShowForm(false);
       router.refresh();
     } catch (error: any) {
@@ -145,6 +200,31 @@ export default function TreinoManager({ alunoId, treinos }: TreinoManagerProps) 
       {/* Form */}
       {showForm && (
         <form onSubmit={handleSave} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-4 rounded-lg space-y-3">
+          {/* Template Selector */}
+          {templates.length > 0 && (
+            <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700 p-3 rounded-lg">
+              <label className="block text-sm font-medium text-primary-900 dark:text-primary-300 mb-2 flex items-center gap-2">
+                <Copy size={16} />
+                Usar Template (Opcional)
+              </label>
+              <select
+                value={selectedTemplateId}
+                onChange={(e) => handleTemplateSelect(e.target.value)}
+                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-primary-300 dark:border-primary-600 rounded-md text-gray-900 dark:text-white"
+              >
+                <option value="">Começar do zero</option>
+                {templates.map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name} {template.description ? `- ${template.description}` : ''} (usado {template.times_used}x)
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-primary-700 dark:text-primary-300 mt-1">
+                Selecione um template para pré-preencher os campos automaticamente
+              </p>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Título

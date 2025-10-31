@@ -16,7 +16,8 @@ import {
   X,
   LogOut,
   Users,
-  DollarSign
+  DollarSign,
+  FileText
 } from 'lucide-react';
 import { Profile } from '@/types';
 import ThemeToggle from './ThemeToggle';
@@ -99,6 +100,7 @@ export default function Sidebar({ profile }: SidebarProps) {
   const menuItems = isCoach ? [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/coach/dashboard' },
     { icon: Users, label: 'Alunos', href: '/coach/alunos' },
+    { icon: FileText, label: 'Templates', href: '/coach/templates' },
     { icon: DollarSign, label: 'Pagamentos', href: '/admin/dashboard' },
     { icon: User, label: 'Perfil', href: '/coach/perfil' },
   ] : [

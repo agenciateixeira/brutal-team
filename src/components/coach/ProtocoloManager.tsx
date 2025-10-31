@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { ProtocoloHormonal } from '@/types';
-import { Plus, CheckCircle, XCircle, Trash2, Edit } from 'lucide-react';
+import { Plus, CheckCircle, XCircle, Trash2, Edit, Copy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -11,16 +11,66 @@ import { ptBR } from 'date-fns/locale';
 interface ProtocoloManagerProps {
   alunoId: string;
   protocolos: ProtocoloHormonal[];
+  coachId: string;
 }
 
-export default function ProtocoloManager({ alunoId, protocolos }: ProtocoloManagerProps) {
+interface ProtocolTemplate {
+  id: string;
+  name: string;
+  description: string | null;
+  content: string;
+  times_used: number;
+}
+
+export default function ProtocoloManager({ alunoId, protocolos, coachId }: ProtocoloManagerProps) {
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [setAsActive, setSetAsActive] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [templates, setTemplates] = useState<ProtocolTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const router = useRouter();
   const supabase = createClient();
+
+  // Buscar templates ao abrir o formulário
+  useEffect(() => {
+    if (showForm) {
+      loadTemplates();
+    }
+  }, [showForm]);
+
+  const loadTemplates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('protocolo_templates')
+        .select('*')
+        .eq('coach_id', coachId)
+        .order('times_used', { ascending: false });
+
+      if (error) throw error;
+      setTemplates(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar templates:', error);
+    }
+  };
+
+  const handleTemplateSelect = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+
+    if (!templateId) {
+      // Limpar formulário se desselecionar template
+      setTitle('');
+      setContent('');
+      return;
+    }
+
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      setTitle(template.name);
+      setContent(template.content);
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +92,7 @@ export default function ProtocoloManager({ alunoId, protocolos }: ProtocoloManag
         title: title.trim(),
         content: content.trim(),
         active: setAsActive,
+        template_id: selectedTemplateId || null,
       });
 
       if (error) throw error;
@@ -49,6 +100,7 @@ export default function ProtocoloManager({ alunoId, protocolos }: ProtocoloManag
       setTitle('');
       setContent('');
       setSetAsActive(true);
+      setSelectedTemplateId('');
       setShowForm(false);
       router.refresh();
     } catch (error: any) {
@@ -122,6 +174,31 @@ export default function ProtocoloManager({ alunoId, protocolos }: ProtocoloManag
       {/* Form */}
       {showForm && (
         <form onSubmit={handleSave} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-4 rounded-lg space-y-3">
+          {/* Template Selector */}
+          {templates.length > 0 && (
+            <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700 p-3 rounded-lg">
+              <label className="block text-sm font-medium text-primary-900 dark:text-primary-300 mb-2 flex items-center gap-2">
+                <Copy size={16} />
+                Usar Template (Opcional)
+              </label>
+              <select
+                value={selectedTemplateId}
+                onChange={(e) => handleTemplateSelect(e.target.value)}
+                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-primary-300 dark:border-primary-600 rounded-md text-gray-900 dark:text-white"
+              >
+                <option value="">Começar do zero</option>
+                {templates.map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name} {template.description ? `- ${template.description}` : ''} (usado {template.times_used}x)
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-primary-700 dark:text-primary-300 mt-1">
+                Selecione um template para pré-preencher os campos automaticamente
+              </p>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Título
