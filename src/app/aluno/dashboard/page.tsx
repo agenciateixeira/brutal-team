@@ -1,6 +1,7 @@
 import { createServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Sidebar from '@/components/ui/Sidebar';
+import BottomNavigation from '@/components/ui/BottomNavigation';
 import ProgressChart from '@/components/aluno/ProgressChart';
 import WeeklySummary from '@/components/aluno/WeeklySummary';
 import MonthlyPhotoProgress from '@/components/aluno/MonthlyPhotoProgress';
@@ -105,7 +106,7 @@ export default async function AlunoDashboard() {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto lg:ml-64 bg-gray-50">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16 lg:mt-0">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16 lg:mt-0 pb-24 md:pb-8">
             <div className="space-y-6">
               {/* Header */}
               <div>
@@ -210,6 +211,9 @@ export default async function AlunoDashboard() {
             </div>
           </div>
         </main>
+
+        {/* Bottom Navigation - Mobile Only */}
+        <BottomNavigation profile={profile} />
       </div>
     </DashboardWithFirstAccess>
   );

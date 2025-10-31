@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   LayoutDashboard,
@@ -18,6 +18,7 @@ import {
   LogOut
 } from 'lucide-react';
 import { Profile } from '@/types';
+import { createClient } from '@/lib/supabase/client';
 
 interface BottomNavigationProps {
   profile: Profile;
@@ -25,8 +26,16 @@ interface BottomNavigationProps {
 
 export default function BottomNavigation({ profile }: BottomNavigationProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = createClient();
   const [showMenu, setShowMenu] = useState(false);
   const isAluno = profile.role === 'aluno';
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+    router.refresh();
+  };
 
   const mainNavItems = isAluno
     ? [
@@ -145,15 +154,13 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
                   })}
 
                   {/* Logout */}
-                  <form action="/auth/logout" method="post">
-                    <button
-                      type="submit"
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                    >
-                      <LogOut size={20} />
-                      <span className="font-medium">Sair</span>
-                    </button>
-                  </form>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <LogOut size={20} />
+                    <span className="font-medium">Sair</span>
+                  </button>
                 </div>
               </div>
 
