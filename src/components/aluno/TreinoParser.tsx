@@ -17,6 +17,7 @@ interface ParsedItem {
   text: string;
   series?: string;
   reps?: string;
+  rest?: string;
   alternatives?: ParsedItem[];
 }
 
@@ -146,31 +147,46 @@ export default function TreinoParser({ content }: TreinoParserProps) {
     return 'geral';
   };
 
-  const extractSeriesReps = (text: string): { series?: string; reps?: string; cleanText: string } => {
+  const extractSeriesReps = (text: string): { series?: string; reps?: string; rest?: string; cleanText: string } => {
     // Procura por padrões: 3x12, 4 x 15, 3 séries de 12 reps, etc
     const seriesRepsMatch = text.match(/(\d+)\s*[xX×]\s*(\d+(?:-\d+)?)/);
-    if (seriesRepsMatch) {
-      return {
-        series: seriesRepsMatch[1],
-        reps: seriesRepsMatch[2],
-        cleanText: text.replace(seriesRepsMatch[0], '').trim(),
-      };
-    }
-
-    const seriesMatch = text.match(/(\d+)\s*séries?/i);
-    const repsMatch = text.match(/(\d+(?:-\d+)?)\s*rep(?:s|etições?)?/i);
 
     let cleanText = text;
-    const result: { series?: string; reps?: string; cleanText: string } = { cleanText };
+    const result: { series?: string; reps?: string; rest?: string; cleanText: string } = { cleanText };
 
-    if (seriesMatch) {
-      result.series = seriesMatch[1];
-      cleanText = cleanText.replace(seriesMatch[0], '').trim();
+    if (seriesRepsMatch) {
+      result.series = seriesRepsMatch[1];
+      result.reps = seriesRepsMatch[2];
+      cleanText = cleanText.replace(seriesRepsMatch[0], '').trim();
+    } else {
+      const seriesMatch = text.match(/(\d+)\s*séries?/i);
+      const repsMatch = text.match(/(\d+(?:-\d+)?)\s*rep(?:s|etições?)?/i);
+
+      if (seriesMatch) {
+        result.series = seriesMatch[1];
+        cleanText = cleanText.replace(seriesMatch[0], '').trim();
+      }
+
+      if (repsMatch) {
+        result.reps = repsMatch[1];
+        cleanText = cleanText.replace(repsMatch[0], '').trim();
+      }
     }
 
-    if (repsMatch) {
-      result.reps = repsMatch[1];
-      cleanText = cleanText.replace(repsMatch[0], '').trim();
+    // Detectar tempo de descanso: 30s, 60s, 90s, 1min, 2min, etc
+    const restMatch = cleanText.match(/(\d+)\s*(s|seg|segundos?|min|minutos?)\b/i);
+    if (restMatch) {
+      const value = restMatch[1];
+      const unit = restMatch[2].toLowerCase();
+
+      // Normalizar para formato padrão
+      if (unit.startsWith('m')) {
+        result.rest = `${value}min`;
+      } else {
+        result.rest = `${value}s`;
+      }
+
+      cleanText = cleanText.replace(restMatch[0], '').trim();
     }
 
     result.cleanText = cleanText;
@@ -195,6 +211,7 @@ export default function TreinoParser({ content }: TreinoParserProps) {
         text: extracted.cleanText,
         series: extracted.series,
         reps: extracted.reps,
+        rest: extracted.rest,
       };
 
       if (pendingAlternatives.length > 0) {
@@ -246,6 +263,7 @@ export default function TreinoParser({ content }: TreinoParserProps) {
             text: extracted.cleanText,
             series: extracted.series,
             reps: extracted.reps,
+            rest: extracted.rest,
           });
         }
       } else if (line) {
@@ -312,11 +330,18 @@ export default function TreinoParser({ content }: TreinoParserProps) {
                       <div className="flex items-start gap-2">
                         {getCategoryIcon(item.category)}
                         <div className="flex-1">
-                          {(item.series || item.reps) && (
-                            <span className="inline-block px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 rounded mr-2">
-                              {item.series && item.reps ? `${item.series}x${item.reps}` : item.series ? `${item.series} séries` : `${item.reps} reps`}
-                            </span>
-                          )}
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            {(item.series || item.reps) && (
+                              <span className="inline-block px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 rounded">
+                                {item.series && item.reps ? `${item.series}x${item.reps}` : item.series ? `${item.series} séries` : `${item.reps} reps`}
+                              </span>
+                            )}
+                            {item.rest && (
+                              <span className="inline-block px-2 py-0.5 bg-cyan-100 dark:bg-cyan-900/30 text-xs font-semibold text-cyan-700 dark:text-cyan-300 rounded">
+                                ⏱️ {item.rest}
+                              </span>
+                            )}
+                          </div>
                           <span className="text-sm text-gray-700 dark:text-gray-300">
                             {item.text}
                           </span>
@@ -347,11 +372,18 @@ export default function TreinoParser({ content }: TreinoParserProps) {
                                 key={altIndex}
                                 className="pl-3 py-1.5 bg-gray-50 dark:bg-gray-800/50 rounded text-sm border-l-2 border-gray-300 dark:border-gray-600"
                               >
-                                {(alt.series || alt.reps) && (
-                                  <span className="inline-block px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 rounded mr-2">
-                                    {alt.series && alt.reps ? `${alt.series}x${alt.reps}` : alt.series ? `${alt.series} séries` : `${alt.reps} reps`}
-                                  </span>
-                                )}
+                                <div className="flex flex-wrap items-center gap-2 mb-1">
+                                  {(alt.series || alt.reps) && (
+                                    <span className="inline-block px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 rounded">
+                                      {alt.series && alt.reps ? `${alt.series}x${alt.reps}` : alt.series ? `${alt.series} séries` : `${alt.reps} reps`}
+                                    </span>
+                                  )}
+                                  {alt.rest && (
+                                    <span className="inline-block px-1.5 py-0.5 bg-cyan-100 dark:bg-cyan-900/30 text-xs font-semibold text-cyan-700 dark:text-cyan-300 rounded">
+                                      ⏱️ {alt.rest}
+                                    </span>
+                                  )}
+                                </div>
                                 <span className="text-gray-700 dark:text-gray-300">
                                   {alt.text}
                                 </span>
