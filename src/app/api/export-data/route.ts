@@ -81,6 +81,13 @@ export async function GET() {
       .eq('aluno_id', userId)
       .order('week_number', { ascending: false });
 
+    // Buscar histórico de pagamentos
+    const { data: paymentHistory } = await supabase
+      .from('payment_history')
+      .select('*')
+      .eq('aluno_id', userId)
+      .order('created_at', { ascending: false });
+
     // Montar objeto com todos os dados
     const exportData = {
       exportadoEm: new Date().toISOString(),
@@ -93,6 +100,7 @@ export async function GET() {
       trackingRefeicoes: mealTracking || [],
       trackingTreinos: workoutTracking || [],
       resumosSemanais: resumos || [],
+      historicoPagamentos: paymentHistory || [],
     };
 
     console.log('✅ Dados exportados com sucesso');

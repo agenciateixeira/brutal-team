@@ -162,7 +162,17 @@ export async function POST() {
       console.error('Erro ao deletar solicitacoes_acesso (coach):', solicitacoesCoachError);
     }
 
-    // 13. Deletar perfil
+    // 13. Deletar histórico de pagamentos
+    const { error: paymentHistoryError } = await supabaseAdmin
+      .from('payment_history')
+      .delete()
+      .eq('aluno_id', userId);
+
+    if (paymentHistoryError) {
+      console.error('Erro ao deletar payment_history:', paymentHistoryError);
+    }
+
+    // 14. Deletar perfil
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .delete()
@@ -176,7 +186,7 @@ export async function POST() {
       );
     }
 
-    // 14. Deletar usuário do Auth
+    // 15. Deletar usuário do Auth
     const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (authError) {
