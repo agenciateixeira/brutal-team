@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS anamnese_responses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   -- Identificação temporária (antes do cadastro)
-  temp_email VARCHAR(255) UNIQUE,
+  -- Removido UNIQUE para permitir múltiplos registros (ex: usuário deletou perfil e quer refazer)
+  temp_email VARCHAR(255),
 
   -- INFORMAÇÕES GERAIS
   nome_completo TEXT,
