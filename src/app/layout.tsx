@@ -7,6 +7,7 @@ import { LoadingProvider } from "@/components/providers/LoadingProvider";
 import { RouteLoadingProvider } from "@/components/providers/RouteLoadingProvider";
 import PageTransition from "@/components/ui/PageTransition";
 import NotificationToast from "@/components/ui/NotificationToast";
+import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import { Suspense } from "react";
 
 const montserrat = Montserrat({
@@ -48,6 +49,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
       </head>
       <body className={`${montserrat.className} ${montserrat.variable} bg-white`}>
+        <ServiceWorkerRegistration />
         <ThemeProvider>
           <LoadingProvider>
             <Suspense fallback={null}>
