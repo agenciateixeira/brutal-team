@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Profile, ProgressPhoto, Message, Dieta, Treino, ProtocoloHormonal, NotificationCounts } from '@/types';
-import { ArrowLeft, Image as ImageIcon, MessageCircle, Apple, Dumbbell, Syringe, Calendar, FileText, X, Bell, User, Mail, Phone, CreditCard, DollarSign } from 'lucide-react';
+import { ArrowLeft, Image as ImageIcon, MessageCircle, Apple, Dumbbell, Syringe, Calendar, FileText, X, Bell, User, Mail, Phone, CreditCard, DollarSign, ChevronDown, ChevronUp } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -46,6 +46,7 @@ export default function AlunoDetails({
   const [showMeasurementsModal, setShowMeasurementsModal] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [modalData, setModalData] = useState<ProgressPhoto | null>(null);
+  const [anamneseExpanded, setAnamneseExpanded] = useState(false);
   const [notifications, setNotifications] = useState<NotificationCounts>({
     photo: 0,
     message: 0,
@@ -541,11 +542,23 @@ export default function AlunoDetails({
               {/* Questionário de Anamnese */}
               {anamneseResponse && (
                 <div className="bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 rounded-lg p-6 border-2 border-green-200 dark:border-green-800">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <FileText size={20} className="text-green-600" />
-                    Questionário de Anamnese
-                  </h3>
-                  <div className="space-y-4">
+                  <button
+                    onClick={() => setAnamneseExpanded(!anamneseExpanded)}
+                    className="w-full flex items-center justify-between mb-4 hover:opacity-80 transition-opacity"
+                  >
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      <FileText size={20} className="text-green-600" />
+                      Questionário de Anamnese
+                    </h3>
+                    {anamneseExpanded ? (
+                      <ChevronUp size={24} className="text-green-600" />
+                    ) : (
+                      <ChevronDown size={24} className="text-green-600" />
+                    )}
+                  </button>
+
+                  {anamneseExpanded && (
+                    <div className="space-y-4">
                     {/* Informações Básicas */}
                     <div>
                       <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Informações Básicas</h4>
@@ -698,6 +711,7 @@ export default function AlunoDetails({
                       Respondido em: {anamneseResponse.completed_at ? format(new Date(anamneseResponse.completed_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : 'N/A'}
                     </p>
                   </div>
+                  )}
                 </div>
               )}
 
