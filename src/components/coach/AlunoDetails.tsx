@@ -41,7 +41,7 @@ export default function AlunoDetails({
   anamneseResponse,
   firstAccessPhotos
 }: AlunoDetailsProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('perfil');
+  const [activeTab, setActiveTab] = useState<Tab>('fotos');
   const [selectedPhoto, setSelectedPhoto] = useState<ProgressPhoto | null>(null);
   const [showMeasurementsModal, setShowMeasurementsModal] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
@@ -172,17 +172,6 @@ export default function AlunoDetails({
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
         <div className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
           <button
-            onClick={() => setActiveTab('perfil')}
-            className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap ${
-              activeTab === 'perfil'
-                ? 'bg-primary-600 text-white'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-            }`}
-          >
-            <User size={20} />
-            Perfil
-          </button>
-          <button
             onClick={() => setActiveTab('fotos')}
             className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap relative ${
               activeTab === 'fotos'
@@ -195,22 +184,6 @@ export default function AlunoDetails({
             {notifications.photo > 0 && (
               <span className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
                 {notifications.photo}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab('mensagens')}
-            className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap relative ${
-              activeTab === 'mensagens'
-                ? 'bg-primary-600 text-white'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-            }`}
-          >
-            <MessageCircle size={20} />
-            Mensagens ({messages.length})
-            {notifications.message > 0 && (
-              <span className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-white text-xs font-bold">
-                {notifications.message}
               </span>
             )}
           </button>
@@ -261,6 +234,33 @@ export default function AlunoDetails({
                 {notifications.protocol}
               </span>
             )}
+          </button>
+          <button
+            onClick={() => setActiveTab('mensagens')}
+            className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap relative ${
+              activeTab === 'mensagens'
+                ? 'bg-primary-600 text-white'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+            }`}
+          >
+            <MessageCircle size={20} />
+            Mensagens ({messages.length})
+            {notifications.message > 0 && (
+              <span className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-white text-xs font-bold">
+                {notifications.message}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('perfil')}
+            className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap ${
+              activeTab === 'perfil'
+                ? 'bg-primary-600 text-white'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+            }`}
+          >
+            <User size={20} />
+            Perfil
           </button>
         </div>
 
