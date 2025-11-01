@@ -128,7 +128,6 @@ BEGIN
   FOR rec IN
     SELECT
       ac.code,
-      ac.used,
       ac.created_at
     FROM public.access_codes ac
     JOIN public.profiles p ON ac.aluno_id = p.id
@@ -137,7 +136,6 @@ BEGIN
   LOOP
     RAISE NOTICE '  ✅ Encontrado código';
     RAISE NOTICE '  Código: %', rec.code;
-    RAISE NOTICE '  Usado: %', rec.used;
     RAISE NOTICE '  Criado em: %', rec.created_at;
   END LOOP;
 
