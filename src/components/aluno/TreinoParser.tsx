@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Dumbbell, Activity, Target, Info } from 'lucide-react';
+import { ChevronDown, ChevronRight, Dumbbell, Activity, Target, Info, Heart, Clock, Weight } from 'lucide-react';
 
 interface TreinoParserProps {
   content: string;
@@ -18,12 +18,15 @@ interface ParsedItem {
   series?: string;
   reps?: string;
   rest?: string;
+  cardioTime?: string;  // 45m, 30m, etc
+  bpm?: string;  // 120bpm, 140bpm, etc
   alternatives?: ParsedItem[];
 }
 
 export default function TreinoParser({ content }: TreinoParserProps) {
   const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set([0]));
   const [expandedAlternatives, setExpandedAlternatives] = useState<Set<string>>(new Set());
+  const [cargas, setCargas] = useState<Record<string, string>>({});
 
   const toggleSection = (index: number) => {
     const newExpanded = new Set(expandedSections);
@@ -147,12 +150,12 @@ export default function TreinoParser({ content }: TreinoParserProps) {
     return 'geral';
   };
 
-  const extractSeriesReps = (text: string): { series?: string; reps?: string; rest?: string; cleanText: string } => {
+  const extractSeriesReps = (text: string): { series?: string; reps?: string; rest?: string; cardioTime?: string; bpm?: string; cleanText: string } => {
     // Procura por padrões: 3x12, 4 x 15, 3 séries de 12 reps, etc
     const seriesRepsMatch = text.match(/(\d+)\s*[xX×]\s*(\d+(?:-\d+)?)/);
 
     let cleanText = text;
-    const result: { series?: string; reps?: string; rest?: string; cleanText: string } = { cleanText };
+    const result: { series?: string; reps?: string; rest?: string; cardioTime?: string; bpm?: string; cleanText: string } = { cleanText };
 
     if (seriesRepsMatch) {
       result.series = seriesRepsMatch[1];
@@ -173,19 +176,24 @@ export default function TreinoParser({ content }: TreinoParserProps) {
       }
     }
 
-    // Detectar tempo de descanso: 30s, 60s, 90s, 1min, 2min, etc
-    const restMatch = cleanText.match(/(\d+)\s*(s|seg|segundos?|min|minutos?)\b/i);
+    // Detectar tempo de cardio: 45m, 30m, 20min, etc (para cardio)
+    const cardioTimeMatch = cleanText.match(/\b(\d+)\s*m(?:in)?(?:utos?)?\b/i);
+    if (cardioTimeMatch) {
+      result.cardioTime = `${cardioTimeMatch[1]}m`;
+      cleanText = cleanText.replace(cardioTimeMatch[0], '').trim();
+    }
+
+    // Detectar BPM: 120bpm, 140 bpm, etc
+    const bpmMatch = cleanText.match(/\b(\d+)\s*bpm\b/i);
+    if (bpmMatch) {
+      result.bpm = `${bpmMatch[1]}bpm`;
+      cleanText = cleanText.replace(bpmMatch[0], '').trim();
+    }
+
+    // Detectar tempo de descanso: 30s, 60s, 90s, etc
+    const restMatch = cleanText.match(/(\d+)\s*(s|seg|segundos?)\b/i);
     if (restMatch) {
-      const value = restMatch[1];
-      const unit = restMatch[2].toLowerCase();
-
-      // Normalizar para formato padrão
-      if (unit.startsWith('m')) {
-        result.rest = `${value}min`;
-      } else {
-        result.rest = `${value}s`;
-      }
-
+      result.rest = `${restMatch[1]}s`;
       cleanText = cleanText.replace(restMatch[0], '').trim();
     }
 
@@ -212,6 +220,8 @@ export default function TreinoParser({ content }: TreinoParserProps) {
         series: extracted.series,
         reps: extracted.reps,
         rest: extracted.rest,
+        cardioTime: extracted.cardioTime,
+        bpm: extracted.bpm,
       };
 
       if (pendingAlternatives.length > 0) {
@@ -264,6 +274,8 @@ export default function TreinoParser({ content }: TreinoParserProps) {
             series: extracted.series,
             reps: extracted.reps,
             rest: extracted.rest,
+            cardioTime: extracted.cardioTime,
+            bpm: extracted.bpm,
           });
         }
       } else if (line) {
@@ -341,10 +353,35 @@ export default function TreinoParser({ content }: TreinoParserProps) {
                                 ⏱️ {item.rest}
                               </span>
                             )}
+                            {item.cardioTime && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-xs font-semibold text-green-700 dark:text-green-300 rounded">
+                                <Clock size={12} />
+                                {item.cardioTime}
+                              </span>
+                            )}
+                            {item.bpm && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-xs font-semibold text-red-700 dark:text-red-300 rounded">
+                                <Heart size={12} />
+                                {item.bpm}
+                              </span>
+                            )}
                           </div>
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {item.text}
-                          </span>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">
+                              {item.text}
+                            </span>
+                            {/* Input de carga */}
+                            <div className="flex items-center gap-2">
+                              <Weight size={14} className="text-gray-500" />
+                              <input
+                                type="number"
+                                placeholder="kg"
+                                value={cargas[`${sectionIndex}-${itemIndex}`] || ''}
+                                onChange={(e) => setCargas({ ...cargas, [`${sectionIndex}-${itemIndex}`]: e.target.value })}
+                                className="w-16 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -383,10 +420,35 @@ export default function TreinoParser({ content }: TreinoParserProps) {
                                       ⏱️ {alt.rest}
                                     </span>
                                   )}
+                                  {alt.cardioTime && (
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-xs font-semibold text-green-700 dark:text-green-300 rounded">
+                                      <Clock size={12} />
+                                      {alt.cardioTime}
+                                    </span>
+                                  )}
+                                  {alt.bpm && (
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-xs font-semibold text-red-700 dark:text-red-300 rounded">
+                                      <Heart size={12} />
+                                      {alt.bpm}
+                                    </span>
+                                  )}
                                 </div>
-                                <span className="text-gray-700 dark:text-gray-300">
-                                  {alt.text}
-                                </span>
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                  <span className="text-gray-700 dark:text-gray-300 flex-1">
+                                    {alt.text}
+                                  </span>
+                                  {/* Input de carga para alternativa */}
+                                  <div className="flex items-center gap-2">
+                                    <Weight size={14} className="text-gray-500" />
+                                    <input
+                                      type="number"
+                                      placeholder="kg"
+                                      value={cargas[`${sectionIndex}-${itemIndex}-alt-${altIndex}`] || ''}
+                                      onChange={(e) => setCargas({ ...cargas, [`${sectionIndex}-${itemIndex}-alt-${altIndex}`]: e.target.value })}
+                                      className="w-16 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    />
+                                  </div>
+                                </div>
                               </div>
                             ))}
                           </div>
