@@ -7,6 +7,7 @@ import { Plus, CheckCircle, XCircle, Trash2, Edit, Copy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { sendPushNotification } from '@/lib/push-notifications';
 
 interface ProtocoloManagerProps {
   alunoId: string;
@@ -98,6 +99,21 @@ export default function ProtocoloManager({ alunoId, protocolos, coachId }: Proto
 
       if (error) throw error;
 
+      // Enviar push notification se foi marcado como ativo
+      if (setAsActive) {
+        try {
+          await sendPushNotification({
+            userId: alunoId,
+            title: 'Novo protocolo disponível! 📋',
+            body: `Seu coach atualizou seu protocolo: ${title.trim()}`,
+            url: '/aluno/protocolo',
+            data: { type: 'protocolo', action: 'created' },
+          });
+        } catch (pushError) {
+          console.error('Erro ao enviar push notification:', pushError);
+        }
+      }
+
       setTitle('');
       setContent('');
       setSetAsActive(true);
@@ -113,6 +129,9 @@ export default function ProtocoloManager({ alunoId, protocolos, coachId }: Proto
 
   const toggleActive = async (protocoloId: string, currentActive: boolean) => {
     try {
+      // Buscar título do protocolo
+      const protocolo = protocolos.find(p => p.id === protocoloId);
+
       // Se está ativando, desativar todos os outros primeiro
       if (!currentActive) {
         await supabase
@@ -131,6 +150,21 @@ export default function ProtocoloManager({ alunoId, protocolos, coachId }: Proto
         .eq('id', protocoloId);
 
       if (error) throw error;
+
+      // Enviar push notification se está ATIVANDO
+      if (!currentActive && protocolo) {
+        try {
+          await sendPushNotification({
+            userId: alunoId,
+            title: 'Novo protocolo disponível! 📋',
+            body: `Seu coach ativou seu protocolo: ${protocolo.title}`,
+            url: '/aluno/protocolo',
+            data: { type: 'protocolo', action: 'activated' },
+          });
+        } catch (pushError) {
+          console.error('Erro ao enviar push notification:', pushError);
+        }
+      }
 
       router.refresh();
     } catch (error: any) {

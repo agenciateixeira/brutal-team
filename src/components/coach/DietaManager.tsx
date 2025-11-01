@@ -7,6 +7,7 @@ import { Plus, CheckCircle, XCircle, Trash2, Edit, Copy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { sendPushNotification } from '@/lib/push-notifications';
 
 interface DietaManagerProps {
   alunoId: string;
@@ -109,6 +110,22 @@ export default function DietaManager({ alunoId, dietas, coachId }: DietaManagerP
 
       if (error) throw error;
 
+      // Enviar push notification se foi marcada como ativa
+      if (setAsActive) {
+        try {
+          await sendPushNotification({
+            userId: alunoId,
+            title: 'Nova dieta disponível! 🍽️',
+            body: `Seu coach atualizou sua dieta: ${title.trim()}`,
+            url: '/aluno/dieta',
+            data: { type: 'dieta', action: 'created' },
+          });
+        } catch (pushError) {
+          console.error('Erro ao enviar push notification:', pushError);
+          // Não falhar a operação principal se o push falhar
+        }
+      }
+
       setTitle('');
       setContent('');
       setMealsPerDay(6);
@@ -126,6 +143,9 @@ export default function DietaManager({ alunoId, dietas, coachId }: DietaManagerP
 
   const toggleActive = async (dietaId: string, currentActive: boolean) => {
     try {
+      // Buscar título da dieta
+      const dieta = dietas.find(d => d.id === dietaId);
+
       // Se está ativando, desativar todas as outras primeiro
       if (!currentActive) {
         await supabase
@@ -144,6 +164,21 @@ export default function DietaManager({ alunoId, dietas, coachId }: DietaManagerP
         .eq('id', dietaId);
 
       if (error) throw error;
+
+      // Enviar push notification se está ATIVANDO
+      if (!currentActive && dieta) {
+        try {
+          await sendPushNotification({
+            userId: alunoId,
+            title: 'Nova dieta disponível! 🍽️',
+            body: `Seu coach ativou sua dieta: ${dieta.title}`,
+            url: '/aluno/dieta',
+            data: { type: 'dieta', action: 'activated' },
+          });
+        } catch (pushError) {
+          console.error('Erro ao enviar push notification:', pushError);
+        }
+      }
 
       router.refresh();
     } catch (error: any) {

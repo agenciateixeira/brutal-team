@@ -7,6 +7,7 @@ import { Plus, CheckCircle, XCircle, Trash2, Edit, Copy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { sendPushNotification } from '@/lib/push-notifications';
 
 interface TreinoManagerProps {
   alunoId: string;
@@ -122,6 +123,21 @@ export default function TreinoManager({ alunoId, treinos, coachId }: TreinoManag
 
       if (error) throw error;
 
+      // Enviar push notification se foi marcado como ativo
+      if (setAsActive) {
+        try {
+          await sendPushNotification({
+            userId: alunoId,
+            title: 'Novo treino disponível! 💪',
+            body: `Seu coach atualizou seu treino: ${title.trim()}`,
+            url: '/aluno/treino',
+            data: { type: 'treino', action: 'created' },
+          });
+        } catch (pushError) {
+          console.error('Erro ao enviar push notification:', pushError);
+        }
+      }
+
       setTitle('');
       setContent('');
       setWorkoutTypes(['musculacao']);
@@ -138,6 +154,9 @@ export default function TreinoManager({ alunoId, treinos, coachId }: TreinoManag
 
   const toggleActive = async (treinoId: string, currentActive: boolean) => {
     try {
+      // Buscar título do treino
+      const treino = treinos.find(t => t.id === treinoId);
+
       // Se está ativando, desativar todos os outros primeiro
       if (!currentActive) {
         await supabase
@@ -156,6 +175,21 @@ export default function TreinoManager({ alunoId, treinos, coachId }: TreinoManag
         .eq('id', treinoId);
 
       if (error) throw error;
+
+      // Enviar push notification se está ATIVANDO
+      if (!currentActive && treino) {
+        try {
+          await sendPushNotification({
+            userId: alunoId,
+            title: 'Novo treino disponível! 💪',
+            body: `Seu coach ativou seu treino: ${treino.title}`,
+            url: '/aluno/treino',
+            data: { type: 'treino', action: 'activated' },
+          });
+        } catch (pushError) {
+          console.error('Erro ao enviar push notification:', pushError);
+        }
+      }
 
       router.refresh();
     } catch (error: any) {
