@@ -80,6 +80,17 @@ export default async function AlunoDetailPage({ params }: { params: { id: string
     .limit(1)
     .maybeSingle();
 
+  // Primeiro, vamos verificar se existem anamneses para este email SEM filtro de completed
+  const { data: allAnamneseForEmail, count: totalCount } = await supabase
+    .from('anamnese_responses')
+    .select('*', { count: 'exact' })
+    .eq('temp_email', alunoProfile.email);
+
+  console.log('=== DEBUG ANAMNESE DO ALUNO ===');
+  console.log('📧 Email do aluno:', alunoProfile.email);
+  console.log('📊 Total de anamneses (todas):', totalCount);
+  console.log('📋 Dados de todas anamneses:', allAnamneseForEmail);
+
   // Buscar respostas do questionário de anamnese (apenas completas, mais recente)
   const { data: anamneseResponse, error: anamneseError } = await supabase
     .from('anamnese_responses')
@@ -90,9 +101,13 @@ export default async function AlunoDetailPage({ params }: { params: { id: string
     .limit(1)
     .maybeSingle();
 
-  console.log('🔍 Buscando anamnese para:', alunoProfile.email);
-  console.log('✅ Anamnese encontrada:', anamneseResponse ? 'SIM' : 'NÃO');
-  if (anamneseError) console.error('❌ Erro ao buscar anamnese:', anamneseError);
+  console.log('✅ Anamnese completa encontrada:', anamneseResponse ? 'SIM' : 'NÃO');
+  console.log('📝 Dados da anamnese completa:', anamneseResponse);
+  if (anamneseError) {
+    console.error('❌ Erro ao buscar anamnese:', anamneseError);
+    console.error('❌ Detalhes do erro:', JSON.stringify(anamneseError, null, 2));
+  }
+  console.log('=== FIM DEBUG ===');
 
   // Buscar fotos de primeiro acesso
   const { data: firstAccessPhotos } = await supabase
