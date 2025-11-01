@@ -35,11 +35,16 @@ BEGIN
   GET DIAGNOSTICS rows_deleted = ROW_COUNT;
   RAISE NOTICE '✅ Anamnese deletada: % registros', rows_deleted;
 
-  -- 2. Deletar de first_access_photos
-  DELETE FROM public.first_access_photos
-  WHERE aluno_id = aluno_id_var;
-  GET DIAGNOSTICS rows_deleted = ROW_COUNT;
-  RAISE NOTICE '✅ Fotos de primeiro acesso deletadas: % registros', rows_deleted;
+  -- 2. Deletar de first_access_photos (se existir)
+  BEGIN
+    DELETE FROM public.first_access_photos
+    WHERE aluno_id = aluno_id_var;
+    GET DIAGNOSTICS rows_deleted = ROW_COUNT;
+    RAISE NOTICE '✅ Fotos de primeiro acesso deletadas: % registros', rows_deleted;
+  EXCEPTION
+    WHEN undefined_table THEN
+      RAISE NOTICE '⚠️ Tabela first_access_photos não existe (pulando)';
+  END;
 
   -- 3. Deletar de progress_photos
   DELETE FROM public.progress_photos
@@ -47,11 +52,16 @@ BEGIN
   GET DIAGNOSTICS rows_deleted = ROW_COUNT;
   RAISE NOTICE '✅ Fotos de progresso deletadas: % registros', rows_deleted;
 
-  -- 4. Deletar de weekly_summaries
-  DELETE FROM public.weekly_summaries
-  WHERE aluno_id = aluno_id_var;
-  GET DIAGNOSTICS rows_deleted = ROW_COUNT;
-  RAISE NOTICE '✅ Resumos semanais deletados: % registros', rows_deleted;
+  -- 4. Deletar de weekly_summaries (se existir)
+  BEGIN
+    DELETE FROM public.weekly_summaries
+    WHERE aluno_id = aluno_id_var;
+    GET DIAGNOSTICS rows_deleted = ROW_COUNT;
+    RAISE NOTICE '✅ Resumos semanais deletados: % registros', rows_deleted;
+  EXCEPTION
+    WHEN undefined_table THEN
+      RAISE NOTICE '⚠️ Tabela weekly_summaries não existe (pulando)';
+  END;
 
   -- 5. Deletar de messages
   DELETE FROM public.messages
