@@ -63,46 +63,82 @@ export default function DietaParser({ content }: DietaParserProps) {
     // PADRÃO 2: Texto por extenso (30g de proteína, 50g carboidratos, 10g gordura)
     const textPattern = /(\d+)\s*g?s?\s*(?:de\s*)?(carboidrato|carboidratos|proteína|proteínas|proteina|proteinas|carbo|carbos|gordura|gorduras)/gi;
 
-    // Combinar ambos os padrões
-    const combinedPattern = new RegExp(`(${codePattern.source})|(${textPattern.source})`, 'gi');
+    // Processar padrões separadamente para evitar confusão nos grupos
+    // Primeiro tentar código curto
     let match;
+    const allMatches: Array<{index: number, length: number, amount: number, type: 'carboidrato' | 'proteina' | 'gordura', text: string}> = [];
 
-    while ((match = combinedPattern.exec(text)) !== null) {
-      // Adicionar texto antes do match
-      if (match.index > lastIndex) {
-        parts.push(text.substring(lastIndex, match.index));
-      }
+    // Buscar códigos curtos (P30, G10, C40)
+    codePattern.lastIndex = 0;
+    while ((match = codePattern.exec(text)) !== null) {
+      const code = match[1].toUpperCase();
+      const amount = parseInt(match[2]);
 
-      let amount: number;
+      if (isNaN(amount)) continue;
+
       let nutrientType: 'carboidrato' | 'proteina' | 'gordura';
-      let displayText = match[0];
-
-      // Verificar qual padrão foi encontrado
-      if (match[1]) {
-        // Código curto (P30, G10, C40)
-        const code = match[1].toUpperCase();
-        amount = parseInt(match[2]);
-
-        if (code === 'P') {
-          nutrientType = 'proteina';
-        } else if (code === 'G') {
-          nutrientType = 'gordura';
-        } else { // C
-          nutrientType = 'carboidrato';
-        }
-      } else {
-        // Texto por extenso
-        amount = parseInt(match[3]);
-        const nutrientRaw = match[4].toLowerCase();
-
-        if (nutrientRaw.includes('carb')) {
-          nutrientType = 'carboidrato';
-        } else if (nutrientRaw.includes('gord')) {
-          nutrientType = 'gordura';
-        } else {
-          nutrientType = 'proteina';
-        }
+      if (code === 'P') {
+        nutrientType = 'proteina';
+      } else if (code === 'G') {
+        nutrientType = 'gordura';
+      } else { // C
+        nutrientType = 'carboidrato';
       }
+
+      allMatches.push({
+        index: match.index,
+        length: match[0].length,
+        amount,
+        type: nutrientType,
+        text: match[0]
+      });
+    }
+
+    // Buscar texto por extenso (30g de proteína)
+    textPattern.lastIndex = 0;
+    while ((match = textPattern.exec(text)) !== null) {
+      const amount = parseInt(match[1]);
+
+      if (isNaN(amount)) continue;
+
+      const nutrientRaw = match[2].toLowerCase();
+      let nutrientType: 'carboidrato' | 'proteina' | 'gordura';
+
+      if (nutrientRaw.includes('carb')) {
+        nutrientType = 'carboidrato';
+      } else if (nutrientRaw.includes('gord')) {
+        nutrientType = 'gordura';
+      } else {
+        nutrientType = 'proteina';
+      }
+
+      // Verificar se já não temos este match (evitar duplicatas)
+      const isDuplicate = allMatches.some(m =>
+        Math.abs(m.index - match.index) < 5
+      );
+
+      if (!isDuplicate) {
+        allMatches.push({
+          index: match.index,
+          length: match[0].length,
+          amount,
+          type: nutrientType,
+          text: match[0]
+        });
+      }
+    }
+
+    // Ordenar por posição no texto
+    allMatches.sort((a, b) => a.index - b.index);
+
+    // Construir o resultado
+    allMatches.forEach((matchData) => {
+      // Adicionar texto antes do match
+      if (matchData.index > lastIndex) {
+        parts.push(text.substring(lastIndex, matchData.index));
+      }
+
+      const { amount, type: nutrientType, text: displayText } = matchData;
 
       // Determinar cor do badge baseado no tipo
       let badgeColor = 'bg-primary-100 dark:bg-primary-900/30 hover:bg-primary-200 dark:hover:bg-primary-900/50 text-primary-700 dark:text-primary-300';
@@ -115,7 +151,7 @@ export default function DietaParser({ content }: DietaParserProps) {
       // Adicionar link clicável
       parts.push(
         <button
-          key={match.index}
+          key={matchData.index}
           onClick={(e) => {
             e.stopPropagation();
             handleNutrientClick(nutrientType, amount);
@@ -128,8 +164,8 @@ export default function DietaParser({ content }: DietaParserProps) {
         </button>
       );
 
-      lastIndex = combinedPattern.lastIndex;
-    }
+      lastIndex = matchData.index + matchData.length;
+    });
 
     // Adicionar texto restante
     if (lastIndex < text.length) {
