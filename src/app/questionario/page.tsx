@@ -159,8 +159,17 @@ export default function QuestionarioPage() {
 
       setToast({ type: 'success', message: 'Questionário enviado com sucesso!' });
 
+      // Verificar se usuário está logado para saber para onde redirecionar
+      const { data: { user } } = await supabase.auth.getUser();
+
       setTimeout(() => {
-        router.push('/cadastro');
+        if (user) {
+          // Se está logado, volta para dashboard do aluno
+          router.push('/aluno/dashboard');
+        } else {
+          // Se NÃO está logado, vai para cadastro
+          router.push('/cadastro');
+        }
       }, 2000);
     } catch (error: any) {
       console.error('Erro ao enviar questionário:', error);
