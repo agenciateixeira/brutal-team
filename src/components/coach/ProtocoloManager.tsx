@@ -92,6 +92,7 @@ export default function ProtocoloManager({ alunoId, protocolos, coachId }: Proto
         title: title.trim(),
         content: content.trim(),
         active: setAsActive,
+        viewed_by_aluno: false, // Marca como não visualizado pelo aluno
         template_id: selectedTemplateId || null,
       });
 
@@ -123,7 +124,10 @@ export default function ProtocoloManager({ alunoId, protocolos, coachId }: Proto
       // Atualizar o protocolo selecionado
       const { error } = await supabase
         .from('protocolos_hormonais')
-        .update({ active: !currentActive })
+        .update({
+          active: !currentActive,
+          viewed_by_aluno: !currentActive ? false : undefined // Marca como não visualizado se estiver ativando
+        })
         .eq('id', protocoloId);
 
       if (error) throw error;

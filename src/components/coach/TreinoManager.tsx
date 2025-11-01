@@ -116,6 +116,7 @@ export default function TreinoManager({ alunoId, treinos, coachId }: TreinoManag
         content: content.trim(),
         workout_types: workoutTypes,
         active: setAsActive,
+        viewed_by_aluno: false, // Marca como não visualizado pelo aluno
         template_id: selectedTemplateId || null,
       });
 
@@ -148,7 +149,10 @@ export default function TreinoManager({ alunoId, treinos, coachId }: TreinoManag
       // Atualizar o treino selecionado
       const { error } = await supabase
         .from('treinos')
-        .update({ active: !currentActive })
+        .update({
+          active: !currentActive,
+          viewed_by_aluno: !currentActive ? false : undefined // Marca como não visualizado se estiver ativando
+        })
         .eq('id', treinoId);
 
       if (error) throw error;

@@ -103,6 +103,7 @@ export default function DietaManager({ alunoId, dietas, coachId }: DietaManagerP
         meals_per_day: mealsPerDay,
         observacoes_nutricionais: observacoesNutricionais.trim() || null,
         active: setAsActive,
+        viewed_by_aluno: false, // Marca como não visualizada pelo aluno
         template_id: selectedTemplateId || null,
       });
 
@@ -136,7 +137,10 @@ export default function DietaManager({ alunoId, dietas, coachId }: DietaManagerP
       // Atualizar a dieta selecionada
       const { error } = await supabase
         .from('dietas')
-        .update({ active: !currentActive })
+        .update({
+          active: !currentActive,
+          viewed_by_aluno: !currentActive ? false : undefined // Marca como não visualizada se estiver ativando
+        })
         .eq('id', dietaId);
 
       if (error) throw error;
