@@ -47,8 +47,10 @@ export default function DietaParser({ content }: DietaParserProps) {
   };
 
   const handleNutrientClick = (type: 'carboidrato' | 'proteina' | 'gordura', amount: number) => {
+    console.log('🖱️ Nutriente clicado:', type, amount + 'g');
     setSelectedNutrient({ type, amount });
     setModalOpen(true);
+    console.log('✅ Modal setado para abrir');
   };
 
   const renderTextWithNutrientLinks = (text: string) => {
