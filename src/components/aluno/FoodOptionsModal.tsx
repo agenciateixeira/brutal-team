@@ -160,14 +160,20 @@ export default function FoodOptionsModal({ isOpen, onClose, nutrientType, amount
 
   useEffect(() => {
     if (isOpen) {
+      console.log('🔍 Modal abriu. Tipo:', nutrientType, 'Quantidade:', amount);
       loadOptions();
+    } else {
+      console.log('🚪 Modal fechou');
     }
   }, [isOpen, nutrientType, amount]);
 
   const loadOptions = async () => {
+    console.log('📥 Carregando opções. Tipo:', nutrientType, 'Quantidade:', amount);
     setLoading(true);
+
     try {
       if (nutrientType === 'carboidrato') {
+        console.log('🍚 Buscando carboidratos no banco...');
         const { data, error } = await supabase
           .from('carb_food_options')
           .select('*')
@@ -176,37 +182,47 @@ export default function FoodOptionsModal({ isOpen, onClose, nutrientType, amount
           .order('display_order', { ascending: true });
 
         if (error) throw error;
+        console.log('✅ Carboidratos encontrados:', data?.length);
         setOptions(data || []);
         setHardcodedData(null);
       } else if (nutrientType === 'proteina') {
-        // Usar dados hardcoded de proteínas
+        console.log('🥩 Buscando proteínas hardcoded...');
         const data = proteinData[amount];
+        console.log('📊 Proteína data:', data ? 'ENCONTRADO' : 'NÃO ENCONTRADO', 'para', amount + 'g');
         if (data) {
+          console.log('✅ Opções de proteína:', data.options.length);
           setHardcodedData(data);
         } else {
+          console.log('❌ Nenhuma opção para', amount + 'g de proteína');
           setHardcodedData(null);
         }
         setOptions([]);
       } else if (nutrientType === 'gordura') {
-        // Usar dados hardcoded de gorduras
+        console.log('💧 Buscando gorduras hardcoded...');
         const data = fatData[amount];
+        console.log('📊 Gordura data:', data ? 'ENCONTRADO' : 'NÃO ENCONTRADO', 'para', amount + 'g');
         if (data) {
+          console.log('✅ Opções de gordura:', data.options.length);
           setHardcodedData(data);
         } else {
+          console.log('❌ Nenhuma opção para', amount + 'g de gordura');
           setHardcodedData(null);
         }
         setOptions([]);
       }
     } catch (error) {
-      console.error('Erro ao carregar opcoes:', error);
+      console.error('❌ Erro ao carregar opcoes:', error);
       setOptions([]);
       setHardcodedData(null);
     } finally {
       setLoading(false);
+      console.log('✅ Loading finalizado. hardcodedData:', hardcodedData ? 'TEM DADOS' : 'VAZIO');
     }
   };
 
   if (!isOpen) return null;
+
+  console.log('🎨 Renderizando modal. Loading:', loading, 'hardcodedData:', hardcodedData ? 'TEM' : 'VAZIO', 'options:', options.length);
 
   const renderOptions = (type: string, title: string, icon: string) => {
     const filtered = options.filter(opt => opt.type === type);
@@ -278,10 +294,18 @@ export default function FoodOptionsModal({ isOpen, onClose, nutrientType, amount
         {/* Content */}
         <div className="p-4 overflow-y-auto max-h-[calc(80vh-80px)]">
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="animate-spin text-primary-600 dark:text-primary-400" size={32} />
-            </div>
+            (() => {
+              console.log('⏳ Mostrando loading...');
+              return (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="animate-spin text-primary-600 dark:text-primary-400" size={32} />
+                </div>
+              );
+            })()
           ) : (nutrientType === 'proteina' || nutrientType === 'gordura') && hardcodedData ? (
+            (() => {
+              console.log('✅ Mostrando dados hardcoded de', nutrientType);
+              return (
             <>
               {/* Melhores Opções */}
               <div className="mb-4">
@@ -370,19 +394,34 @@ export default function FoodOptionsModal({ isOpen, onClose, nutrientType, amount
                 </div>
               )}
             </>
+              );
+            })()
           ) : (nutrientType === 'proteina' || nutrientType === 'gordura') && !hardcodedData ? (
+            (() => {
+              console.log('⚠️ Proteína/Gordura mas sem dados hardcoded');
+              return (
             <div className="text-center py-12">
               <p className="text-gray-500 dark:text-gray-400">
                 Quantidade não disponível. Consulte o Guia Nutricional para mais opções.
               </p>
             </div>
+              );
+            })()
           ) : options.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500 dark:text-gray-400">
-                Nenhuma opção encontrada para esta quantidade.
-              </p>
-            </div>
+            (() => {
+              console.log('❌ Nenhuma opção encontrada. Tipo:', nutrientType);
+              return (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Nenhuma opção encontrada para esta quantidade.
+                  </p>
+                </div>
+              );
+            })()
           ) : (
+            (() => {
+              console.log('📋 Mostrando opções de carboidratos do banco. Total:', options.length);
+              return (
             <>
               {renderOptions('melhor', 'Melhores Opções', '🔹')}
               {renderOptions('secundaria', 'Opções Secundárias', '🔸')}
@@ -395,6 +434,8 @@ export default function FoodOptionsModal({ isOpen, onClose, nutrientType, amount
                 </p>
               </div>
             </>
+              );
+            })()
           )}
         </div>
 
