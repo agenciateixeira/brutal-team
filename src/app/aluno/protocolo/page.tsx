@@ -2,6 +2,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import AppLayout from '@/components/layouts/AppLayout';
 import ProtocoloView from '@/components/aluno/ProtocoloView';
+import { Bell, Sparkles } from 'lucide-react';
 
 export default async function ProtocoloPage() {
   const supabase = createServerClient();
@@ -32,12 +33,22 @@ export default async function ProtocoloPage() {
     .eq('active', true)
     .single();
 
+  // Marcar como visualizado
+  if (protocoloAtivo && !protocoloAtivo.viewed_by_aluno) {
+    await supabase
+      .from('protocolos_hormonais')
+      .update({ viewed_by_aluno: true })
+      .eq('id', protocoloAtivo.id);
+  }
+
   // Buscar histórico de protocolos
   const { data: historico } = await supabase
     .from('protocolos_hormonais')
     .select('*')
     .eq('aluno_id', session.user.id)
     .order('created_at', { ascending: false });
+
+  const hasProtocoloUpdate = protocoloAtivo && !protocoloAtivo.viewed_by_aluno;
 
   return (
     <AppLayout profile={profile}>
@@ -50,6 +61,28 @@ export default async function ProtocoloPage() {
             Acompanhe seu protocolo de suplementação hormonal
           </p>
         </div>
+
+        {/* Notificação de Atualização */}
+        {hasProtocoloUpdate && (
+          <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30 border-2 border-orange-400 dark:border-orange-600 rounded-xl p-4 shadow-lg">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <Bell className="text-white" size={20} />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="text-orange-600 dark:text-orange-400" size={18} />
+                  <h3 className="text-base font-bold text-orange-900 dark:text-orange-300">
+                    Protocolo Atualizado!
+                  </h3>
+                </div>
+                <p className="text-sm text-orange-800 dark:text-orange-200">
+                  Seu coach fez atualizações no seu protocolo. Confira as mudanças abaixo!
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <ProtocoloView
           alunoId={session.user.id}

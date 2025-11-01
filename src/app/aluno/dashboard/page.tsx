@@ -7,7 +7,7 @@ import WeeklySummary from '@/components/aluno/WeeklySummary';
 import MonthlyPhotoProgress from '@/components/aluno/MonthlyPhotoProgress';
 import DashboardWithFirstAccess from '@/components/aluno/DashboardWithFirstAccess';
 import WelcomeMessage from '@/components/aluno/WelcomeMessage';
-import { TrendingUp, Calendar, Apple, AlertCircle, FileQuestion } from 'lucide-react';
+import { TrendingUp, Calendar, Apple, AlertCircle, FileQuestion, Bell, Sparkles, Activity } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function AlunoDashboard() {
@@ -47,7 +47,21 @@ export default async function AlunoDashboard() {
     .eq('active', true)
     .single();
 
+  const { data: protocoloAtivo } = await supabase
+    .from('protocolos_hormonais')
+    .select('*')
+    .eq('aluno_id', session.user.id)
+    .eq('active', true)
+    .single();
+
   const showWelcomeMessage = !dietaAtiva || !treinoAtivo;
+
+  // Verificar se há atualizações não visualizadas
+  const hasDietaUpdate = dietaAtiva && !dietaAtiva.viewed_by_aluno;
+  const hasTreinoUpdate = treinoAtivo && !treinoAtivo.viewed_by_aluno;
+  const hasProtocoloUpdate = protocoloAtivo && !protocoloAtivo.viewed_by_aluno;
+
+  const updatesCount = [hasDietaUpdate, hasTreinoUpdate, hasProtocoloUpdate].filter(Boolean).length;
 
   // Buscar lembretes de vencimento (3 dias antes)
   const { data: paymentReminders } = await supabase
@@ -205,6 +219,70 @@ export default async function AlunoDashboard() {
                         <FileQuestion size={18} />
                         Preencher Questionário
                       </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Notificação de Atualizações */}
+              {updatesCount > 0 && (
+                <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30 border-2 border-orange-400 dark:border-orange-600 rounded-xl p-5 shadow-lg">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Bell className="text-white" size={24} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Sparkles className="text-orange-600 dark:text-orange-400" size={20} />
+                        <h3 className="text-lg font-bold text-orange-900 dark:text-orange-300">
+                          Nova Atualização Disponível!
+                        </h3>
+                      </div>
+                      {updatesCount === 3 ? (
+                        <p className="text-orange-800 dark:text-orange-200 leading-relaxed text-base">
+                          {profile.full_name || 'Atleta'}, seu coach fez atualização nos seus treinos, dieta e protocolo.
+                          Acesse-os para verificar já e manter a sua evolução em dia!
+                        </p>
+                      ) : (
+                        <p className="text-orange-800 dark:text-orange-200 leading-relaxed text-base">
+                          {profile.full_name || 'Atleta'},
+                          {hasDietaUpdate && !hasTreinoUpdate && !hasProtocoloUpdate && ' sua dieta foi atualizada, acesse a página da dieta e verifique.'}
+                          {hasTreinoUpdate && !hasDietaUpdate && !hasProtocoloUpdate && ' seu treino foi atualizado, acesse a página do treino e verifique.'}
+                          {hasProtocoloUpdate && !hasDietaUpdate && !hasTreinoUpdate && ' seu protocolo foi atualizado, acesse a página do protocolo e verifique.'}
+                          {updatesCount === 2 && hasDietaUpdate && hasTreinoUpdate && ' sua dieta e seu treino foram atualizados. Acesse as páginas para verificar!'}
+                          {updatesCount === 2 && hasDietaUpdate && hasProtocoloUpdate && ' sua dieta e seu protocolo foram atualizados. Acesse as páginas para verificar!'}
+                          {updatesCount === 2 && hasTreinoUpdate && hasProtocoloUpdate && ' seu treino e seu protocolo foram atualizados. Acesse as páginas para verificar!'}
+                        </p>
+                      )}
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        {hasDietaUpdate && (
+                          <Link
+                            href="/aluno/dieta"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors text-sm"
+                          >
+                            <Apple size={16} />
+                            Ver Dieta
+                          </Link>
+                        )}
+                        {hasTreinoUpdate && (
+                          <Link
+                            href="/aluno/treino"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors text-sm"
+                          >
+                            <TrendingUp size={16} />
+                            Ver Treino
+                          </Link>
+                        )}
+                        {hasProtocoloUpdate && (
+                          <Link
+                            href="/aluno/protocolo"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors text-sm"
+                          >
+                            <Activity size={16} />
+                            Ver Protocolo
+                          </Link>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
