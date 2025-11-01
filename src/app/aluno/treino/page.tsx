@@ -33,8 +33,11 @@ export default async function TreinoPage() {
     .eq('active', true)
     .single();
 
+  // Verificar se tem atualização ANTES de marcar como visualizado
+  const hasTreinoUpdate = treinoAtivo && treinoAtivo.viewed_by_aluno === false;
+
   // Marcar como visualizado
-  if (treinoAtivo && !treinoAtivo.viewed_by_aluno) {
+  if (hasTreinoUpdate) {
     await supabase
       .from('treinos')
       .update({ viewed_by_aluno: true })
@@ -47,8 +50,6 @@ export default async function TreinoPage() {
     .select('*')
     .eq('aluno_id', session.user.id)
     .order('created_at', { ascending: false });
-
-  const hasTreinoUpdate = treinoAtivo && !treinoAtivo.viewed_by_aluno;
 
   return (
     <AppLayout profile={profile}>

@@ -33,8 +33,11 @@ export default async function ProtocoloPage() {
     .eq('active', true)
     .single();
 
+  // Verificar se tem atualização ANTES de marcar como visualizado
+  const hasProtocoloUpdate = protocoloAtivo && protocoloAtivo.viewed_by_aluno === false;
+
   // Marcar como visualizado
-  if (protocoloAtivo && !protocoloAtivo.viewed_by_aluno) {
+  if (hasProtocoloUpdate) {
     await supabase
       .from('protocolos_hormonais')
       .update({ viewed_by_aluno: true })
@@ -47,8 +50,6 @@ export default async function ProtocoloPage() {
     .select('*')
     .eq('aluno_id', session.user.id)
     .order('created_at', { ascending: false });
-
-  const hasProtocoloUpdate = protocoloAtivo && !protocoloAtivo.viewed_by_aluno;
 
   return (
     <AppLayout profile={profile}>

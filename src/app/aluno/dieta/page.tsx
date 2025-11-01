@@ -33,8 +33,11 @@ export default async function DietaPage() {
     .eq('active', true)
     .single();
 
+  // Verificar se tem atualização ANTES de marcar como visualizada
+  const hasDietaUpdate = dietaAtiva && dietaAtiva.viewed_by_aluno === false;
+
   // Marcar como visualizada
-  if (dietaAtiva && !dietaAtiva.viewed_by_aluno) {
+  if (hasDietaUpdate) {
     await supabase
       .from('dietas')
       .update({ viewed_by_aluno: true })
@@ -47,8 +50,6 @@ export default async function DietaPage() {
     .select('*')
     .eq('aluno_id', session.user.id)
     .order('created_at', { ascending: false });
-
-  const hasDietaUpdate = dietaAtiva && !dietaAtiva.viewed_by_aluno;
 
   return (
     <AppLayout profile={profile}>

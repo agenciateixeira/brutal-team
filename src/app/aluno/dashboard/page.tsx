@@ -56,10 +56,10 @@ export default async function AlunoDashboard() {
 
   const showWelcomeMessage = !dietaAtiva || !treinoAtivo;
 
-  // Verificar se há atualizações não visualizadas
-  const hasDietaUpdate = dietaAtiva && !dietaAtiva.viewed_by_aluno;
-  const hasTreinoUpdate = treinoAtivo && !treinoAtivo.viewed_by_aluno;
-  const hasProtocoloUpdate = protocoloAtivo && !protocoloAtivo.viewed_by_aluno;
+  // Verificar se há atualizações não visualizadas (explicitamente false, não null)
+  const hasDietaUpdate = dietaAtiva && dietaAtiva.viewed_by_aluno === false;
+  const hasTreinoUpdate = treinoAtivo && treinoAtivo.viewed_by_aluno === false;
+  const hasProtocoloUpdate = protocoloAtivo && protocoloAtivo.viewed_by_aluno === false;
 
   const updatesCount = [hasDietaUpdate, hasTreinoUpdate, hasProtocoloUpdate].filter(Boolean).length;
 
