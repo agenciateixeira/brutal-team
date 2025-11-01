@@ -346,7 +346,7 @@ export default function AlunosList({ alunos }: AlunosListProps) {
                     )}
                   </div>
                   <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 truncate">{aluno.email}</p>
-                  <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 text-xs text-gray-400 dark:text-gray-500 mt-1">
                     <span className="flex items-center gap-1">
                       <Calendar size={12} />
                       Cadastrado em {format(new Date(aluno.created_at), "dd/MM/yyyy", { locale: ptBR })}
@@ -357,14 +357,22 @@ export default function AlunosList({ alunos }: AlunosListProps) {
                         Ativo {formatDistanceToNow(new Date(aluno.last_activity), { addSuffix: true, locale: ptBR })}
                       </span>
                     )}
+
+                    {/* Para novos alunos, botão configurar aparece aqui no mobile */}
+                    {activeTab === 'new' && (
+                      <div className="flex md:hidden items-center gap-2 px-3 py-1 bg-purple-600 text-white rounded-lg text-sm font-medium w-fit mt-1">
+                        <FileText size={14} />
+                        Configurar
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
-                {/* Para novos alunos, mostrar botão de configurar */}
+                {/* Para novos alunos, mostrar botão de configurar (apenas desktop) */}
                 {activeTab === 'new' ? (
-                  <div className="flex items-center gap-2 px-3 py-1 bg-purple-600 text-white rounded-lg text-sm font-medium">
+                  <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-purple-600 text-white rounded-lg text-sm font-medium">
                     <FileText size={16} />
                     Configurar
                   </div>

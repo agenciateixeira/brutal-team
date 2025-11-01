@@ -31,11 +31,16 @@ export default async function CoachAnamnesePage() {
   }
 
   // Buscar todas as anamneses completas
-  const { data: anamneses } = await supabase
+  const { data: anamneses, error: anamneseError } = await supabase
     .from('anamnese_responses')
     .select('*')
     .eq('completed', true)
     .order('completed_at', { ascending: false });
+
+  console.log('=== DEBUG ANAMNESE PAGE ===');
+  console.log('Anamneses encontradas:', anamneses?.length || 0);
+  console.log('Erro:', anamneseError);
+  console.log('Dados:', anamneses);
 
   // Buscar perfis dos alunos
   const emails = anamneses?.map(a => a.temp_email) || [];

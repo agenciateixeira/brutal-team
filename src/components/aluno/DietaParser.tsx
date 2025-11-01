@@ -54,7 +54,7 @@ export default function DietaParser({ content }: DietaParserProps) {
   };
 
   const renderTextWithNutrientLinks = (text: string) => {
-    const parts = [];
+    const parts: React.ReactNode[] = [];
     let lastIndex = 0;
 
     // PADRÃO 1: Códigos curtos (P30, G10, C40)
