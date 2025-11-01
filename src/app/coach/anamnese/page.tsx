@@ -30,24 +30,34 @@ export default async function CoachAnamnesePage() {
     redirect('/aluno/dashboard');
   }
 
-  // Buscar todas as anamneses completas
+  // Primeiro, buscar todos os alunos aprovados (role = aluno e approved = true)
+  const { data: alunos } = await supabase
+    .from('profiles')
+    .select('email, full_name, id')
+    .eq('role', 'aluno')
+    .eq('approved', true);
+
+  console.log('=== DEBUG ANAMNESE PAGE ===');
+  console.log('Alunos aprovados:', alunos?.length || 0);
+
+  // Extrair emails dos alunos
+  const alunosEmails = alunos?.map(a => a.email) || [];
+
+  // Buscar anamneses completas desses alunos
   const { data: anamneses, error: anamneseError } = await supabase
     .from('anamnese_responses')
     .select('*')
+    .in('temp_email', alunosEmails)
     .eq('completed', true)
     .order('completed_at', { ascending: false });
 
-  console.log('=== DEBUG ANAMNESE PAGE ===');
+  console.log('Emails dos alunos:', alunosEmails);
   console.log('Anamneses encontradas:', anamneses?.length || 0);
   console.log('Erro:', anamneseError);
   console.log('Dados:', anamneses);
 
-  // Buscar perfis dos alunos
-  const emails = anamneses?.map(a => a.temp_email) || [];
-  const { data: alunosProfiles } = await supabase
-    .from('profiles')
-    .select('email, full_name, id')
-    .in('email', emails);
+  // Criar mapa de email -> perfil dos alunos
+  const alunosProfiles = alunos;
 
   // Criar mapa de email -> perfil
   const profileMap = new Map(alunosProfiles?.map(p => [p.email, p]) || []);
