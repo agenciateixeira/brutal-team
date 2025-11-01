@@ -21,6 +21,38 @@ interface FoodOptionsModalProps {
 
 // Dados hardcoded de proteínas (movidos para fora do componente)
 const proteinData: Record<number, { options: string[]; liquidas: string[]; notes: string[] }> = {
+    10: {
+      options: [
+        '40g de carne magra pronta - equivalente a 50g crua',
+        '2-3 claras de ovos / 150ml de clara pasteurizada',
+        '20g de carne magra pronta + 1 clara'
+      ],
+      liquidas: [
+        '12-13g de albumina / beef protein / whey isolado',
+        '150ml de clara líquida pasteurizada'
+      ],
+      notes: [
+        '❌ Evite usar somente whey isoladamente',
+        '🚫 Não utilize caseína (altamente inflamatória)',
+        '⚠️ Prefira versões sem sabor'
+      ]
+    },
+    15: {
+      options: [
+        '55g de carne magra pronta - equivalente a 75g crua',
+        '4 claras de ovos / 200ml de clara pasteurizada',
+        '30g de carne magra pronta + 2 claras'
+      ],
+      liquidas: [
+        '18-20g de albumina / beef protein / whey isolado',
+        '200ml de clara líquida pasteurizada'
+      ],
+      notes: [
+        '❌ Evite usar somente whey isoladamente',
+        '🚫 Não utilize caseína (altamente inflamatória)',
+        '⚠️ Prefira versões sem sabor'
+      ]
+    },
     20: {
       options: [
         '75g de carne magra pronta (grelhada ou cozida) - equivalente a 100g crua',
@@ -36,6 +68,22 @@ const proteinData: Record<number, { options: string[]; liquidas: string[]; notes
         '🚫 Não utilize caseína (altamente inflamatória)',
         '⚠️ Prefira versões sem sabor - adoçantes artificiais prejudicam a microbiota intestinal',
         'Para saborizar: 🍋 Limão / 🌿 Stevia pura / 🌰 Canela / 🍫 Cacau 100%'
+      ]
+    },
+    25: {
+      options: [
+        '95g de carne magra pronta - equivalente a 125g crua',
+        '6-7 claras de ovos / 350ml de clara pasteurizada',
+        '55g de carne magra pronta + 3 claras - equivalente a 75g crua + 3 claras'
+      ],
+      liquidas: [
+        '30-32g de albumina / beef protein / whey isolado',
+        '350ml de clara líquida pasteurizada'
+      ],
+      notes: [
+        'Evite usar apenas whey em refeições principais',
+        'Não use caseína',
+        'Prefira sem sabor'
       ]
     },
     30: {
@@ -119,11 +167,57 @@ const proteinData: Record<number, { options: string[]; liquidas: string[]; notes
         'Não use caseína',
         'Prefira sem sabor'
       ]
+    },
+    80: {
+      options: [
+        '300g de carne magra pronta - equivalente a 400g crua',
+        '20 claras de ovos / 900ml de clara pasteurizada',
+        '225g de carne magra + 5 claras - equivalente a 300g crua + 5 claras'
+      ],
+      liquidas: [
+        '95-100g de albumina / beef protein / colágeno / whey isolado',
+        '900ml de clara líquida pasteurizada'
+      ],
+      notes: [
+        'Evite somente whey',
+        'Não use caseína',
+        'Prefira sem sabor'
+      ]
     }
   };
 
+// Função para encontrar a quantidade mais próxima
+const findClosestAmount = (data: Record<number, any>, targetAmount: number): number | null => {
+  const amounts = Object.keys(data).map(Number);
+  if (amounts.length === 0) return null;
+
+  // Se encontrar exato, retorna
+  if (amounts.includes(targetAmount)) return targetAmount;
+
+  // Encontra o mais próximo (máximo 10g de diferença)
+  const closest = amounts.reduce((prev, curr) => {
+    return Math.abs(curr - targetAmount) < Math.abs(prev - targetAmount) ? curr : prev;
+  });
+
+  // Só retorna se estiver a no máximo 10g de diferença
+  return Math.abs(closest - targetAmount) <= 10 ? closest : null;
+};
+
 // Dados hardcoded de gorduras (movidos para fora do componente)
 const fatData: Record<number, { options: string[]; praticas: string; sugestoes: string; aviso: string }> = {
+    5: {
+      options: [
+        'Azeite de oliva extra virgem - 0,5 colher de sopa (≈5,5g)',
+        'Abacate - 25g (≈1,5 colheres de sopa)',
+        'Castanha-do-pará - 1 unidade média (≈6g)',
+        'Macadâmia - 2 unidades médias (≈7g)',
+        'Manteiga - 6g (≈1 colher de chá rasa)',
+        'Óleo de coco - 5g (≈0,5 colher de sopa)'
+      ],
+      praticas: '0,5 colher de sopa de azeite, óleo de coco ou manteiga',
+      sugestoes: 'Ideal para finalizar pratos ou pequenos lanches',
+      aviso: 'Evite óleos refinados (soja, milho, canola) - altamente inflamatórios'
+    },
     10: {
       options: [
         'Azeite de oliva extra virgem - 1 colher de sopa (≈11g)',
@@ -148,6 +242,32 @@ const fatData: Record<number, { options: string[]; praticas: string; sugestoes: 
       ],
       praticas: '1,5 colheres de sopa de azeite, óleo de coco ou manteiga',
       sugestoes: 'Salgados: azeite, manteiga ou óleo de coco. Shakes: abacate ou óleo de coco. Lanches: castanhas',
+      aviso: 'Evite óleos refinados (soja, milho, canola) - ricos em ômega-6 e inflamatórios'
+    },
+    20: {
+      options: [
+        'Azeite de oliva - 2 colheres de sopa (≈22g)',
+        'Abacate - 100g (≈6 colheres de sopa)',
+        'Castanha-do-pará - 4 unidades médias (≈24g)',
+        'Macadâmia - 8 unidades médias (≈28g)',
+        'Manteiga - 24g (≈2 colheres de chá)',
+        'Óleo de coco - 20g (≈2 colheres de sopa)'
+      ],
+      praticas: '2 colheres de sopa de azeite, óleo de coco ou manteiga',
+      sugestoes: 'Salgados: azeite, manteiga ou óleo de coco. Shakes: abacate. Lanches: castanhas',
+      aviso: 'Evite óleos refinados (soja, milho, canola) - ricos em ômega-6 e inflamatórios'
+    },
+    25: {
+      options: [
+        'Azeite de oliva - 2,5 colheres de sopa (≈27,5g)',
+        'Abacate - 125g (≈7,5 colheres de sopa)',
+        'Castanha-do-pará - 5 unidades médias (≈30g)',
+        'Macadâmia - 10 unidades médias (≈35g)',
+        'Manteiga - 30g (≈2,5 colheres de chá)',
+        'Óleo de coco - 25g (≈2,5 colheres de sopa)'
+      ],
+      praticas: '2,5 colheres de sopa de azeite, óleo de coco ou manteiga',
+      sugestoes: 'Salgados: azeite, manteiga ou óleo de coco. Shakes: abacate. Lanches: castanhas',
       aviso: 'Evite óleos refinados (soja, milho, canola) - ricos em ômega-6 e inflamatórios'
     }
   };
@@ -187,11 +307,31 @@ export default function FoodOptionsModal({ isOpen, onClose, nutrientType, amount
         setHardcodedData(null);
       } else if (nutrientType === 'proteina') {
         console.log('🥩 Buscando proteínas hardcoded...');
-        const data = proteinData[amount];
+        let data = proteinData[amount];
+        let usedAmount = amount;
+
+        // Se não encontrou exato, busca o mais próximo
+        if (!data) {
+          const closestAmount = findClosestAmount(proteinData, amount);
+          if (closestAmount !== null) {
+            data = proteinData[closestAmount];
+            usedAmount = closestAmount;
+            console.log('🔄 Usando quantidade aproximada:', closestAmount + 'g', 'para', amount + 'g solicitados');
+          }
+        }
+
         console.log('📊 Proteína data:', data ? 'ENCONTRADO' : 'NÃO ENCONTRADO', 'para', amount + 'g');
         if (data) {
           console.log('✅ Opções de proteína:', data.options.length);
-          setHardcodedData(data);
+          // Adiciona aviso se estiver usando quantidade aproximada
+          const dataWithWarning = usedAmount !== amount ? {
+            ...data,
+            notes: [
+              `⚠️ Mostrando opções para ${usedAmount}g (aproximação de ${amount}g solicitados)`,
+              ...data.notes
+            ]
+          } : data;
+          setHardcodedData(dataWithWarning);
         } else {
           console.log('❌ Nenhuma opção para', amount + 'g de proteína');
           setHardcodedData(null);
@@ -199,11 +339,28 @@ export default function FoodOptionsModal({ isOpen, onClose, nutrientType, amount
         setOptions([]);
       } else if (nutrientType === 'gordura') {
         console.log('💧 Buscando gorduras hardcoded...');
-        const data = fatData[amount];
+        let data = fatData[amount];
+        let usedAmount = amount;
+
+        // Se não encontrou exato, busca o mais próximo
+        if (!data) {
+          const closestAmount = findClosestAmount(fatData, amount);
+          if (closestAmount !== null) {
+            data = fatData[closestAmount];
+            usedAmount = closestAmount;
+            console.log('🔄 Usando quantidade aproximada:', closestAmount + 'g', 'para', amount + 'g solicitados');
+          }
+        }
+
         console.log('📊 Gordura data:', data ? 'ENCONTRADO' : 'NÃO ENCONTRADO', 'para', amount + 'g');
         if (data) {
           console.log('✅ Opções de gordura:', data.options.length);
-          setHardcodedData(data);
+          // Adiciona aviso se estiver usando quantidade aproximada
+          const dataWithWarning = usedAmount !== amount ? {
+            ...data,
+            aviso: `⚠️ Mostrando opções para ${usedAmount}g (aproximação de ${amount}g solicitados). ${data.aviso}`
+          } : data;
+          setHardcodedData(dataWithWarning);
         } else {
           console.log('❌ Nenhuma opção para', amount + 'g de gordura');
           setHardcodedData(null);

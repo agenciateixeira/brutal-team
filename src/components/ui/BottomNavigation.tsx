@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Profile } from '@/types';
 import { createClient } from '@/lib/supabase/client';
+import { useLoading } from '@/components/providers/LoadingProvider';
 
 interface BottomNavigationProps {
   profile: Profile;
@@ -30,13 +31,21 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const { showLoading } = useLoading();
   const [showMenu, setShowMenu] = useState(false);
   const isAluno = profile.role === 'aluno';
 
   const handleLogout = async () => {
+    const userName = profile.full_name || profile.email.split('@')[0];
+    showLoading(`Até amanhã, ${userName}!`, 1300); // 1.3 segundos para logout
+
     await supabase.auth.signOut();
-    router.push('/login');
-    router.refresh();
+
+    // Aguardar um pouco para mostrar a mensagem
+    setTimeout(() => {
+      router.push('/login');
+      router.refresh();
+    }, 1000);
   };
 
   const mainNavItems = isAluno

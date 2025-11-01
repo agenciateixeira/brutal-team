@@ -149,38 +149,51 @@ export default function PaymentsList({ students, recentPayments }: PaymentsListP
               students.map((student) => (
                 <div
                   key={student.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+                  className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
                 >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">
-                          {student.profiles?.full_name || student.profiles?.email}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {student.profiles?.email}
-                        </p>
+                  {/* Info do Aluno */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 dark:text-white truncate">
+                      {student.profiles?.full_name || student.profiles?.email}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                        {student.profiles?.email}
+                      </p>
+                      {/* Tags no mobile aparecem aqui embaixo do email */}
+                      <div className="flex md:hidden items-center gap-2">
+                        {getPlanBadge(student.plan_type)}
+                        {getStatusBadge(student.profiles?.payment_status || 'pending')}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
-                    {getPlanBadge(student.plan_type)}
+                  {/* Valor e Ações */}
+                  <div className="flex items-center justify-between md:justify-end gap-3 md:gap-4">
+                    {/* Tags no desktop aparecem aqui */}
+                    <div className="hidden md:flex items-center gap-3">
+                      {getPlanBadge(student.plan_type)}
+                      {getStatusBadge(student.profiles?.payment_status || 'pending')}
+                    </div>
+
+                    {/* Valor */}
                     <div className="text-right">
-                      <p className="font-semibold text-gray-900 dark:text-white">
+                      <p className="text-base md:text-lg font-semibold text-gray-900 dark:text-white">
                         R$ {student.monthly_value?.toFixed(2)}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {/* "por mês" só aparece no desktop */}
+                      <p className="hidden md:block text-xs text-gray-500 dark:text-gray-400">
                         por mês
                       </p>
                     </div>
-                    {getStatusBadge(student.profiles?.payment_status || 'pending')}
+
+                    {/* Botão Editar */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEdit(student);
                       }}
-                      className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                      className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
                       title="Editar plano"
                     >
                       <Edit size={18} className="text-gray-600 dark:text-gray-400" />
