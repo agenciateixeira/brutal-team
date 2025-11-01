@@ -349,8 +349,9 @@ export default function TreinoParser({ content }: TreinoParserProps) {
                               </span>
                             )}
                             {item.rest && (
-                              <span className="inline-block px-2 py-0.5 bg-cyan-100 dark:bg-cyan-900/30 text-xs font-semibold text-cyan-700 dark:text-cyan-300 rounded">
-                                ⏱️ {item.rest}
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-cyan-100 dark:bg-cyan-900/30 text-xs font-semibold text-cyan-700 dark:text-cyan-300 rounded">
+                                <Clock size={12} />
+                                {item.rest}
                               </span>
                             )}
                             {item.cardioTime && (
@@ -418,8 +419,9 @@ export default function TreinoParser({ content }: TreinoParserProps) {
                                     </span>
                                   )}
                                   {alt.rest && (
-                                    <span className="inline-block px-1.5 py-0.5 bg-cyan-100 dark:bg-cyan-900/30 text-xs font-semibold text-cyan-700 dark:text-cyan-300 rounded">
-                                      ⏱️ {alt.rest}
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-cyan-100 dark:bg-cyan-900/30 text-xs font-semibold text-cyan-700 dark:text-cyan-300 rounded">
+                                      <Clock size={12} />
+                                      {alt.rest}
                                     </span>
                                   )}
                                   {alt.cardioTime && (
