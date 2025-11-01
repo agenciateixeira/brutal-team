@@ -81,7 +81,7 @@ export default async function AlunoDetailPage({ params }: { params: { id: string
     .maybeSingle();
 
   // Buscar respostas do questionário de anamnese (apenas completas, mais recente)
-  const { data: anamneseResponse } = await supabase
+  const { data: anamneseResponse, error: anamneseError } = await supabase
     .from('anamnese_responses')
     .select('*')
     .eq('temp_email', alunoProfile.email)
@@ -89,6 +89,10 @@ export default async function AlunoDetailPage({ params }: { params: { id: string
     .order('completed_at', { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  console.log('🔍 Buscando anamnese para:', alunoProfile.email);
+  console.log('✅ Anamnese encontrada:', anamneseResponse ? 'SIM' : 'NÃO');
+  if (anamneseError) console.error('❌ Erro ao buscar anamnese:', anamneseError);
 
   // Buscar fotos de primeiro acesso
   const { data: firstAccessPhotos } = await supabase

@@ -539,6 +539,14 @@ export default function AlunoDetails({
                 </div>
               )}
 
+              {/* Estatísticas de Adesão do Aluno */}
+              <AlunoStatistics alunoId={aluno.id} />
+            </div>
+          )}
+
+          {/* Resumo Semanal Tab */}
+          {activeTab === 'fotos' && (
+            <div className="space-y-6">
               {/* Questionário de Anamnese */}
               {anamneseResponse && (
                 <div className="bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 rounded-lg p-6 border-2 border-green-200 dark:border-green-800">
@@ -715,14 +723,6 @@ export default function AlunoDetails({
                 </div>
               )}
 
-              {/* Estatísticas de Adesão do Aluno */}
-              <AlunoStatistics alunoId={aluno.id} />
-            </div>
-          )}
-
-          {/* Resumo Semanal Tab */}
-          {activeTab === 'fotos' && (
-            <div>
               {photos.length === 0 ? (
                 <div className="text-center py-12">
                   <ImageIcon size={48} className="mx-auto text-gray-400 mb-4" />
