@@ -5,6 +5,8 @@ const urlsToCache = [
   '/login',
   '/cadastro',
   '/manifest.json',
+  '/icon-192x192.png',
+  '/icon-512x512.png',
 ];
 
 // Instalação do Service Worker
@@ -73,4 +75,74 @@ self.addEventListener('fetch', (event) => {
         return caches.match(event.request);
       })
   );
+});
+
+// ============================================
+// PUSH NOTIFICATIONS
+// ============================================
+
+// Receber notificação push
+self.addEventListener('push', (event) => {
+  console.log('[Service Worker] Push recebido:', event);
+
+  let data = {
+    title: 'Brutal Team',
+    body: 'Você tem uma nova notificação',
+    icon: '/icon-192x192.png',
+    badge: '/icon-192x192.png',
+    data: {
+      url: '/',
+    },
+  };
+
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      console.error('[Service Worker] Erro ao parsear dados do push:', e);
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon || '/icon-192x192.png',
+    badge: data.badge || '/icon-192x192.png',
+    vibrate: [200, 100, 200],
+    tag: data.tag || 'brutal-team-notification',
+    requireInteraction: false,
+    data: data.data || {},
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+// Clicar na notificação
+self.addEventListener('notificationclick', (event) => {
+  console.log('[Service Worker] Notificação clicada:', event);
+
+  event.notification.close();
+
+  const urlToOpen = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Verificar se já existe uma janela aberta
+      for (const client of clientList) {
+        if (client.url === urlToOpen && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Se não existe, abrir nova janela
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});
+
+// Fechar notificação
+self.addEventListener('notificationclose', (event) => {
+  console.log('[Service Worker] Notificação fechada:', event);
 });

@@ -3,6 +3,7 @@
 import { Profile } from '@/types';
 import Sidebar from '@/components/ui/Sidebar';
 import BottomNavigation from '@/components/ui/BottomNavigation';
+import PushNotificationPrompt from '@/components/PushNotificationPrompt';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -23,6 +24,9 @@ export default function AppLayout({ children, profile }: AppLayoutProps) {
 
       {/* Bottom Navigation - Mobile Only */}
       <BottomNavigation profile={profile} />
+
+      {/* Push Notification Prompt - Apenas para alunos */}
+      {profile.role === 'aluno' && <PushNotificationPrompt />}
     </div>
   );
 }
