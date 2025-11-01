@@ -80,11 +80,14 @@ export default async function AlunoDetailPage({ params }: { params: { id: string
     .limit(1)
     .maybeSingle();
 
-  // Buscar respostas do questionário de anamnese
+  // Buscar respostas do questionário de anamnese (apenas completas, mais recente)
   const { data: anamneseResponse } = await supabase
     .from('anamnese_responses')
     .select('*')
     .eq('temp_email', alunoProfile.email)
+    .eq('completed', true)
+    .order('completed_at', { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   // Buscar fotos de primeiro acesso
