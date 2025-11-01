@@ -71,6 +71,7 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
       ]
     : [
         { href: '/coach/perfil', icon: User, label: 'Perfil' },
+        { href: '/coach/anamnese', icon: BookOpen, label: 'Anamnese' },
       ];
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');

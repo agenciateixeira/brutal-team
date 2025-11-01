@@ -144,6 +144,18 @@ export default async function CoachDashboard() {
         console.error('Erro ao buscar treino ativo:', workoutError);
       }
 
+      // Verificar se tem anamnese completa
+      const { data: anamnese, error: anamneseError } = await supabase
+        .from('anamnese_responses')
+        .select('id')
+        .eq('temp_email', aluno.email)
+        .eq('completed', true)
+        .maybeSingle();
+
+      if (anamneseError) {
+        console.error('Erro ao buscar anamnese:', anamneseError);
+      }
+
       return {
         ...aluno,
         unread_messages_count: unreadByAluno?.[aluno.id] || 0,
@@ -153,6 +165,7 @@ export default async function CoachDashboard() {
         has_all_notifications: hasAllNotifications,
         has_diet: !!activeDiet,
         has_workout: !!activeWorkout,
+        has_anamnese: !!anamnese,
       };
     })
   );

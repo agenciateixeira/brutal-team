@@ -1,7 +1,7 @@
 'use client';
 
 import { Profile } from '@/types';
-import { User, MessageCircle, ChevronRight, Search, Filter, Calendar, Bell, CheckCircle, Clock, TrendingUp, FileText, Dumbbell, CheckCircle2, ArrowRight } from 'lucide-react';
+import { User, MessageCircle, ChevronRight, Search, Filter, Calendar, Bell, CheckCircle, Clock, TrendingUp, FileText, Dumbbell, CheckCircle2, ArrowRight, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -23,6 +23,7 @@ interface AlunosListProps {
       count: number;
     };
     has_all_notifications?: boolean;
+    has_anamnese?: boolean;
   })[];
 }
 
@@ -321,6 +322,14 @@ export default function AlunosList({ alunos }: AlunosListProps) {
                           </span>
                         )}
                       </div>
+                    )}
+
+                    {/* Badge de Anamnese - visível para todos */}
+                    {aluno.has_anamnese && (
+                      <span className="flex items-center gap-1 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full whitespace-nowrap">
+                        <BookOpen size={12} />
+                        Anamnese
+                      </span>
                     )}
 
                     {/* Badge de status de pagamento (apenas para alunos ativos) */}
