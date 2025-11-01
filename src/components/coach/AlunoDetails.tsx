@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Profile, ProgressPhoto, Message, Dieta, Treino, ProtocoloHormonal, NotificationCounts } from '@/types';
-import { ArrowLeft, Image as ImageIcon, MessageCircle, Apple, Dumbbell, Syringe, Calendar, FileText, X, Bell, User, Mail, Phone, CreditCard, DollarSign, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
+import { ArrowLeft, Image as ImageIcon, MessageCircle, Apple, Dumbbell, Syringe, Calendar, FileText, X, Bell, User, Mail, Phone, CreditCard, DollarSign, ChevronDown, ChevronUp } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -27,7 +27,7 @@ interface AlunoDetailsProps {
   firstAccessPhotos?: any;
 }
 
-type Tab = 'perfil' | 'fotos' | 'mensagens' | 'dieta' | 'treino' | 'protocolo' | 'anamnese';
+type Tab = 'perfil' | 'fotos' | 'mensagens' | 'dieta' | 'treino' | 'protocolo';
 
 export default function AlunoDetails({
   aluno,
@@ -234,17 +234,6 @@ export default function AlunoDetails({
                 {notifications.protocol}
               </span>
             )}
-          </button>
-          <button
-            onClick={() => setActiveTab('anamnese')}
-            className={`flex-1 px-6 py-4 font-semibold flex items-center justify-center gap-2 transition-colors whitespace-nowrap ${
-              activeTab === 'anamnese'
-                ? 'bg-primary-600 text-white'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-            }`}
-          >
-            <BookOpen size={20} />
-            Anamnese
           </button>
           <button
             onClick={() => setActiveTab('mensagens')}
@@ -850,186 +839,6 @@ export default function AlunoDetails({
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* Anamnese Tab */}
-          {activeTab === 'anamnese' && (
-            <div className="space-y-6">
-              {!anamneseResponse ? (
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-12 text-center">
-                  <BookOpen size={48} className="mx-auto text-gray-400 mb-4" />
-                  <p className="text-gray-500 dark:text-gray-400">
-                    Este aluno ainda não preencheu a anamnese
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {/* Informações Básicas */}
-                  <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm uppercase tracking-wide">
-                      📋 Informações Básicas
-                    </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Idade</span>
-                        <p className="text-base font-semibold text-gray-900 dark:text-white">{anamneseResponse.idade} anos</p>
-                      </div>
-                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Altura</span>
-                        <p className="text-base font-semibold text-gray-900 dark:text-white">{anamneseResponse.altura} cm</p>
-                      </div>
-                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Peso</span>
-                        <p className="text-base font-semibold text-gray-900 dark:text-white">{anamneseResponse.peso} kg</p>
-                      </div>
-                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">IMC</span>
-                        <p className="text-base font-semibold text-gray-900 dark:text-white">
-                          {(anamneseResponse.peso / Math.pow(anamneseResponse.altura / 100, 2)).toFixed(1)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Medidas */}
-                  <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm uppercase tracking-wide">
-                      📏 Medidas Corporais
-                    </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Cintura</span>
-                        <p className="text-base font-semibold text-gray-900 dark:text-white">{anamneseResponse.cintura} cm</p>
-                      </div>
-                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Braço</span>
-                        <p className="text-base font-semibold text-gray-900 dark:text-white">{anamneseResponse.braco} cm</p>
-                      </div>
-                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Perna</span>
-                        <p className="text-base font-semibold text-gray-900 dark:text-white">{anamneseResponse.perna} cm</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Rotina */}
-                  <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm uppercase tracking-wide">
-                      💼 Rotina
-                    </h4>
-                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-3">
-                      <div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Profissão</span>
-                        <p className="text-sm text-gray-900 dark:text-white mt-1">{anamneseResponse.profissao}</p>
-                      </div>
-                      <div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Rotina de Trabalho</span>
-                        <p className="text-sm text-gray-900 dark:text-white mt-1">{anamneseResponse.rotina_trabalho}</p>
-                      </div>
-                      <div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Estuda</span>
-                        <p className="text-sm text-gray-900 dark:text-white mt-1">
-                          {anamneseResponse.estuda ? 'Sim' : 'Não'}
-                          {anamneseResponse.estuda && anamneseResponse.horarios_estudo && ` - ${anamneseResponse.horarios_estudo}`}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Atividade Física */}
-                  <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm uppercase tracking-wide">
-                      🏃 Atividade Física
-                    </h4>
-                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-3">
-                      <div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Pratica atividade física</span>
-                        <p className="text-sm text-gray-900 dark:text-white mt-1">
-                          {anamneseResponse.pratica_atividade_fisica ? 'Sim' : 'Não'}
-                        </p>
-                      </div>
-                      {anamneseResponse.pratica_atividade_fisica && (
-                        <>
-                          {anamneseResponse.modalidades_exercicio && (
-                            <div>
-                              <span className="text-xs text-gray-500 dark:text-gray-400">Modalidades</span>
-                              <p className="text-sm text-gray-900 dark:text-white mt-1">{anamneseResponse.modalidades_exercicio}</p>
-                            </div>
-                          )}
-                          {anamneseResponse.dias_horarios_atividade && (
-                            <div>
-                              <span className="text-xs text-gray-500 dark:text-gray-400">Dias e horários</span>
-                              <p className="text-sm text-gray-900 dark:text-white mt-1">{anamneseResponse.dias_horarios_atividade}</p>
-                            </div>
-                          )}
-                        </>
-                      )}
-                      <div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Horários de sono</span>
-                        <p className="text-sm text-gray-900 dark:text-white mt-1">{anamneseResponse.horarios_sono}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Objetivos */}
-                  <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm uppercase tracking-wide">
-                      🎯 Objetivos
-                    </h4>
-                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-3">
-                      <div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Trajetória e objetivos</span>
-                        <p className="text-sm text-gray-900 dark:text-white mt-1">{anamneseResponse.trajetoria_objetivos}</p>
-                      </div>
-                      <div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Mudanças esperadas</span>
-                        <p className="text-sm text-gray-900 dark:text-white mt-1">{anamneseResponse.mudancas_esperadas}</p>
-                      </div>
-                      <div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Resultado estético final</span>
-                        <p className="text-sm text-gray-900 dark:text-white mt-1">{anamneseResponse.resultado_estetico_final}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Histórico de Treino */}
-                  <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm uppercase tracking-wide">
-                      📊 Histórico de Treino
-                    </h4>
-                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-3">
-                      <div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Tempo de treino contínuo</span>
-                        <p className="text-sm text-gray-900 dark:text-white mt-1">{anamneseResponse.tempo_treino_continuo}</p>
-                      </div>
-                      <div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Resultados estagnados</span>
-                        <p className="text-sm text-gray-900 dark:text-white mt-1">
-                          {anamneseResponse.resultados_estagnados ? 'Sim' : 'Não'}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Percepção de pump</span>
-                        <p className="text-sm text-gray-900 dark:text-white mt-1">{anamneseResponse.percepcao_pump}</p>
-                      </div>
-                      <div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Uso de esteroides</span>
-                        <p className="text-sm text-gray-900 dark:text-white mt-1">
-                          {anamneseResponse.uso_esteroides ? 'Sim' : 'Não'}
-                          {anamneseResponse.uso_esteroides && anamneseResponse.quais_esteroides && ` - ${anamneseResponse.quais_esteroides}`}
-                        </p>
-                      </div>
-                      {anamneseResponse.outras_substancias && (
-                        <div>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">Outras substâncias</span>
-                          <p className="text-sm text-gray-900 dark:text-white mt-1">{anamneseResponse.outras_substancias}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </>
               )}
             </div>
           )}
