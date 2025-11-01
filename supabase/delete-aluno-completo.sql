@@ -10,7 +10,7 @@ DO $$
 DECLARE
   aluno_id_var UUID;
   aluno_email_var TEXT := 'SEU_EMAIL_AQUI@gmail.com'; -- 🔴 ALTERE AQUI!
-  rec RECORD;
+  rows_deleted INTEGER;
 BEGIN
   -- Buscar ID do aluno pelo email
   SELECT id INTO aluno_id_var
@@ -35,86 +35,86 @@ BEGIN
   -- 1. Deletar de anamnese_responses
   DELETE FROM public.anamnese_responses
   WHERE temp_email = aluno_email_var;
-  GET DIAGNOSTICS rec = ROW_COUNT;
-  RAISE NOTICE '✅ Anamnese deletada: % registros', rec;
+  GET DIAGNOSTICS rows_deleted = ROW_COUNT;
+  RAISE NOTICE '✅ Anamnese deletada: % registros', rows_deleted;
 
   -- 2. Deletar de first_access_photos
   DELETE FROM public.first_access_photos
   WHERE aluno_id = aluno_id_var;
-  GET DIAGNOSTICS rec = ROW_COUNT;
-  RAISE NOTICE '✅ Fotos de primeiro acesso deletadas: % registros', rec;
+  GET DIAGNOSTICS rows_deleted = ROW_COUNT;
+  RAISE NOTICE '✅ Fotos de primeiro acesso deletadas: % registros', rows_deleted;
 
   -- 3. Deletar de progress_photos
   DELETE FROM public.progress_photos
   WHERE aluno_id = aluno_id_var;
-  GET DIAGNOSTICS rec = ROW_COUNT;
-  RAISE NOTICE '✅ Fotos de progresso deletadas: % registros', rec;
+  GET DIAGNOSTICS rows_deleted = ROW_COUNT;
+  RAISE NOTICE '✅ Fotos de progresso deletadas: % registros', rows_deleted;
 
   -- 4. Deletar de weekly_summaries
   DELETE FROM public.weekly_summaries
   WHERE aluno_id = aluno_id_var;
-  GET DIAGNOSTICS rec = ROW_COUNT;
-  RAISE NOTICE '✅ Resumos semanais deletados: % registros', rec;
+  GET DIAGNOSTICS rows_deleted = ROW_COUNT;
+  RAISE NOTICE '✅ Resumos semanais deletados: % registros', rows_deleted;
 
   -- 5. Deletar de messages
   DELETE FROM public.messages
   WHERE aluno_id = aluno_id_var;
-  GET DIAGNOSTICS rec = ROW_COUNT;
-  RAISE NOTICE '✅ Mensagens deletadas: % registros', rec;
+  GET DIAGNOSTICS rows_deleted = ROW_COUNT;
+  RAISE NOTICE '✅ Mensagens deletadas: % registros', rows_deleted;
 
   -- 6. Deletar de dietas
   DELETE FROM public.dietas
   WHERE aluno_id = aluno_id_var;
-  GET DIAGNOSTICS rec = ROW_COUNT;
-  RAISE NOTICE '✅ Dietas deletadas: % registros', rec;
+  GET DIAGNOSTICS rows_deleted = ROW_COUNT;
+  RAISE NOTICE '✅ Dietas deletadas: % registros', rows_deleted;
 
   -- 7. Deletar de treinos
   DELETE FROM public.treinos
   WHERE aluno_id = aluno_id_var;
-  GET DIAGNOSTICS rec = ROW_COUNT;
-  RAISE NOTICE '✅ Treinos deletados: % registros', rec;
+  GET DIAGNOSTICS rows_deleted = ROW_COUNT;
+  RAISE NOTICE '✅ Treinos deletados: % registros', rows_deleted;
 
   -- 8. Deletar de protocolos_hormonais
   DELETE FROM public.protocolos_hormonais
   WHERE aluno_id = aluno_id_var;
-  GET DIAGNOSTICS rec = ROW_COUNT;
-  RAISE NOTICE '✅ Protocolos deletados: % registros', rec;
+  GET DIAGNOSTICS rows_deleted = ROW_COUNT;
+  RAISE NOTICE '✅ Protocolos deletados: % registros', rows_deleted;
 
   -- 9. Deletar de payment_history
   DELETE FROM public.payment_history
   WHERE aluno_id = aluno_id_var;
-  GET DIAGNOSTICS rec = ROW_COUNT;
-  RAISE NOTICE '✅ Histórico de pagamentos deletado: % registros', rec;
+  GET DIAGNOSTICS rows_deleted = ROW_COUNT;
+  RAISE NOTICE '✅ Histórico de pagamentos deletado: % registros', rows_deleted;
 
   -- 10. Deletar de student_plans
   DELETE FROM public.student_plans
   WHERE aluno_id = aluno_id_var;
-  GET DIAGNOSTICS rec = ROW_COUNT;
-  RAISE NOTICE '✅ Planos deletados: % registros', rec;
+  GET DIAGNOSTICS rows_deleted = ROW_COUNT;
+  RAISE NOTICE '✅ Planos deletados: % registros', rows_deleted;
 
   -- 11. Deletar de access_codes
   DELETE FROM public.access_codes
   WHERE aluno_id = aluno_id_var;
-  GET DIAGNOSTICS rec = ROW_COUNT;
-  RAISE NOTICE '✅ Códigos de acesso deletados: % registros', rec;
+  GET DIAGNOSTICS rows_deleted = ROW_COUNT;
+  RAISE NOTICE '✅ Códigos de acesso deletados: % registros', rows_deleted;
 
   -- 12. Deletar de coach_notifications
   DELETE FROM public.coach_notifications
   WHERE aluno_id = aluno_id_var;
-  GET DIAGNOSTICS rec = ROW_COUNT;
-  RAISE NOTICE '✅ Notificações deletadas: % registros', rec;
+  GET DIAGNOSTICS rows_deleted = ROW_COUNT;
+  RAISE NOTICE '✅ Notificações deletadas: % registros', rows_deleted;
 
   -- 13. Deletar de profiles
   DELETE FROM public.profiles
   WHERE id = aluno_id_var;
-  GET DIAGNOSTICS rec = ROW_COUNT;
-  RAISE NOTICE '✅ Perfil deletado: % registros', rec;
+  GET DIAGNOSTICS rows_deleted = ROW_COUNT;
+  RAISE NOTICE '✅ Perfil deletado: % registros', rows_deleted;
 
   -- 14. Deletar de auth.users (ÚLTIMA ETAPA)
   DELETE FROM auth.users
   WHERE id = aluno_id_var;
-  GET DIAGNOSTICS rec = ROW_COUNT;
-  RAISE NOTICE '✅ Usuário deletado do auth: % registros', rec;
+  GET DIAGNOSTICS rows_deleted = ROW_COUNT;
+  RAISE NOTICE '✅ Usuário deletado do auth: % registros', rows_deleted;
 
   RAISE NOTICE '';
   RAISE NOTICE '============================================';
