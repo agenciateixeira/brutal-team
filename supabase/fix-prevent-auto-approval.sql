@@ -152,7 +152,10 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
 
-RAISE NOTICE '✅ Trigger recriado - novos alunos sempre PENDENTES';
+DO $$
+BEGIN
+  RAISE NOTICE '✅ Trigger recriado - novos alunos sempre PENDENTES';
+END $$;
 
 -- 5. RELATÓRIO FINAL
 -- ============================================
