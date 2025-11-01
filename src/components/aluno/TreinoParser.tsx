@@ -370,17 +370,19 @@ export default function TreinoParser({ content }: TreinoParserProps) {
                             <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">
                               {item.text}
                             </span>
-                            {/* Input de carga */}
-                            <div className="flex items-center gap-2">
-                              <Weight size={14} className="text-gray-500" />
-                              <input
-                                type="number"
-                                placeholder="kg"
-                                value={cargas[`${sectionIndex}-${itemIndex}`] || ''}
-                                onChange={(e) => setCargas({ ...cargas, [`${sectionIndex}-${itemIndex}`]: e.target.value })}
-                                className="w-16 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                              />
-                            </div>
+                            {/* Input de carga (apenas para exercícios não-cardio) */}
+                            {item.category !== 'cardio' && (
+                              <div className="flex items-center gap-2">
+                                <Weight size={14} className="text-gray-500" />
+                                <input
+                                  type="number"
+                                  placeholder="kg"
+                                  value={cargas[`${sectionIndex}-${itemIndex}`] || ''}
+                                  onChange={(e) => setCargas({ ...cargas, [`${sectionIndex}-${itemIndex}`]: e.target.value })}
+                                  className="w-16 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                />
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -437,17 +439,19 @@ export default function TreinoParser({ content }: TreinoParserProps) {
                                   <span className="text-gray-700 dark:text-gray-300 flex-1">
                                     {alt.text}
                                   </span>
-                                  {/* Input de carga para alternativa */}
-                                  <div className="flex items-center gap-2">
-                                    <Weight size={14} className="text-gray-500" />
-                                    <input
-                                      type="number"
-                                      placeholder="kg"
-                                      value={cargas[`${sectionIndex}-${itemIndex}-alt-${altIndex}`] || ''}
-                                      onChange={(e) => setCargas({ ...cargas, [`${sectionIndex}-${itemIndex}-alt-${altIndex}`]: e.target.value })}
-                                      className="w-16 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                    />
-                                  </div>
+                                  {/* Input de carga para alternativa (apenas não-cardio) */}
+                                  {alt.category !== 'cardio' && (
+                                    <div className="flex items-center gap-2">
+                                      <Weight size={14} className="text-gray-500" />
+                                      <input
+                                        type="number"
+                                        placeholder="kg"
+                                        value={cargas[`${sectionIndex}-${itemIndex}-alt-${altIndex}`] || ''}
+                                        onChange={(e) => setCargas({ ...cargas, [`${sectionIndex}-${itemIndex}-alt-${altIndex}`]: e.target.value })}
+                                        className="w-16 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                      />
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             ))}
