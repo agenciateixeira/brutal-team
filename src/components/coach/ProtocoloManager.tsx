@@ -386,39 +386,37 @@ ou Puran T4 25mcg pela manhã`}</pre>
             <div className="flex flex-col sm:flex-row gap-2 mb-3">
               <button
                 onClick={() => handleEdit(protocolo)}
-                className="p-2 bg-white dark:bg-gray-800 border-2 border-blue-600 rounded-md transition-all duration-200 flex items-center justify-center gap-2 hover:bg-blue-600 hover:scale-105 group"
+                className="p-2 bg-white dark:bg-gray-800 border-2 border-gray-900 dark:border-gray-300 rounded-md transition-all duration-200 flex items-center justify-center gap-2 hover:bg-blue-600 hover:border-blue-600 hover:scale-105 group"
                 title="Editar (criar nova versão)"
               >
-                <Edit size={18} className="text-blue-600 group-hover:text-white transition-colors" />
-                <span className="sm:hidden text-blue-600 group-hover:text-white text-sm font-medium transition-colors">Editar</span>
+                <Edit size={18} className="text-gray-900 dark:text-gray-300 group-hover:text-white transition-colors" />
+                <span className="sm:hidden text-gray-900 dark:text-gray-300 group-hover:text-white text-sm font-medium transition-colors">Editar</span>
               </button>
               <button
                 onClick={() => toggleActive(protocolo.id, protocolo.active)}
-                className={`p-2 bg-white dark:bg-gray-800 border-2 rounded-md transition-all duration-200 flex items-center justify-center gap-2 hover:scale-105 group ${
+                className={`p-2 bg-white dark:bg-gray-800 border-2 border-gray-900 dark:border-gray-300 rounded-md transition-all duration-200 flex items-center justify-center gap-2 hover:scale-105 group ${
                   protocolo.active
-                    ? 'border-yellow-600 hover:bg-yellow-600'
-                    : 'border-green-600 hover:bg-green-600'
+                    ? 'hover:bg-yellow-600 hover:border-yellow-600'
+                    : 'hover:bg-green-600 hover:border-green-600'
                 }`}
                 title={protocolo.active ? 'Desativar' : 'Ativar'}
               >
                 {protocolo.active ? (
-                  <XCircle size={18} className="text-yellow-600 group-hover:text-white transition-colors" />
+                  <XCircle size={18} className="text-gray-900 dark:text-gray-300 group-hover:text-white transition-colors" />
                 ) : (
-                  <CheckCircle size={18} className="text-green-600 group-hover:text-white transition-colors" />
+                  <CheckCircle size={18} className="text-gray-900 dark:text-gray-300 group-hover:text-white transition-colors" />
                 )}
-                <span className={`sm:hidden text-sm font-medium transition-colors group-hover:text-white ${
-                  protocolo.active ? 'text-yellow-600' : 'text-green-600'
-                }`}>
+                <span className="sm:hidden text-gray-900 dark:text-gray-300 text-sm font-medium transition-colors group-hover:text-white">
                   {protocolo.active ? 'Desativar' : 'Ativar'}
                 </span>
               </button>
               <button
                 onClick={() => handleDelete(protocolo.id)}
-                className="p-2 bg-white dark:bg-gray-800 border-2 border-red-600 rounded-md transition-all duration-200 flex items-center justify-center gap-2 hover:bg-red-600 hover:scale-105 group"
+                className="p-2 bg-white dark:bg-gray-800 border-2 border-gray-900 dark:border-gray-300 rounded-md transition-all duration-200 flex items-center justify-center gap-2 hover:bg-red-600 hover:border-red-600 hover:scale-105 group"
                 title="Excluir"
               >
-                <Trash2 size={18} className="text-red-600 group-hover:text-white transition-colors" />
-                <span className="sm:hidden text-red-600 group-hover:text-white text-sm font-medium transition-colors">Excluir</span>
+                <Trash2 size={18} className="text-gray-900 dark:text-gray-300 group-hover:text-white transition-colors" />
+                <span className="sm:hidden text-gray-900 dark:text-gray-300 group-hover:text-white text-sm font-medium transition-colors">Excluir</span>
               </button>
             </div>
 
@@ -427,7 +425,7 @@ ou Puran T4 25mcg pela manhã`}</pre>
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-gray-900 dark:text-white font-semibold">{protocolo.title}</h3>
                 {protocolo.active && (
-                  <span className="px-2 py-1 bg-white dark:bg-gray-800 border-2 border-purple-600 text-purple-600 text-xs rounded-full hover:bg-purple-600 hover:text-white hover:scale-105 transition-all duration-200 cursor-default">
+                  <span className="px-2 py-1 bg-white dark:bg-gray-800 border-2 border-gray-900 dark:border-gray-300 text-gray-900 dark:text-gray-300 text-xs rounded-full hover:bg-purple-600 hover:border-purple-600 hover:text-white hover:scale-105 transition-all duration-200 cursor-default">
                     Ativo
                   </span>
                 )}
