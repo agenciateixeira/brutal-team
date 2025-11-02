@@ -446,31 +446,39 @@ Cardio 20 minutos esteira`}</pre>
             <div className="flex flex-col sm:flex-row gap-2 mb-3">
               <button
                 onClick={() => handleEdit(treino)}
-                className="p-2 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors flex items-center justify-center gap-2"
+                className="p-2 bg-white dark:bg-gray-800 border-2 border-blue-600 rounded-md transition-all duration-200 flex items-center justify-center gap-2 hover:bg-blue-600 hover:scale-105 group"
                 title="Editar (criar nova versão)"
               >
-                <Edit size={18} />
-                <span className="sm:hidden text-white text-sm font-medium">Editar</span>
+                <Edit size={18} className="text-blue-600 group-hover:text-white transition-colors" />
+                <span className="sm:hidden text-blue-600 group-hover:text-white text-sm font-medium transition-colors">Editar</span>
               </button>
               <button
                 onClick={() => toggleActive(treino.id, treino.active)}
-                className={`p-2 rounded-md transition-colors flex items-center justify-center gap-2 ${
+                className={`p-2 bg-white dark:bg-gray-800 border-2 rounded-md transition-all duration-200 flex items-center justify-center gap-2 hover:scale-105 group ${
                   treino.active
-                    ? 'bg-yellow-600 hover:bg-yellow-700'
-                    : 'bg-green-600 hover:bg-green-700'
+                    ? 'border-yellow-600 hover:bg-yellow-600'
+                    : 'border-green-600 hover:bg-green-600'
                 }`}
                 title={treino.active ? 'Desativar' : 'Ativar'}
               >
-                {treino.active ? <XCircle size={18} /> : <CheckCircle size={18} />}
-                <span className="sm:hidden text-white text-sm font-medium">{treino.active ? 'Desativar' : 'Ativar'}</span>
+                {treino.active ? (
+                  <XCircle size={18} className="text-yellow-600 group-hover:text-white transition-colors" />
+                ) : (
+                  <CheckCircle size={18} className="text-green-600 group-hover:text-white transition-colors" />
+                )}
+                <span className={`sm:hidden text-sm font-medium transition-colors group-hover:text-white ${
+                  treino.active ? 'text-yellow-600' : 'text-green-600'
+                }`}>
+                  {treino.active ? 'Desativar' : 'Ativar'}
+                </span>
               </button>
               <button
                 onClick={() => handleDelete(treino.id)}
-                className="p-2 bg-red-600 hover:bg-red-700 rounded-md transition-colors flex items-center justify-center gap-2"
+                className="p-2 bg-white dark:bg-gray-800 border-2 border-red-600 rounded-md transition-all duration-200 flex items-center justify-center gap-2 hover:bg-red-600 hover:scale-105 group"
                 title="Excluir"
               >
-                <Trash2 size={18} />
-                <span className="sm:hidden text-white text-sm font-medium">Excluir</span>
+                <Trash2 size={18} className="text-red-600 group-hover:text-white transition-colors" />
+                <span className="sm:hidden text-red-600 group-hover:text-white text-sm font-medium transition-colors">Excluir</span>
               </button>
             </div>
 
@@ -479,7 +487,7 @@ Cardio 20 minutos esteira`}</pre>
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-gray-900 dark:text-white font-semibold">{treino.title}</h3>
                 {treino.active && (
-                  <span className="px-2 py-1 bg-green-600 text-white text-xs rounded-full">
+                  <span className="px-2 py-1 bg-white dark:bg-gray-800 border-2 border-green-600 text-green-600 text-xs rounded-full hover:bg-green-600 hover:text-white hover:scale-105 transition-all duration-200 cursor-default">
                     Ativo
                   </span>
                 )}
@@ -487,7 +495,7 @@ Cardio 20 minutos esteira`}</pre>
                   {treino.workout_types.map((type) => {
                     const typeLabel = workoutTypeOptions.find(opt => opt.value === type)?.label || type;
                     return (
-                      <span key={type} className="px-2 py-1 bg-purple-600 text-white text-xs rounded-full">
+                      <span key={type} className="px-2 py-1 bg-white dark:bg-gray-800 border-2 border-purple-600 text-purple-600 text-xs rounded-full hover:bg-purple-600 hover:text-white hover:scale-105 transition-all duration-200 cursor-default">
                         {typeLabel}
                       </span>
                     );
