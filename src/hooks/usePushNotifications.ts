@@ -85,7 +85,12 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
   // Solicitar permissão
   const requestPermission = async () => {
+    console.log('🔔 [PERMISSION] Solicitando permissão...');
+    console.log('🔔 [PERMISSION] isSupported:', isSupported);
+    console.log('🔔 [PERMISSION] Notification.permission atual:', Notification.permission);
+
     if (!isSupported) {
+      console.error('❌ [PERMISSION] Push notifications não suportadas');
       setError('Push notifications não são suportadas neste navegador');
       return;
     }
@@ -94,17 +99,21 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     setError(null);
 
     try {
+      console.log('🔔 [PERMISSION] Chamando Notification.requestPermission()...');
       const result = await Notification.requestPermission();
+      console.log('🔔 [PERMISSION] Resultado:', result);
       setPermission(result);
 
       if (result === 'denied') {
+        console.error('❌ [PERMISSION] Permissão negada pelo usuário');
         setError('Permissão negada. Você pode alterar isso nas configurações do navegador.');
       } else if (result === 'granted') {
+        console.log('✅ [PERMISSION] Permissão concedida! Inscrevendo...');
         // Automaticamente inscrever após permissão
         await subscribe();
       }
     } catch (err: any) {
-      console.error('Erro ao solicitar permissão:', err);
+      console.error('❌ [PERMISSION] Erro ao solicitar permissão:', err);
       setError(err.message || 'Erro ao solicitar permissão');
     } finally {
       setIsLoading(false);
