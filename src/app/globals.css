@@ -14,28 +14,34 @@
   }
 
   html {
-    /* Desabilita zoom completamente - Nível 1 */
-    -webkit-text-size-adjust: none;
-    -moz-text-size-adjust: none;
-    -ms-text-size-adjust: none;
-    text-size-adjust: none;
-    /* Desabilita zoom - Nível 2 */
-    touch-action: manipulation;
-    -ms-touch-action: manipulation;
+    /* Previne zoom sem quebrar funcionalidades */
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Desabilita pinch-to-zoom mas permite scroll */
+    touch-action: pan-x pan-y;
+    -ms-touch-action: pan-x pan-y;
+    overflow-x: hidden;
+    height: 100%;
   }
 
   body {
     color: rgb(var(--foreground-rgb));
     background: rgb(var(--background));
     transition: background-color 0.3s ease, color 0.3s ease;
-    /* Previne zoom em inputs e gestos - Nível 3 */
+    /* Previne zoom em inputs e gestos */
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-    /* Forçar touch-action manipulation */
-    touch-action: manipulation !important;
+    /* Força pan apenas, sem zoom */
+    touch-action: pan-x pan-y !important;
+    /* Previne double-tap zoom */
+    -webkit-tap-highlight-color: transparent;
+    height: 100%;
+    overflow-x: hidden;
   }
 
   /* Permitir seleção de texto em elementos específicos */
@@ -59,9 +65,16 @@
     -webkit-touch-callout: none;
   }
 
-  /* Desabilita zoom em qualquer elemento interativo */
-  a, button, [role="button"], [onclick] {
-    touch-action: manipulation !important;
+  /* Desabilita zoom em qualquer elemento - FORÇA MÁXIMA */
+  *, *::before, *::after {
+    touch-action: pan-x pan-y !important;
+  }
+
+  /* Elementos interativos - previne zoom e double-tap */
+  a, button, [role="button"], [onclick], div, section, main {
+    touch-action: pan-x pan-y !important;
+    -webkit-user-drag: none;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
