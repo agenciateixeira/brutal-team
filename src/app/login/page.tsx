@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -12,9 +12,54 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checking, setChecking] = useState(true);
   const router = useRouter();
   const supabase = createClient();
   const { showLoading, hideLoading } = useLoading();
+
+  // Verificar se já está logado ao carregar a página
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (session) {
+          console.log('✅ Sessão ativa detectada, redirecionando...');
+          showLoading('Carregando sua conta...', 3000);
+
+          // Buscar o perfil do usuário para saber o role
+          const { data: profiles, error: profileError } = await supabase
+            .from('profiles')
+            .select('role')
+            .filter('id', 'eq', session.user.id);
+
+          if (profileError || !profiles || profiles.length === 0) {
+            console.error('❌ Erro ao buscar perfil:', profileError);
+            setChecking(false);
+            hideLoading();
+            return;
+          }
+
+          const profile = profiles[0];
+
+          // Redirecionar baseado no role
+          if ('role' in profile && profile.role === 'coach') {
+            router.push('/coach/dashboard');
+          } else {
+            router.push('/aluno/dashboard');
+          }
+        } else {
+          console.log('❌ Nenhuma sessão ativa');
+          setChecking(false);
+        }
+      } catch (err) {
+        console.error('❌ Erro ao verificar sessão:', err);
+        setChecking(false);
+      }
+    };
+
+    checkSession();
+  }, [supabase, router, showLoading, hideLoading]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +101,26 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  // Mostrar loading enquanto verifica sessão
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="relative w-48 h-48">
+            <Image
+              src="/logo.png"
+              alt="Brutal Team"
+              fill
+              className="object-contain animate-pulse"
+              priority
+            />
+          </div>
+          <p className="text-gray-600 text-lg font-medium">Verificando conta...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
