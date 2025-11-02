@@ -7,6 +7,7 @@ import { Send, MessageCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { sendPushNotification } from '@/lib/push-notifications';
 
 interface ChatFullProps {
   alunoId: string;
@@ -69,6 +70,33 @@ export default function ChatFull({ alunoId, messages: initialMessages, coach }: 
       });
 
       if (error) throw error;
+
+      // Buscar informações do aluno e coach para enviar notificação
+      const { data: alunoProfile } = await supabase
+        .from('profiles')
+        .select('coach_id, full_name')
+        .eq('id', alunoId)
+        .single();
+
+      if (alunoProfile?.coach_id) {
+        try {
+          // Enviar notificação push para o coach
+          await sendPushNotification({
+            userId: alunoProfile.coach_id,
+            title: '💬 Nova Mensagem!',
+            body: `${alunoProfile.full_name || 'Seu aluno'}: ${newMessage.trim().substring(0, 50)}${newMessage.length > 50 ? '...' : ''}`,
+            url: `/coach/aluno/${alunoId}`,
+            data: {
+              type: 'message',
+              alunoId: alunoId,
+            },
+          });
+          console.log('✅ Notificação enviada para o coach');
+        } catch (pushError) {
+          console.error('❌ Erro ao enviar notificação para o coach:', pushError);
+          // Não falhar a operação principal
+        }
+      }
 
       setNewMessage('');
       router.refresh();
