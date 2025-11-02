@@ -46,6 +46,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning className="light">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
       </head>

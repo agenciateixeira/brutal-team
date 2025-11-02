@@ -7,6 +7,7 @@ import WeeklySummary from '@/components/aluno/WeeklySummary';
 import MonthlyPhotoProgress from '@/components/aluno/MonthlyPhotoProgress';
 import DashboardWithFirstAccess from '@/components/aluno/DashboardWithFirstAccess';
 import WelcomeMessage from '@/components/aluno/WelcomeMessage';
+import PullToRefresh from '@/components/ui/PullToRefresh';
 import { TrendingUp, Calendar, Apple, AlertCircle, FileQuestion, Bell, Sparkles, Activity } from 'lucide-react';
 import Link from 'next/link';
 
@@ -164,6 +165,9 @@ export default async function AlunoDashboard() {
     >
       <div className="flex h-screen bg-white">
         <Sidebar profile={profile} />
+
+        {/* Pull to Refresh */}
+        <PullToRefresh />
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto lg:ml-64 bg-gray-50">

@@ -101,24 +101,25 @@ export default function PullToRefresh() {
           showIndicator ? 'pointer-events-auto' : 'pointer-events-none'
         }`}
         style={{
-          height: isRefreshing ? '60px' : `${pullDistance}px`,
+          height: isRefreshing ? '80px' : `${pullDistance}px`,
           opacity: showIndicator ? 1 : 0,
         }}
       >
         <div
-          className="bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg"
+          className="bg-white dark:bg-gray-800 rounded-full p-4 shadow-xl border-2 border-primary-200 dark:border-primary-700"
           style={{
-            transform: `scale(${0.5 + pullProgress * 0.5})`,
+            transform: `scale(${0.6 + pullProgress * 0.4})`,
+            transition: 'transform 0.2s ease-out',
           }}
         >
           <RefreshCw
-            size={24}
+            size={28}
             className={`text-primary-600 ${
               isRefreshing ? 'animate-spin' : ''
             }`}
             style={{
-              transform: `rotate(${pullProgress * 360}deg)`,
-              transition: isRefreshing ? 'none' : 'transform 0.3s ease',
+              transform: isRefreshing ? 'none' : `rotate(${pullProgress * 360}deg)`,
+              transition: isRefreshing ? 'none' : 'transform 0.2s ease-out',
             }}
           />
         </div>
