@@ -53,6 +53,17 @@ export default function Sidebar({ profile }: SidebarProps) {
 
   const isCoach = profile.role === 'coach';
 
+  // Prefetch das páginas principais para navegação instantânea
+  useEffect(() => {
+    const pagesToPrefetch = isCoach
+      ? ['/coach/dashboard', '/coach/alunos', '/coach/templates', '/coach/anamnese', '/coach/pagamentos', '/coach/perfil']
+      : ['/aluno/dashboard', '/aluno/dieta', '/aluno/treino', '/aluno/protocolo', '/aluno/mensagens', '/aluno/progresso', '/aluno/perfil'];
+
+    pagesToPrefetch.forEach((path) => {
+      router.prefetch(path);
+    });
+  }, [isCoach, router]);
+
   // Carregar contadores de não lidos para alunos
   useEffect(() => {
     if (!isCoach) {

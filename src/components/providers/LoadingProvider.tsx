@@ -11,7 +11,7 @@ interface LoadingContextType {
 const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 
 const DEFAULT_MIN_TIME = 3000; // 3 segundos para login/cadastro
-const NAVIGATION_MIN_TIME = 1300; // 1.3 segundos para navegação interna
+const NAVIGATION_MIN_TIME = 300; // 300ms para navegação interna (instantâneo)
 
 export function LoadingProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -41,7 +41,7 @@ export function LoadingProvider({ children }: { children: ReactNode }) {
       setTimeout(() => {
         setIsLoading(false);
         setIsFadingOut(false);
-      }, 300); // Duração do fade-out
+      }, 150); // Duração do fade-out (rápido)
     }, remainingTime);
   }, []);
 

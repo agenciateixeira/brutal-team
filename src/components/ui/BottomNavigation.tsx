@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -34,6 +34,17 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
   const { showLoading } = useLoading();
   const [showMenu, setShowMenu] = useState(false);
   const isAluno = profile.role === 'aluno';
+
+  // Prefetch das páginas principais para navegação instantânea
+  useEffect(() => {
+    const pagesToPrefetch = isAluno
+      ? ['/aluno/dashboard', '/aluno/dieta', '/aluno/treino', '/aluno/protocolo', '/aluno/mensagens', '/aluno/progresso']
+      : ['/coach/dashboard', '/coach/alunos', '/coach/templates', '/coach/pagamentos'];
+
+    pagesToPrefetch.forEach((path) => {
+      router.prefetch(path);
+    });
+  }, [isAluno, router]);
 
   const handleLogout = async () => {
     const userName = profile.full_name || profile.email.split('@')[0];

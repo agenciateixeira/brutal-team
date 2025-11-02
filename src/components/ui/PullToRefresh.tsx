@@ -13,48 +13,60 @@ export default function PullToRefresh() {
   const [currentY, setCurrentY] = useState(0);
   const [isPulling, setIsPulling] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [startTime, setStartTime] = useState(0);
   const router = useRouter();
-  const pullThreshold = 80; // Pixels necessários para ativar o refresh
+  const pullThreshold = 120; // Aumentado para 120px - precisa puxar mais para ativar
+  const minPullSpeed = 0.3; // Velocidade mínima necessária (pixels por ms)
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
-      // Só ativa se estiver no topo da página
+      // APENAS ativa se estiver EXATAMENTE no topo da página
       if (window.scrollY === 0) {
         setStartY(e.touches[0].clientY);
+        setStartTime(Date.now());
         setIsPulling(false);
       }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (startY === 0) return;
+      if (startY === 0 || startTime === 0) return;
 
       const currentTouchY = e.touches[0].clientY;
       const pullDistance = currentTouchY - startY;
 
-      // Só ativa pull se arrastar para baixo e estiver no topo
-      if (pullDistance > 0 && window.scrollY === 0) {
+      // APENAS ativa pull se:
+      // 1. Estiver puxando para BAIXO (pullDistance > 0)
+      // 2. Estiver NO TOPO da página (scrollY === 0)
+      // 3. Já puxou pelo menos 30px (evita ativação acidental)
+      if (pullDistance > 30 && window.scrollY === 0) {
         setCurrentY(currentTouchY);
         setIsPulling(true);
 
-        // Prevenir scroll enquanto está puxando
-        if (pullDistance > 10) {
+        // Prevenir scroll enquanto está puxando FORÇA
+        if (pullDistance > 50) {
           e.preventDefault();
         }
       }
     };
 
     const handleTouchEnd = async () => {
-      if (!isPulling) {
+      if (!isPulling || startTime === 0) {
         setStartY(0);
         setCurrentY(0);
+        setStartTime(0);
         return;
       }
 
       const pullDistance = currentY - startY;
+      const pullDuration = Date.now() - startTime;
+      const pullSpeed = pullDistance / pullDuration; // pixels por ms
 
-      // Se puxou o suficiente, ativa o refresh
-      if (pullDistance >= pullThreshold) {
+      // Só ativa refresh se:
+      // 1. Puxou pelo menos 120px (threshold)
+      // 2. Com velocidade mínima (não foi arrasto lento acidental)
+      // 3. Ainda está no topo
+      if (pullDistance >= pullThreshold && pullSpeed >= minPullSpeed && window.scrollY === 0) {
         setIsRefreshing(true);
 
         // Aguardar um pouco para mostrar a animação
@@ -72,6 +84,7 @@ export default function PullToRefresh() {
       // Reset
       setStartY(0);
       setCurrentY(0);
+      setStartTime(0);
       setIsPulling(false);
     };
 
@@ -85,7 +98,7 @@ export default function PullToRefresh() {
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [startY, currentY, isPulling, router]);
+  }, [startY, currentY, isPulling, startTime, router]);
 
   // Calcular a distância puxada
   const pullDistance = isPulling ? Math.min(currentY - startY, pullThreshold * 1.5) : 0;
