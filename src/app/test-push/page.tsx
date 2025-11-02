@@ -186,10 +186,10 @@ export default function TestPushPage() {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mt-6">
           <h3 className="font-semibold text-blue-900 mb-2">📖 Como testar:</h3>
           <ol className="list-decimal list-inside space-y-1 text-blue-800 text-sm">
-            <li>Clique em "Solicitar Permissão" e aceite as notificações</li>
-            <li>Clique em "Inscrever para Notificações" para salvar a subscription</li>
-            <li>Clique em "Ver Subscriptions no Banco" para confirmar que foi salvo</li>
-            <li>Clique em "Enviar Notificação de Teste" para enviar uma push</li>
+            <li>Clique em &quot;Solicitar Permissão&quot; e aceite as notificações</li>
+            <li>Clique em &quot;Inscrever para Notificações&quot; para salvar a subscription</li>
+            <li>Clique em &quot;Ver Subscriptions no Banco&quot; para confirmar que foi salvo</li>
+            <li>Clique em &quot;Enviar Notificação de Teste&quot; para enviar uma push</li>
             <li>Verifique se a notificação apareceu na tela bloqueada/topo</li>
             <li>Abra o Console do navegador (F12) para ver logs detalhados</li>
           </ol>
