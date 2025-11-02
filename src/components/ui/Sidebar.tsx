@@ -208,14 +208,21 @@ export default function Sidebar({ profile }: SidebarProps) {
                   onClick={() => setIsOpen(false)}
                   disableLoading={isCoach}
                   className={`
-                    flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative
+                    group flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 relative
                     ${isActive
-                      ? 'bg-primary-50 text-primary-600 font-semibold'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-semibold scale-105'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105'
                     }
                   `}
                 >
-                  <Icon size={20} />
+                  <Icon
+                    size={20}
+                    className={`transition-transform duration-200 ${
+                      isActive
+                        ? 'animate-pulse'
+                        : 'group-hover:scale-110 group-hover:rotate-12'
+                    }`}
+                  />
                   <span className="flex-1">{item.label}</span>
                   {badgeCount > 0 && (
                     <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full ${badgeColor} text-white text-xs font-bold`}>
@@ -236,9 +243,9 @@ export default function Sidebar({ profile }: SidebarProps) {
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors"
+              className="group flex items-center gap-3 px-4 py-3 w-full rounded-lg text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 dark:hover:text-primary-400 hover:scale-105 transition-all duration-200"
             >
-              <LogOut size={20} />
+              <LogOut size={20} className="group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-200" />
               <span>Sair</span>
             </button>
           </div>
