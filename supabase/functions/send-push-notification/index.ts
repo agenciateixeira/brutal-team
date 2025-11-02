@@ -72,7 +72,7 @@ serve(async (req) => {
     })
 
     // Configurar VAPID
-    const vapidPublicKey = Deno.env.get('NEXT_PUBLIC_VAPID_PUBLIC_KEY') ?? ''
+    const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY') ?? ''
     const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY') ?? ''
 
     webpush.setVapidDetails(
