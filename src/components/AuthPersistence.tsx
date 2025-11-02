@@ -54,14 +54,15 @@ export default function AuthPersistence() {
       if (event === 'TOKEN_REFRESHED') {
         console.log('🔄 Token renovado automaticamente');
         console.log('🔐 Nova expiração:', new Date(session!.expires_at! * 1000).toLocaleString('pt-BR'));
+        // Não fazer refresh aqui - token renova em background sem precisar recarregar
       }
 
       if (event === 'USER_UPDATED') {
         console.log('👤 Dados do usuário atualizados');
       }
 
-      // Refresh da página para atualizar dados
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      // Refresh da página APENAS quando usuário faz login (não em token refresh automático)
+      if (event === 'SIGNED_IN') {
         router.refresh();
       }
     });
