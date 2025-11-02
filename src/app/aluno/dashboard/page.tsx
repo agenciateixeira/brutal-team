@@ -187,7 +187,7 @@ export default async function AlunoDashboard() {
                 hasDieta={!!dietaAtiva}
                 hasTreino={!!treinoAtivo}
                 hasProtocolo={!!protocoloAtivo}
-                hasProfile={!!(profile.full_name && profile.phone)}
+                hasProfile={!!(profile.full_name || (profile.phone && profile.weight && profile.height))}
               />
 
               {/* Mensagem de Boas-Vindas (7 dias) */}

@@ -28,7 +28,7 @@ export default function OnboardingChecklist({
   hasProfile,
 }: OnboardingChecklistProps) {
   const [isVisible, setIsVisible] = useState(true);
-  const { isSubscribed } = usePushNotifications();
+  const { isSubscribed, requestPermission, subscribe, permission, isLoading } = usePushNotifications();
   const router = useRouter();
 
   const items: ChecklistItem[] = [
@@ -102,6 +102,26 @@ export default function OnboardingChecklist({
     setIsVisible(false);
   };
 
+  const handleNotificationClick = async () => {
+    // Se já está inscrito, não fazer nada
+    if (isSubscribed) return;
+
+    // Tentar ativar notificações diretamente
+    try {
+      if (permission === 'granted') {
+        // Já tem permissão, só inscrever
+        await subscribe();
+      } else {
+        // Pedir permissão
+        await requestPermission();
+      }
+    } catch (error) {
+      console.error('Erro ao ativar notificações:', error);
+      // Se falhar, redirecionar para o perfil
+      router.push('/aluno/perfil');
+    }
+  };
+
   if (!isVisible) return null;
 
   return (
@@ -150,8 +170,14 @@ export default function OnboardingChecklist({
           return (
             <button
               key={item.id}
-              onClick={() => item.link && router.push(item.link)}
-              disabled={item.completed}
+              onClick={() => {
+                if (item.id === 'notifications') {
+                  handleNotificationClick();
+                } else if (item.link) {
+                  router.push(item.link);
+                }
+              }}
+              disabled={item.completed || (item.id === 'notifications' && isLoading)}
               className={`w-full flex items-center gap-4 p-4 rounded-lg border transition-all duration-200 ${
                 item.completed
                   ? 'bg-green-500/20 dark:bg-green-400/20 backdrop-blur-sm border-green-400/60 dark:border-green-400/60'
