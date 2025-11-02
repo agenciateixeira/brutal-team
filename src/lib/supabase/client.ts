@@ -3,6 +3,16 @@ import { Database } from '@/types/database.types';
 
 export const createClient = () => {
   return createClientComponentClient<Database>({
+    auth: {
+      // Persistir sessão no localStorage (não expira ao fechar navegador)
+      persistSession: true,
+      // Detectar mudanças de sessão automaticamente
+      autoRefreshToken: true,
+      // Detectar quando usuário muda de aba/janela
+      detectSessionInUrl: true,
+      // Storage key para persistência
+      storageKey: 'brutal-team-auth',
+    },
     realtime: {
       params: {
         eventsPerSecond: 2,

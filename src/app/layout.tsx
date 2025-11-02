@@ -8,6 +8,7 @@ import { RouteLoadingProvider } from "@/components/providers/RouteLoadingProvide
 import PageTransition from "@/components/ui/PageTransition";
 import NotificationToast from "@/components/ui/NotificationToast";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import AuthPersistence from "@/components/AuthPersistence";
 import { Suspense } from "react";
 
 const montserrat = Montserrat({
@@ -50,6 +51,7 @@ export default function RootLayout({
       </head>
       <body className={`${montserrat.className} ${montserrat.variable} bg-white`}>
         <ServiceWorkerRegistration />
+        <AuthPersistence />
         <ThemeProvider>
           <LoadingProvider>
             <Suspense fallback={null}>
