@@ -131,13 +131,19 @@ export default function Sidebar({ profile }: SidebarProps) {
     const userName = profile.full_name || profile.email.split('@')[0];
     showLoading(`Te aguardamos amanhã, ${userName}!`, 1300); // 1.3 segundos para logout
 
-    await supabase.auth.signOut();
+    try {
+      // Usar scope local para evitar erro 403
+      await supabase.auth.signOut({ scope: 'local' });
 
-    // Aguardar um pouco para mostrar a mensagem
-    setTimeout(() => {
+      // Redirecionar após logout
       router.push('/login');
       router.refresh();
-    }, 1000);
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      // Mesmo com erro, limpar sessão local e redirecionar
+      router.push('/login');
+      router.refresh();
+    }
   };
 
   return (

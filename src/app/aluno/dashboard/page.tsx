@@ -8,6 +8,7 @@ import MonthlyPhotoProgress from '@/components/aluno/MonthlyPhotoProgress';
 import DashboardWithFirstAccess from '@/components/aluno/DashboardWithFirstAccess';
 import WelcomeMessage from '@/components/aluno/WelcomeMessage';
 import PullToRefresh from '@/components/ui/PullToRefresh';
+import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import { TrendingUp, Calendar, Apple, AlertCircle, FileQuestion, Bell, Sparkles, Activity } from 'lucide-react';
 import Link from 'next/link';
 
@@ -180,6 +181,14 @@ export default async function AlunoDashboard() {
                   Bem-vindo de volta, {profile.full_name || 'Atleta'}!
                 </p>
               </div>
+
+              {/* Onboarding Checklist */}
+              <OnboardingChecklist
+                hasDieta={!!dietaAtiva}
+                hasTreino={!!treinoAtivo}
+                hasProtocolo={!!protocoloAtivo}
+                hasProfile={!!(profile.full_name && profile.phone)}
+              />
 
               {/* Mensagem de Boas-Vindas (7 dias) */}
               {showWelcomeMessage && <WelcomeMessage type="dashboard" />}

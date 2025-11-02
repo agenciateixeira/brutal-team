@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import FirstAccessModal from './FirstAccessModal';
+import OnboardingModal from '@/components/onboarding/OnboardingModal';
 
 interface DashboardWithFirstAccessProps {
   alunoId: string;
@@ -15,26 +16,44 @@ export default function DashboardWithFirstAccess({
   initialFirstAccessCompleted,
   children,
 }: DashboardWithFirstAccessProps) {
-  const [showModal, setShowModal] = useState(false);
+  const [showFirstAccessModal, setShowFirstAccessModal] = useState(false);
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const [firstAccessCompleted, setFirstAccessCompleted] = useState(initialFirstAccessCompleted);
   const supabase = createClient();
 
   useEffect(() => {
-    // Mostrar modal se o primeiro acesso não foi completo
+    // Mostrar modal de primeiro acesso se ainda não foi completo
     if (!firstAccessCompleted) {
-      setShowModal(true);
+      setShowFirstAccessModal(true);
+    } else {
+      // Se primeiro acesso completo, verificar se já viu o onboarding
+      const onboardingSeen = localStorage.getItem('onboarding-seen');
+      if (!onboardingSeen) {
+        setShowOnboardingModal(true);
+      }
     }
   }, [firstAccessCompleted]);
 
-  const handleComplete = () => {
-    setShowModal(false);
+  const handleFirstAccessComplete = () => {
+    setShowFirstAccessModal(false);
     setFirstAccessCompleted(true);
+
+    // Mostrar onboarding após completar primeiro acesso
+    setTimeout(() => {
+      setShowOnboardingModal(true);
+    }, 500);
+  };
+
+  const handleOnboardingClose = () => {
+    setShowOnboardingModal(false);
+    localStorage.setItem('onboarding-seen', 'true');
   };
 
   return (
     <>
       {children}
-      {showModal && <FirstAccessModal alunoId={alunoId} onComplete={handleComplete} />}
+      {showFirstAccessModal && <FirstAccessModal alunoId={alunoId} onComplete={handleFirstAccessComplete} />}
+      {showOnboardingModal && <OnboardingModal isOpen={showOnboardingModal} onClose={handleOnboardingClose} />}
     </>
   );
 }
