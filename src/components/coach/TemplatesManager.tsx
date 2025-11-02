@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Plus, Trash2, Edit2, Save, X, Copy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useAlert } from '@/contexts/AlertContext';
 
 interface DietTemplate {
   id: string;
@@ -66,6 +67,7 @@ export default function TemplatesManager({
 
   const router = useRouter();
   const supabase = createClient();
+  const { showAlert, showConfirm } = useAlert();
 
   const resetForm = () => {
     setName('');
@@ -92,7 +94,11 @@ export default function TemplatesManager({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !content.trim()) {
-      alert('Nome e conteudo sao obrigatorios');
+      showAlert({
+        type: 'error',
+        title: 'Campos obrigatórios',
+        message: 'Nome e conteúdo são obrigatórios.',
+      });
       return;
     }
 
@@ -131,15 +137,33 @@ export default function TemplatesManager({
 
       resetForm();
       router.refresh();
+
+      showAlert({
+        type: 'success',
+        title: 'Template salvo',
+        message: editingId ? 'O template foi atualizado com sucesso.' : 'O template foi criado com sucesso.',
+      });
     } catch (error: any) {
-      alert('Erro ao salvar template: ' + error.message);
+      showAlert({
+        type: 'error',
+        title: 'Erro ao salvar',
+        message: 'Erro ao salvar template: ' + error.message,
+      });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (templateId: string) => {
-    if (!confirm('Tem certeza que deseja excluir este template?')) return;
+    const confirmed = await showConfirm({
+      title: 'Excluir Template',
+      message: 'Tem certeza que deseja excluir este template? Esta ação não pode ser desfeita.',
+      confirmText: 'Excluir',
+      cancelText: 'Cancelar',
+      type: 'danger',
+    });
+
+    if (!confirmed) return;
 
     try {
       const tableName = activeTab === 'diet' ? 'dieta_templates' :
@@ -154,8 +178,18 @@ export default function TemplatesManager({
       if (error) throw error;
 
       router.refresh();
+
+      showAlert({
+        type: 'success',
+        title: 'Template excluído',
+        message: 'O template foi excluído com sucesso.',
+      });
     } catch (error: any) {
-      alert('Erro ao excluir template: ' + error.message);
+      showAlert({
+        type: 'error',
+        title: 'Erro ao excluir',
+        message: 'Erro ao excluir template: ' + error.message,
+      });
     }
   };
 

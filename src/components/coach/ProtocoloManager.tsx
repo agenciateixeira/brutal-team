@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { sendPushNotification } from '@/lib/push-notifications';
+import { useAlert } from '@/contexts/AlertContext';
 
 interface ProtocoloManagerProps {
   alunoId: string;
@@ -33,6 +34,7 @@ export default function ProtocoloManager({ alunoId, protocolos, coachId }: Proto
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const router = useRouter();
   const supabase = createClient();
+  const { showAlert, showConfirm } = useAlert();
 
   // Buscar templates ao abrir o formulário
   useEffect(() => {
@@ -120,8 +122,17 @@ export default function ProtocoloManager({ alunoId, protocolos, coachId }: Proto
       setSelectedTemplateId('');
       setShowForm(false);
       router.refresh();
+      showAlert({
+        type: 'success',
+        title: 'Protocolo salvo!',
+        message: 'O protocolo foi criado com sucesso.',
+      });
     } catch (error: any) {
-      alert('Erro ao salvar protocolo: ' + error.message);
+      showAlert({
+        type: 'error',
+        title: 'Erro ao salvar',
+        message: error.message || 'Não foi possível salvar o protocolo.',
+      });
     } finally {
       setSaving(false);
     }
@@ -167,13 +178,30 @@ export default function ProtocoloManager({ alunoId, protocolos, coachId }: Proto
       }
 
       router.refresh();
+      showAlert({
+        type: 'success',
+        title: 'Protocolo atualizado!',
+        message: currentActive ? 'Protocolo desativado.' : 'Protocolo ativado com sucesso.',
+      });
     } catch (error: any) {
-      alert('Erro ao atualizar protocolo: ' + error.message);
+      showAlert({
+        type: 'error',
+        title: 'Erro ao atualizar',
+        message: error.message || 'Não foi possível atualizar o protocolo.',
+      });
     }
   };
 
   const handleDelete = async (protocoloId: string) => {
-    if (!confirm('Tem certeza que deseja excluir este protocolo?')) return;
+    const confirmed = await showConfirm({
+      title: 'Excluir protocolo?',
+      message: 'Tem certeza que deseja excluir este protocolo? Esta ação não pode ser desfeita.',
+      confirmText: 'Sim, excluir',
+      cancelText: 'Cancelar',
+      type: 'danger',
+    });
+
+    if (!confirmed) return;
 
     try {
       const { error } = await supabase
@@ -184,8 +212,17 @@ export default function ProtocoloManager({ alunoId, protocolos, coachId }: Proto
       if (error) throw error;
 
       router.refresh();
+      showAlert({
+        type: 'success',
+        title: 'Protocolo excluído!',
+        message: 'O protocolo foi excluído com sucesso.',
+      });
     } catch (error: any) {
-      alert('Erro ao excluir protocolo: ' + error.message);
+      showAlert({
+        type: 'error',
+        title: 'Erro ao excluir',
+        message: error.message || 'Não foi possível excluir o protocolo.',
+      });
     }
   };
 

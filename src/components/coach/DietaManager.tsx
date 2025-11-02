@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { sendPushNotification } from '@/lib/push-notifications';
+import { useAlert } from '@/contexts/AlertContext';
 
 interface DietaManagerProps {
   alunoId: string;
@@ -38,6 +39,7 @@ export default function DietaManager({ alunoId, dietas, coachId }: DietaManagerP
 
   const router = useRouter();
   const supabase = createClient();
+  const { showAlert, showConfirm } = useAlert();
 
   // Buscar templates ao abrir o formulário
   useEffect(() => {
@@ -134,8 +136,18 @@ export default function DietaManager({ alunoId, dietas, coachId }: DietaManagerP
       setSelectedTemplateId('');
       setShowForm(false);
       router.refresh();
+
+      showAlert({
+        type: 'success',
+        title: 'Dieta salva',
+        message: 'A dieta foi criada com sucesso.',
+      });
     } catch (error: any) {
-      alert('Erro ao salvar dieta: ' + error.message);
+      showAlert({
+        type: 'error',
+        title: 'Erro ao salvar',
+        message: 'Erro ao salvar dieta: ' + error.message,
+      });
     } finally {
       setSaving(false);
     }
@@ -181,13 +193,31 @@ export default function DietaManager({ alunoId, dietas, coachId }: DietaManagerP
       }
 
       router.refresh();
+
+      showAlert({
+        type: 'success',
+        title: 'Dieta atualizada',
+        message: currentActive ? 'A dieta foi desativada.' : 'A dieta foi ativada.',
+      });
     } catch (error: any) {
-      alert('Erro ao atualizar dieta: ' + error.message);
+      showAlert({
+        type: 'error',
+        title: 'Erro ao atualizar',
+        message: 'Erro ao atualizar dieta: ' + error.message,
+      });
     }
   };
 
   const handleDelete = async (dietaId: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta dieta?')) return;
+    const confirmed = await showConfirm({
+      title: 'Excluir Dieta',
+      message: 'Tem certeza que deseja excluir esta dieta? Esta ação não pode ser desfeita.',
+      confirmText: 'Excluir',
+      cancelText: 'Cancelar',
+      type: 'danger',
+    });
+
+    if (!confirmed) return;
 
     try {
       const { error } = await supabase
@@ -198,8 +228,18 @@ export default function DietaManager({ alunoId, dietas, coachId }: DietaManagerP
       if (error) throw error;
 
       router.refresh();
+
+      showAlert({
+        type: 'success',
+        title: 'Dieta excluída',
+        message: 'A dieta foi excluída com sucesso.',
+      });
     } catch (error: any) {
-      alert('Erro ao excluir dieta: ' + error.message);
+      showAlert({
+        type: 'error',
+        title: 'Erro ao excluir',
+        message: 'Erro ao excluir dieta: ' + error.message,
+      });
     }
   };
 

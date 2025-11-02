@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { sendPushNotification } from '@/lib/push-notifications';
+import { useAlert } from '@/contexts/AlertContext';
 
 interface TreinoManagerProps {
   alunoId: string;
@@ -42,6 +43,7 @@ export default function TreinoManager({ alunoId, treinos, coachId }: TreinoManag
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const router = useRouter();
   const supabase = createClient();
+  const { showAlert, showConfirm } = useAlert();
 
   // Buscar templates ao abrir o formulário
   useEffect(() => {
@@ -96,7 +98,11 @@ export default function TreinoManager({ alunoId, treinos, coachId }: TreinoManag
     e.preventDefault();
     if (!title.trim() || !content.trim()) return;
     if (workoutTypes.length === 0) {
-      alert('Selecione pelo menos um tipo de treino');
+      showAlert({
+        type: 'error',
+        title: 'Tipo de treino obrigatório',
+        message: 'Selecione pelo menos um tipo de treino.',
+      });
       return;
     }
 
@@ -145,8 +151,18 @@ export default function TreinoManager({ alunoId, treinos, coachId }: TreinoManag
       setSelectedTemplateId('');
       setShowForm(false);
       router.refresh();
+
+      showAlert({
+        type: 'success',
+        title: 'Treino salvo',
+        message: 'O treino foi criado com sucesso.',
+      });
     } catch (error: any) {
-      alert('Erro ao salvar treino: ' + error.message);
+      showAlert({
+        type: 'error',
+        title: 'Erro ao salvar',
+        message: 'Erro ao salvar treino: ' + error.message,
+      });
     } finally {
       setSaving(false);
     }
@@ -192,13 +208,31 @@ export default function TreinoManager({ alunoId, treinos, coachId }: TreinoManag
       }
 
       router.refresh();
+
+      showAlert({
+        type: 'success',
+        title: 'Treino atualizado',
+        message: currentActive ? 'O treino foi desativado.' : 'O treino foi ativado.',
+      });
     } catch (error: any) {
-      alert('Erro ao atualizar treino: ' + error.message);
+      showAlert({
+        type: 'error',
+        title: 'Erro ao atualizar',
+        message: 'Erro ao atualizar treino: ' + error.message,
+      });
     }
   };
 
   const handleDelete = async (treinoId: string) => {
-    if (!confirm('Tem certeza que deseja excluir este treino?')) return;
+    const confirmed = await showConfirm({
+      title: 'Excluir Treino',
+      message: 'Tem certeza que deseja excluir este treino? Esta ação não pode ser desfeita.',
+      confirmText: 'Excluir',
+      cancelText: 'Cancelar',
+      type: 'danger',
+    });
+
+    if (!confirmed) return;
 
     try {
       const { error } = await supabase
@@ -209,8 +243,18 @@ export default function TreinoManager({ alunoId, treinos, coachId }: TreinoManag
       if (error) throw error;
 
       router.refresh();
+
+      showAlert({
+        type: 'success',
+        title: 'Treino excluído',
+        message: 'O treino foi excluído com sucesso.',
+      });
     } catch (error: any) {
-      alert('Erro ao excluir treino: ' + error.message);
+      showAlert({
+        type: 'error',
+        title: 'Erro ao excluir',
+        message: 'Erro ao excluir treino: ' + error.message,
+      });
     }
   };
 
