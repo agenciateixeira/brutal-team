@@ -72,16 +72,22 @@ export default function ChatFull({ alunoId, messages: initialMessages, coach }: 
       if (error) throw error;
 
       // Buscar informações do aluno e coach para enviar notificação
-      const { data: alunoProfile } = await supabase
+      console.log('🔔 [MENSAGEM] Buscando informações do aluno para notificar coach...');
+      const { data: alunoProfile, error: profileError } = await supabase
         .from('profiles')
         .select('coach_id, full_name')
         .eq('id', alunoId)
         .single();
 
+      console.log('🔔 [MENSAGEM] Dados do aluno:', alunoProfile);
+      console.log('🔔 [MENSAGEM] Erro ao buscar perfil:', profileError);
+
       if (alunoProfile?.coach_id) {
+        console.log('🔔 [MENSAGEM] Coach ID encontrado:', alunoProfile.coach_id);
         try {
           // Enviar notificação push para o coach
-          await sendPushNotification({
+          console.log('🔔 [MENSAGEM] Enviando notificação push...');
+          const result = await sendPushNotification({
             userId: alunoProfile.coach_id,
             title: '💬 Nova Mensagem!',
             body: `${alunoProfile.full_name || 'Seu aluno'}: ${newMessage.trim().substring(0, 50)}${newMessage.length > 50 ? '...' : ''}`,
@@ -91,11 +97,13 @@ export default function ChatFull({ alunoId, messages: initialMessages, coach }: 
               alunoId: alunoId,
             },
           });
-          console.log('✅ Notificação enviada para o coach');
+          console.log('✅ [MENSAGEM] Notificação enviada com sucesso!', result);
         } catch (pushError) {
-          console.error('❌ Erro ao enviar notificação para o coach:', pushError);
+          console.error('❌ [MENSAGEM] Erro ao enviar notificação:', pushError);
           // Não falhar a operação principal
         }
+      } else {
+        console.log('⚠️ [MENSAGEM] Coach ID não encontrado no perfil do aluno');
       }
 
       setNewMessage('');
