@@ -51,21 +51,29 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
     showLoading(`Até amanhã, ${userName}!`, 1300); // 1.3 segundos para logout
 
     try {
-      // Limpar todos os storages antes do logout
+      // Limpar todos os storages
       localStorage.clear();
       sessionStorage.clear();
+
+      // Limpar todos os cookies do Supabase manualmente
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i];
+        const eqPos = cookie.indexOf('=');
+        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+        // Remover cookie em todos os domínios possíveis
+        document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+        document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=' + window.location.hostname;
+      }
 
       // Fazer logout no Supabase
       await supabase.auth.signOut({ scope: 'local' });
 
-      // Aguardar um pouco para garantir limpeza
-      setTimeout(() => {
-        // Forçar redirecionamento completo (não apenas push)
-        window.location.href = '/login';
-      }, 500);
+      // Forçar redirecionamento completo
+      window.location.href = '/login';
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
-      // Mesmo com erro, limpar e redirecionar
+      // Mesmo com erro, limpar tudo e redirecionar
       localStorage.clear();
       sessionStorage.clear();
       window.location.href = '/login';
