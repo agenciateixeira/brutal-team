@@ -136,16 +136,27 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       if (!subscription) {
         // Criar nova subscription
         const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+
+        console.log('🔑 VAPID Key Debug:');
+        console.log('  - Key exists:', !!vapidPublicKey);
+        console.log('  - Key length:', vapidPublicKey?.length);
+        console.log('  - Key value:', vapidPublicKey);
+
         if (!vapidPublicKey) {
           throw new Error('VAPID public key não configurada');
         }
 
+        console.log('🔄 Converting VAPID key to Uint8Array...');
         const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
+        console.log('  - Converted key length:', convertedVapidKey.length);
+        console.log('  - Converted key:', convertedVapidKey);
 
+        console.log('📤 Subscribing to push manager...');
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: convertedVapidKey,
         });
+        console.log('✅ Subscription successful!');
       }
 
       // Salvar subscription no Supabase

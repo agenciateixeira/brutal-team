@@ -2,6 +2,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import AppLayout from '@/components/layouts/AppLayout';
 import PerfilForm from '@/components/perfil/PerfilForm';
+import PushNotificationSettings from '@/components/settings/PushNotificationSettings';
 
 export default async function AlunoPerfilPage() {
   const supabase = createServerClient();
@@ -26,11 +27,12 @@ export default async function AlunoPerfilPage() {
 
   return (
     <AppLayout profile={profile}>
-      <div className="max-w-2xl">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+      <div className="max-w-2xl space-y-6">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Meu Perfil
         </h1>
         <PerfilForm profile={profile} />
+        <PushNotificationSettings />
       </div>
     </AppLayout>
   );
