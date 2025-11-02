@@ -28,15 +28,13 @@ export default function NavLink({
     // Iniciar transição suave
     setIsTransitioning(true);
 
-    // Pequeno delay antes de mostrar o loading (se não estiver desabilitado)
-    setTimeout(() => {
-      if (!disableLoading) {
-        showLoading(loadingMessage);
-      }
-      if (onClick) {
-        onClick();
-      }
-    }, 150);
+    // Mostrar loading instantaneamente (sem delay)
+    if (!disableLoading) {
+      showLoading(loadingMessage);
+    }
+    if (onClick) {
+      onClick();
+    }
   };
 
   return (
