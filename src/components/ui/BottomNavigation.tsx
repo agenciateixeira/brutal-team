@@ -51,17 +51,24 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
     showLoading(`Até amanhã, ${userName}!`, 1300); // 1.3 segundos para logout
 
     try {
-      // Usar scope local para evitar erro 403
+      // Limpar todos os storages antes do logout
+      localStorage.clear();
+      sessionStorage.clear();
+
+      // Fazer logout no Supabase
       await supabase.auth.signOut({ scope: 'local' });
 
-      // Redirecionar após logout
-      router.push('/login');
-      router.refresh();
+      // Aguardar um pouco para garantir limpeza
+      setTimeout(() => {
+        // Forçar redirecionamento completo (não apenas push)
+        window.location.href = '/login';
+      }, 500);
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
-      // Mesmo com erro, limpar sessão local e redirecionar
-      router.push('/login');
-      router.refresh();
+      // Mesmo com erro, limpar e redirecionar
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/login';
     }
   };
 
