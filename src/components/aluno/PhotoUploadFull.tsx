@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Toast from '@/components/ui/Toast';
+import { sendPushNotification } from '@/lib/push-notifications';
 
 interface PhotoUploadFullProps {
   alunoId: string;
@@ -295,6 +296,33 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
         console.log('⚠️ Foto salva, mas resumo semanal falhou');
       } else {
         console.log('✅ Salvo em weekly_summary com sucesso');
+
+        // Buscar coach_id do aluno para enviar notificação
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('coach_id, full_name')
+          .eq('id', alunoId)
+          .single();
+
+        if (profileData?.coach_id) {
+          try {
+            await sendPushNotification({
+              userId: profileData.coach_id,
+              title: '📸 Novo Resumo Semanal!',
+              body: `${profileData.full_name || 'Seu aluno'} enviou o resumo semanal da semana ${weekNumber}`,
+              url: `/coach/aluno/${alunoId}`,
+              data: {
+                type: 'weekly_summary',
+                alunoId: alunoId,
+                weekNumber: parseInt(weekNumber),
+              },
+            });
+            console.log('✅ Notificação enviada para o coach');
+          } catch (pushError) {
+            console.error('❌ Erro ao enviar notificação para o coach:', pushError);
+            // Não falhar a operação principal
+          }
+        }
       }
 
       setToast({ type: 'success', message: 'Foto enviada com sucesso!' });
