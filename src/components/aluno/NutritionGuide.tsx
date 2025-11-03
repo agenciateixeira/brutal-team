@@ -291,7 +291,7 @@ export default function NutritionGuide({ carbOptions }: NutritionGuideProps) {
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Selecione a quantidade de carboidratos
             </h2>
-            <div className="grid grid-cols-5 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
               {[20, 40, 60, 80, 100].map((amount) => (
                 <button
                   key={amount}
@@ -358,7 +358,7 @@ export default function NutritionGuide({ carbOptions }: NutritionGuideProps) {
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Selecione a quantidade de proteínas
             </h2>
-            <div className="grid grid-cols-7 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
               {[20, 30, 40, 50, 60, 70].map((amount) => (
                 <button
                   key={amount}
