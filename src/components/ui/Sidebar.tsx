@@ -18,7 +18,8 @@ import {
   Users,
   DollarSign,
   FileText,
-  BookOpen
+  BookOpen,
+  Gift
 } from 'lucide-react';
 import { Profile } from '@/types';
 import ThemeToggle from './ThemeToggle';
@@ -57,7 +58,7 @@ export default function Sidebar({ profile }: SidebarProps) {
   useEffect(() => {
     const pagesToPrefetch = isCoach
       ? ['/coach/dashboard', '/coach/alunos', '/coach/templates', '/coach/anamnese', '/coach/pagamentos', '/coach/perfil']
-      : ['/aluno/dashboard', '/aluno/dieta', '/aluno/treino', '/aluno/protocolo', '/aluno/mensagens', '/aluno/progresso', '/aluno/perfil'];
+      : ['/aluno/dashboard', '/aluno/dieta', '/aluno/treino', '/aluno/protocolo', '/aluno/mensagens', '/aluno/progresso', '/aluno/indicacao', '/aluno/perfil'];
 
     pagesToPrefetch.forEach((path) => {
       router.prefetch(path);
@@ -124,6 +125,7 @@ export default function Sidebar({ profile }: SidebarProps) {
     { icon: Dumbbell, label: 'Treino', href: '/aluno/treino' },
     { icon: Syringe, label: 'Protocolo', href: '/aluno/protocolo' },
     { icon: BookOpen, label: 'Guia Nutricional', href: '/aluno/guia-nutricional' },
+    { icon: Gift, label: 'Indicação', href: '/aluno/indicacao' },
     { icon: User, label: 'Perfil', href: '/aluno/perfil' },
   ];
 

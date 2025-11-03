@@ -17,7 +17,8 @@ import {
   Settings,
   LogOut,
   DollarSign,
-  BookOpen
+  BookOpen,
+  Gift
 } from 'lucide-react';
 import { Profile } from '@/types';
 import { createClient } from '@/lib/supabase/client';
@@ -100,6 +101,7 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
         { href: '/aluno/mensagens', icon: MessageCircle, label: 'Mensagens' },
         { href: '/aluno/progresso', icon: Calendar, label: 'Progresso' },
         { href: '/aluno/guia-nutricional', icon: BookOpen, label: 'Guia Nutricional' },
+        { href: '/aluno/indicacao', icon: Gift, label: 'Indicação' },
       ]
     : [
         { href: '/coach/perfil', icon: User, label: 'Perfil' },
