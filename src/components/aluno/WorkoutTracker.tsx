@@ -7,6 +7,7 @@ import { Calendar, Filter, CheckCircle, Circle } from 'lucide-react';
 import { format, startOfDay, subDays, isToday, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Toast from '@/components/ui/Toast';
+import { useSuccessSound } from '@/hooks/useSuccessSound';
 
 interface WorkoutTrackerProps {
   alunoId: string;
@@ -31,6 +32,9 @@ export default function WorkoutTracker({ alunoId, workoutTypes = ['musculacao'] 
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const supabase = createClient();
+
+  // Hook de sons de sucesso
+  const { playWorkoutSuccess, playUncheckSound } = useSuccessSound();
 
   const today = format(startOfDay(new Date()), 'yyyy-MM-dd');
 
@@ -124,6 +128,7 @@ export default function WorkoutTracker({ alunoId, workoutTypes = ['musculacao'] 
   const toggleWorkout = async (workoutType: string) => {
     try {
       const currentCompleted = todayTracking?.workout_types_completed || [];
+      const isMarking = !currentCompleted.includes(workoutType);
       const newCompleted = currentCompleted.includes(workoutType)
         ? currentCompleted.filter(t => t !== workoutType)
         : [...currentCompleted, workoutType];
@@ -153,6 +158,13 @@ export default function WorkoutTracker({ alunoId, workoutTypes = ['musculacao'] 
         if (error) throw error;
 
         setTodayTracking(data);
+      }
+
+      // Tocar som de sucesso/desmarcar
+      if (isMarking) {
+        playWorkoutSuccess(); // Som energético ao marcar treino
+      } else {
+        playUncheckSound(); // Som sutil ao desmarcar
       }
 
       setToast({ type: 'success', message: 'Treino atualizado!' });

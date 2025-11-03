@@ -6,6 +6,7 @@ import { Calendar, Filter, CheckCircle, Circle } from 'lucide-react';
 import { format, startOfDay, subDays, isToday, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Toast from '@/components/ui/Toast';
+import { useSuccessSound } from '@/hooks/useSuccessSound';
 
 interface MealTrackerProps {
   alunoId: string;
@@ -48,6 +49,9 @@ export default function MealTracker({ alunoId, mealsPerDay = 6 }: MealTrackerPro
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const supabase = createClient();
+
+  // Hook de sons de sucesso
+  const { playMealSuccess, playUncheckSound } = useSuccessSound();
 
   const today = format(startOfDay(new Date()), 'yyyy-MM-dd');
 
@@ -176,6 +180,13 @@ export default function MealTracker({ alunoId, mealsPerDay = 6 }: MealTrackerPro
         if (error) throw error;
 
         setTodayTracking(data);
+      }
+
+      // Tocar som de sucesso/desmarcar
+      if (newValue) {
+        playMealSuccess(); // Som de sucesso ao marcar
+      } else {
+        playUncheckSound(); // Som sutil ao desmarcar
       }
 
       setToast({ type: 'success', message: 'Refeição atualizada!' });
