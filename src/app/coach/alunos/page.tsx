@@ -29,7 +29,7 @@ export default async function CoachAlunosPage() {
     redirect('/aluno/dashboard');
   }
 
-  // Buscar todos os alunos
+  // Buscar todos os alunos com informações de indicação
   const { data: alunos } = await supabase
     .from('profiles')
     .select(`
@@ -99,6 +99,35 @@ export default async function CoachAlunosPage() {
         .eq('active', true)
         .maybeSingle();
 
+      // Buscar informações de indicação
+      let referralInfo = null;
+      if (aluno.referred_by) {
+        // Buscar quem indicou
+        const { data: referrer } = await supabase
+          .from('profiles')
+          .select('id, full_name, email, referral_code')
+          .eq('referral_code', aluno.referred_by)
+          .maybeSingle();
+
+        // Buscar status da indicação
+        const { data: referralData } = await supabase
+          .from('referrals')
+          .select('id, status, created_at')
+          .eq('referred_id', aluno.id)
+          .maybeSingle();
+
+        if (referrer) {
+          referralInfo = {
+            referrer_name: referrer.full_name || referrer.email,
+            referrer_id: referrer.id,
+            referral_code: referrer.referral_code,
+            status: referralData?.status || 'pending',
+            referral_id: referralData?.id,
+            created_at: referralData?.created_at,
+          };
+        }
+      }
+
       return {
         ...aluno,
         unread_messages_count: unreadByAluno?.[aluno.id] || 0,
@@ -106,6 +135,7 @@ export default async function CoachAlunosPage() {
         has_unviewed_updates: hasUnviewedUpdates,
         has_diet: !!activeDiet,
         has_workout: !!activeWorkout,
+        referral_info: referralInfo,
       };
     })
   );

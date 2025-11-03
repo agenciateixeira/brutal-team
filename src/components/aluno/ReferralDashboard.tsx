@@ -175,7 +175,7 @@ export default function ReferralDashboard({ profile, stats, referrals }: Referra
 
           {/* Link */}
           <div className="flex items-center gap-3">
-            <div className="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3">
+            <div className="flex-1 min-w-0 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 overflow-hidden">
               <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Link de cadastro</div>
               <div className="text-sm text-gray-700 dark:text-gray-300 truncate font-mono">
                 {referralLink}
@@ -183,7 +183,7 @@ export default function ReferralDashboard({ profile, stats, referrals }: Referra
             </div>
             <button
               onClick={handleCopyLink}
-              className="p-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+              className="flex-shrink-0 p-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
             >
               <ExternalLink size={20} />
             </button>
