@@ -52,14 +52,14 @@ USING (
   auth.uid() = referrer_id
 );
 
--- Coaches podem ver indicações de seus alunos
-CREATE POLICY "Coaches podem ver indicações de seus alunos"
+-- Coaches podem ver todas as indicações
+CREATE POLICY "Coaches podem ver indicações"
 ON referrals FOR SELECT
 USING (
   EXISTS (
-    SELECT 1 FROM profiles aluno
-    WHERE aluno.id = referrals.referrer_id
-    AND aluno.coach_id = auth.uid()
+    SELECT 1 FROM profiles
+    WHERE profiles.id = auth.uid()
+    AND profiles.role = 'coach'
   )
 );
 
@@ -68,14 +68,14 @@ CREATE POLICY "Permitir inserção de referrals"
 ON referrals FOR INSERT
 WITH CHECK (true);
 
--- Coaches podem atualizar status das indicações de seus alunos
+-- Coaches podem atualizar status das indicações
 CREATE POLICY "Coaches podem atualizar indicações"
 ON referrals FOR UPDATE
 USING (
   EXISTS (
-    SELECT 1 FROM profiles aluno
-    WHERE aluno.id = referrals.referrer_id
-    AND aluno.coach_id = auth.uid()
+    SELECT 1 FROM profiles
+    WHERE profiles.id = auth.uid()
+    AND profiles.role = 'coach'
   )
 );
 
