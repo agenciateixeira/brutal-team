@@ -1,7 +1,7 @@
 'use client';
 
 import { Profile } from '@/types';
-import { User, MessageCircle, ChevronRight, Search, Filter, Calendar, Bell, CheckCircle, Clock, TrendingUp, FileText, Dumbbell, CheckCircle2, ArrowRight, BookOpen } from 'lucide-react';
+import { User, MessageCircle, ChevronRight, Search, Filter, Calendar, Bell, CheckCircle, Clock, TrendingUp, FileText, Dumbbell, CheckCircle2, ArrowRight, BookOpen, Gift } from 'lucide-react';
 import Link from 'next/link';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -24,6 +24,14 @@ interface AlunosListProps {
     };
     has_all_notifications?: boolean;
     has_anamnese?: boolean;
+    referral_info?: {
+      referrer_name: string;
+      referrer_id: string;
+      referral_code: string;
+      status: string;
+      referral_id?: string;
+      created_at?: string;
+    } | null;
   })[];
 }
 
@@ -31,6 +39,7 @@ type SortOption = 'newest' | 'oldest' | 'recent_activity' | 'name';
 type StatusFilter = 'all' | 'active' | 'inactive' | 'pending' | 'overdue';
 type UpdatesFilter = 'all' | 'unviewed' | 'viewed' | 'recent';
 type AdesaoFilter = 'all' | 'excelente' | 'bom' | 'atencao';
+type ReferralFilter = 'all' | 'referred' | 'not_referred' | 'active_referral' | 'pending_referral';
 type TabOption = 'active' | 'new';
 
 export default function AlunosList({ alunos }: AlunosListProps) {
@@ -40,6 +49,7 @@ export default function AlunosList({ alunos }: AlunosListProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [updatesFilter, setUpdatesFilter] = useState<UpdatesFilter>('all');
   const [adesaoFilter, setAdesaoFilter] = useState<AdesaoFilter>('all');
+  const [referralFilter, setReferralFilter] = useState<ReferralFilter>('all');
 
   // Separar alunos em ativos (com dieta E treino) e novos (sem dieta OU treino)
   const alunosAtivos = useMemo(() => alunos.filter(a => a.has_diet && a.has_workout), [alunos]);
@@ -86,6 +96,19 @@ export default function AlunosList({ alunos }: AlunosListProps) {
       }
     }
 
+    // Filtro por indicação
+    if (referralFilter !== 'all') {
+      if (referralFilter === 'referred') {
+        result = result.filter((aluno) => aluno.referral_info !== null && aluno.referral_info !== undefined);
+      } else if (referralFilter === 'not_referred') {
+        result = result.filter((aluno) => !aluno.referral_info);
+      } else if (referralFilter === 'active_referral') {
+        result = result.filter((aluno) => aluno.referral_info?.status === 'active');
+      } else if (referralFilter === 'pending_referral') {
+        result = result.filter((aluno) => aluno.referral_info?.status === 'pending');
+      }
+    }
+
     // Ordenação
     result.sort((a, b) => {
       switch (sortBy) {
@@ -107,7 +130,7 @@ export default function AlunosList({ alunos }: AlunosListProps) {
     });
 
     return result;
-  }, [currentList, searchTerm, sortBy, statusFilter, updatesFilter]);
+  }, [currentList, searchTerm, sortBy, statusFilter, updatesFilter, referralFilter]);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
@@ -162,7 +185,7 @@ export default function AlunosList({ alunos }: AlunosListProps) {
 
         {/* Filters */}
         {alunos.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Ordenação */}
             <div>
               <label className="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
@@ -235,6 +258,25 @@ export default function AlunosList({ alunos }: AlunosListProps) {
                 <option value="atencao">Precisa atenção (&lt;60%)</option>
               </select>
             </div>
+
+            {/* Indicações */}
+            <div>
+              <label className="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                <Gift size={14} />
+                Indicações
+              </label>
+              <select
+                value={referralFilter}
+                onChange={(e) => setReferralFilter(e.target.value as ReferralFilter)}
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="all">Todos</option>
+                <option value="referred">Com indicação</option>
+                <option value="not_referred">Sem indicação</option>
+                <option value="active_referral">Indicação ativa</option>
+                <option value="pending_referral">Indicação pendente</option>
+              </select>
+            </div>
           </div>
         )}
       </div>
@@ -295,6 +337,21 @@ export default function AlunosList({ alunos }: AlunosListProps) {
                     <h3 className="text-sm md:text-base text-gray-900 dark:text-white font-semibold group-hover:text-primary-600 dark:group-hover:text-primary-500 transition-colors truncate">
                       {aluno.full_name || 'Nome não definido'}
                     </h3>
+
+                    {/* Badge de Indicação */}
+                    {aluno.referral_info && (
+                      <span
+                        className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${
+                          aluno.referral_info.status === 'active'
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                            : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                        }`}
+                        title={`Indicado por ${aluno.referral_info.referrer_name} - Status: ${aluno.referral_info.status === 'active' ? 'Ativo' : 'Pendente'}`}
+                      >
+                        <Gift size={12} />
+                        Indicação {aluno.referral_info.status === 'active' ? '✓' : '⏳'}
+                      </span>
+                    )}
 
                     {/* Badges de status para novos alunos */}
                     {activeTab === 'new' && (
