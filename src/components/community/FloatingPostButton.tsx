@@ -94,7 +94,7 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
         .from('community_check_ins')
         .insert({
           aluno_id: alunoId,
-          check_in_date: today,
+          date: today,
         });
 
       if (checkInError) {
@@ -157,7 +157,7 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
         .from('community_check_ins')
         .insert({
           aluno_id: alunoId,
-          check_in_date: today,
+          date: today,
         });
 
       if (checkInError) {

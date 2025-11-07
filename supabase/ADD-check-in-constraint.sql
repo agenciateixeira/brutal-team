@@ -2,6 +2,7 @@
 -- GARANTIR: Check-in único por dia
 -- ============================================
 -- Adiciona constraint UNIQUE para evitar múltiplos check-ins no mesmo dia
+-- NOTA: A coluna se chama "date", não "check_in_date"!
 
 -- 1. Verificar se a constraint já existe
 DO $$
@@ -10,7 +11,7 @@ BEGIN
   BEGIN
     ALTER TABLE community_check_ins
     ADD CONSTRAINT unique_check_in_per_day
-    UNIQUE (aluno_id, check_in_date);
+    UNIQUE (aluno_id, date);
 
     RAISE NOTICE '✅ Constraint UNIQUE adicionada com sucesso!';
   EXCEPTION
@@ -25,13 +26,13 @@ BEGIN
       WHERE id NOT IN (
         SELECT MIN(id)
         FROM community_check_ins
-        GROUP BY aluno_id, check_in_date
+        GROUP BY aluno_id, date
       );
 
       -- Tentar adicionar constraint novamente
       ALTER TABLE community_check_ins
       ADD CONSTRAINT unique_check_in_per_day
-      UNIQUE (aluno_id, check_in_date);
+      UNIQUE (aluno_id, date);
 
       RAISE NOTICE '✅ Duplicatas removidas e constraint adicionada!';
   END;
