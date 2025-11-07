@@ -110,7 +110,10 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
         { href: '/aluno/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { href: '/aluno/dieta', icon: Apple, label: 'Dieta' },
         { href: '/aluno/treino', icon: Dumbbell, label: 'Treino' },
-        { href: '/aluno/protocolo', icon: Syringe, label: 'Protocolo' },
+        // Se tem comunidade, mostra Comunidade; senão, mostra Protocolo
+        hasReferrals
+          ? { href: '/aluno/comunidade', icon: Users2, label: 'Comunidade' }
+          : { href: '/aluno/protocolo', icon: Syringe, label: 'Protocolo' },
       ]
     : [
         { href: '/coach/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -125,7 +128,8 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
         { href: '/aluno/mensagens', icon: MessageCircle, label: 'Mensagens' },
         { href: '/aluno/progresso', icon: Calendar, label: 'Progresso' },
         { href: '/aluno/guia-nutricional', icon: BookOpen, label: 'Guia Nutricional' },
-        ...(hasReferrals ? [{ href: '/aluno/comunidade', icon: Users2, label: 'Comunidade' }] : []),
+        // Se tem comunidade, Protocolo vem pra cá; senão, Indicação normal
+        ...(hasReferrals ? [{ href: '/aluno/protocolo', icon: Syringe, label: 'Protocolo' }] : []),
         { href: '/aluno/indicacao', icon: Gift, label: 'Indicação' },
       ]
     : [
