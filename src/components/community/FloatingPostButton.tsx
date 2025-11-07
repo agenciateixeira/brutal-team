@@ -101,8 +101,16 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
       onPostCreated?.();
 
     } catch (error: any) {
-      console.error('Erro ao postar:', error);
-      setToast({ type: 'error', message: 'Erro ao postar. Tente novamente!' });
+      console.error('❌ ERRO DETALHADO AO POSTAR FOTO:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        status: error?.status,
+        statusCode: error?.statusCode,
+        fullError: error
+      });
+      setToast({ type: 'error', message: `Erro ao postar: ${error?.message || 'Tente novamente!'}` });
     } finally {
       setUploading(false);
     }
@@ -140,8 +148,16 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
       onPostCreated?.();
 
     } catch (error: any) {
-      console.error('Erro ao postar:', error);
-      setToast({ type: 'error', message: 'Erro ao postar. Tente novamente!' });
+      console.error('❌ ERRO DETALHADO AO POSTAR TEXTO:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        status: error?.status,
+        statusCode: error?.statusCode,
+        fullError: error
+      });
+      setToast({ type: 'error', message: `Erro ao postar: ${error?.message || 'Tente novamente!'}` });
     } finally {
       setUploading(false);
     }
@@ -249,19 +265,20 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
             />
 
-            {/* Modal - Centralizado em MOBILE e DESKTOP, compacto */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-sm md:max-w-md z-50 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl flex flex-col max-h-[75vh] md:max-h-[70vh]"
-            >
-              {/* Header */}
-              <div className="flex-shrink-0 bg-gradient-to-r from-primary-600 to-blue-600 text-white p-3 flex items-center justify-between rounded-t-2xl">
-                <div className="flex items-center gap-2">
-                  <Camera size={20} />
-                  <h2 className="text-base font-bold">Postar Treino</h2>
-                </div>
+            {/* Modal - PERFEITAMENTE CENTRALIZADO */}
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="w-full max-w-sm md:max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl flex flex-col max-h-[80vh]"
+              >
+                {/* Header */}
+                <div className="flex-shrink-0 bg-gradient-to-r from-primary-600 to-blue-600 text-white p-3 flex items-center justify-between rounded-t-2xl">
+                  <div className="flex items-center gap-2">
+                    <Camera size={20} />
+                    <h2 className="text-base font-bold">Postar Treino</h2>
+                  </div>
                 <button
                   onClick={closeModal}
                   disabled={uploading}
@@ -366,7 +383,8 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
                   )}
                 </button>
               </div>
-            </motion.div>
+              </motion.div>
+            </div>
           </>
         )}
 
@@ -382,19 +400,20 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
             />
 
-            {/* Modal - Centralizado em MOBILE e DESKTOP, compacto */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-sm md:max-w-md z-50 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl flex flex-col max-h-[75vh] md:max-h-[70vh]"
-            >
-              {/* Header */}
-              <div className="flex-shrink-0 bg-gradient-to-r from-primary-600 to-blue-600 text-white p-3 flex items-center justify-between rounded-t-2xl">
-                <div className="flex items-center gap-2">
-                  <MessageSquare size={20} />
-                  <h2 className="text-base font-bold">Postar Mensagem</h2>
-                </div>
+            {/* Modal - PERFEITAMENTE CENTRALIZADO */}
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="w-full max-w-sm md:max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl flex flex-col max-h-[80vh]"
+              >
+                {/* Header */}
+                <div className="flex-shrink-0 bg-gradient-to-r from-primary-600 to-blue-600 text-white p-3 flex items-center justify-between rounded-t-2xl">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare size={20} />
+                    <h2 className="text-base font-bold">Postar Mensagem</h2>
+                  </div>
                 <button
                   onClick={closeModal}
                   disabled={uploading}
@@ -452,7 +471,8 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
                   )}
                 </button>
               </div>
-            </motion.div>
+              </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>
