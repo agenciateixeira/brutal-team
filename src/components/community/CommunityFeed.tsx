@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, MessageCircle, Flame, ImageOff } from 'lucide-react';
+import { Heart, MessageCircle, ImageOff, MoreVertical } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
@@ -46,7 +46,6 @@ export default function CommunityFeed({ initialPosts, currentUserId }: Community
       .select('post_id, aluno_id');
 
     if (likes) {
-      // Contar curtidas por post
       const counts: Record<string, number> = {};
       const userLikedPosts = new Set<string>();
 
@@ -76,7 +75,7 @@ export default function CommunityFeed({ initialPosts, currentUserId }: Community
   };
 
   const setupRealtimeSubscriptions = () => {
-    // Subscribe to new posts
+    // Subscribe to new posts (REAL-TIME)
     const postsChannel = supabase
       .channel('community-posts-feed')
       .on('postgres_changes', {
@@ -97,7 +96,7 @@ export default function CommunityFeed({ initialPosts, currentUserId }: Community
       })
       .subscribe();
 
-    // Subscribe to likes changes
+    // Subscribe to likes changes (REAL-TIME)
     const likesChannel = supabase
       .channel('community-likes-feed')
       .on('postgres_changes', {
@@ -109,7 +108,7 @@ export default function CommunityFeed({ initialPosts, currentUserId }: Community
       })
       .subscribe();
 
-    // Subscribe to comments changes
+    // Subscribe to comments changes (REAL-TIME)
     const commentsChannel = supabase
       .channel('community-comments-feed')
       .on('postgres_changes', {
@@ -160,33 +159,29 @@ export default function CommunityFeed({ initialPosts, currentUserId }: Community
         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
           Nenhum post ainda
         </h3>
-        <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
+        <p className="text-gray-600 dark:text-gray-400 text-sm">
           Seja o primeiro a postar seu treino do dia!
         </p>
-        <div className="flex items-center justify-center gap-2 text-sm text-primary-600 font-semibold">
-          <Flame size={16} />
-          <span>Clique no botão + para postar</span>
-        </div>
       </div>
     );
   }
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Feed estilo Instagram - COLUNA ÚNICA */}
+      <div className="max-w-xl mx-auto space-y-6">
         {posts.map((post, index) => (
-          <motion.div
+          <motion.article
             key={post.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="group cursor-pointer"
-            onClick={() => setSelectedPost(post)}
+            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
           >
-            {/* Card do Post */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg hover:scale-[1.02] transition-all duration-300">
-              {/* Header */}
-              <div className="p-3 flex items-center gap-2">
+            {/* Header do Post */}
+            <div className="flex items-center justify-between p-3">
+              <div className="flex items-center gap-3">
+                {/* Avatar */}
                 <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-primary-600 to-blue-600 flex-shrink-0">
                   {post.profiles.avatar_url ? (
                     <Image
@@ -194,14 +189,16 @@ export default function CommunityFeed({ initialPosts, currentUserId }: Community
                       alt={post.profiles.full_name}
                       width={40}
                       height={40}
-                      className="object-cover"
+                      className="object-cover w-full h-full"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white font-bold">
+                    <div className="w-full h-full flex items-center justify-center text-white font-bold text-sm">
                       {post.profiles.full_name.charAt(0).toUpperCase()}
                     </div>
                   )}
                 </div>
+
+                {/* Nome e tempo */}
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm text-gray-900 dark:text-white truncate">
                     {post.profiles.full_name}
@@ -212,78 +209,82 @@ export default function CommunityFeed({ initialPosts, currentUserId }: Community
                 </div>
               </div>
 
-              {/* Foto */}
-              <div className="relative aspect-square bg-gray-100 dark:bg-gray-900">
-                <Image
-                  src={post.photo_url}
-                  alt="Post"
-                  fill
-                  className="object-cover"
-                />
-
-                {/* Overlay com interações (aparece no hover no desktop) */}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center gap-6 opacity-0 group-hover:opacity-100">
-                  <div className="flex items-center gap-2 text-white font-bold text-lg">
-                    <Heart className="fill-white" size={24} />
-                    <span>{likesCount[post.id] || 0}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-white font-bold text-lg">
-                    <MessageCircle className="fill-white" size={24} />
-                    <span>{commentsCount[post.id] || 0}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer com ações */}
-              <div className="p-3 space-y-2">
-                {/* Botões de ação */}
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleQuickLike(post.id);
-                    }}
-                    className="flex items-center gap-1 group/like transition-transform hover:scale-110"
-                  >
-                    <Heart
-                      size={20}
-                      className={`transition-colors ${
-                        userLikes.has(post.id)
-                          ? 'fill-red-500 text-red-500'
-                          : 'text-gray-700 dark:text-gray-300 group-hover/like:text-red-500'
-                      }`}
-                    />
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      {likesCount[post.id] || 0}
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedPost(post);
-                    }}
-                    className="flex items-center gap-1 group/comment transition-transform hover:scale-110"
-                  >
-                    <MessageCircle
-                      size={20}
-                      className="text-gray-700 dark:text-gray-300 group-hover/comment:text-primary-500 transition-colors"
-                    />
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      {commentsCount[post.id] || 0}
-                    </span>
-                  </button>
-                </div>
-
-                {/* Legenda */}
-                {post.caption && (
-                  <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
-                    <span className="font-bold">{post.profiles.full_name}</span> {post.caption}
-                  </p>
-                )}
-              </div>
+              {/* Menu */}
+              <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                <MoreVertical size={18} className="text-gray-600 dark:text-gray-400" />
+              </button>
             </div>
-          </motion.div>
+
+            {/* Foto do Post */}
+            <div className="relative w-full aspect-square bg-gray-100 dark:bg-gray-900">
+              <Image
+                src={post.photo_url}
+                alt="Post"
+                fill
+                sizes="(max-width: 640px) 100vw, 640px"
+                className="object-cover"
+                priority={index < 2}
+              />
+            </div>
+
+            {/* Ações e Info */}
+            <div className="p-4 space-y-2">
+              {/* Botões de ação */}
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleQuickLike(post.id);
+                  }}
+                  className="transition-transform active:scale-90"
+                >
+                  <Heart
+                    size={24}
+                    className={`transition-colors ${
+                      userLikes.has(post.id)
+                        ? 'fill-red-500 text-red-500'
+                        : 'text-gray-900 dark:text-gray-100 hover:text-gray-600 dark:hover:text-gray-400'
+                    }`}
+                  />
+                </button>
+
+                <button
+                  onClick={() => setSelectedPost(post)}
+                  className="transition-transform active:scale-90"
+                >
+                  <MessageCircle
+                    size={24}
+                    className="text-gray-900 dark:text-gray-100 hover:text-gray-600 dark:hover:text-gray-400 transition-colors"
+                  />
+                </button>
+              </div>
+
+              {/* Contagem de curtidas */}
+              {likesCount[post.id] > 0 && (
+                <p className="text-sm font-bold text-gray-900 dark:text-white">
+                  {likesCount[post.id]} {likesCount[post.id] === 1 ? 'curtida' : 'curtidas'}
+                </p>
+              )}
+
+              {/* Legenda */}
+              {post.caption && (
+                <p className="text-sm text-gray-900 dark:text-white">
+                  <span className="font-bold mr-2">{post.profiles.full_name}</span>
+                  {post.caption}
+                </p>
+              )}
+
+              {/* Ver comentários */}
+              {commentsCount[post.id] > 0 && (
+                <button
+                  onClick={() => setSelectedPost(post)}
+                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                >
+                  Ver {commentsCount[post.id] === 1 ? 'o' : 'todos os'} {commentsCount[post.id]} {commentsCount[post.id] === 1 ? 'comentário' : 'comentários'}
+                </button>
+              )}
+            </div>
+          </motion.article>
         ))}
       </div>
 

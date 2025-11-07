@@ -139,8 +139,8 @@ export default async function ComunidadePage() {
     .order('created_at', { ascending: false })
     .limit(50);
 
-  // Preparar dados para TopMembers (top 2)
-  const topMembers = membersStats?.slice(0, 2).map(member => ({
+  // Preparar dados para TopMembers (top 3)
+  const topMembers = membersStats?.slice(0, 3).map(member => ({
     id: member.aluno_id,
     full_name: member.full_name,
     avatar_url: avatarMap.get(member.aluno_id) || null,
