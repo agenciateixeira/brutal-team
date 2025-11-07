@@ -272,10 +272,10 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
               </div>
 
               {/* Content - Scrollable */}
-              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {/* Preview ou upload */}
                 {preview ? (
-                  <div className="relative w-full rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-900" style={{ aspectRatio: '1' }}>
+                  <div className="relative w-full max-w-sm mx-auto rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-900" style={{ aspectRatio: '1' }}>
                     <Image
                       src={preview}
                       alt="Preview"
@@ -295,16 +295,16 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
                 ) : (
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full min-h-[250px] md:min-h-[300px] rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-primary-500 dark:hover:border-primary-500 transition-colors cursor-pointer bg-gray-50 dark:bg-gray-900/50 flex flex-col items-center justify-center gap-3 group p-8"
+                    className="w-full max-w-sm mx-auto h-48 md:h-56 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-primary-500 dark:hover:border-primary-500 transition-colors cursor-pointer bg-gray-50 dark:bg-gray-900/50 flex flex-col items-center justify-center gap-2 group"
                   >
-                    <div className="p-4 bg-primary-100 dark:bg-primary-900/50 rounded-full group-hover:scale-110 transition-transform">
-                      <ImageIcon className="text-primary-600" size={32} />
+                    <div className="p-3 bg-primary-100 dark:bg-primary-900/50 rounded-full group-hover:scale-110 transition-transform">
+                      <ImageIcon className="text-primary-600" size={28} />
                     </div>
-                    <div className="text-center">
-                      <p className="text-gray-900 dark:text-white font-semibold mb-1">
+                    <div className="text-center px-4">
+                      <p className="text-gray-900 dark:text-white font-semibold text-sm mb-1">
                         Clique para selecionar a foto
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         Máximo 5MB • JPG, PNG
                       </p>
                     </div>
@@ -322,7 +322,7 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
 
                 {/* Legenda */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     Legenda (opcional)
                   </label>
                   <textarea
@@ -330,44 +330,44 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
                     onChange={(e) => setCaption(e.target.value)}
                     placeholder="Ex: Treino de pernas completo! 💪"
                     maxLength={200}
-                    rows={3}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                    rows={2}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
                   />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-right">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 text-right">
                     {caption.length}/200
                   </p>
                 </div>
 
                 {/* Info */}
-                <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl p-4">
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    <strong>✨ Ao postar:</strong> Seu check-in do dia será marcado automaticamente e você aparecerá no feed da comunidade!
+                <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl p-3">
+                  <p className="text-xs text-gray-700 dark:text-gray-300">
+                    <strong>✨ Ao postar:</strong> Seu check-in do dia será marcado automaticamente!
                   </p>
                 </div>
               </div>
 
               {/* Footer - Fixo */}
-              <div className="flex-shrink-0 p-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex gap-3">
+              <div className="flex-shrink-0 p-3 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex gap-2">
                 <button
                   onClick={closeModal}
                   disabled={uploading}
-                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handlePhotoSubmit}
                   disabled={!selectedFile || uploading}
-                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-primary-600 to-blue-600 hover:from-primary-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
+                  className="flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-primary-600 to-blue-600 hover:from-primary-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
                 >
                   {uploading ? (
                     <>
-                      <Loader2 size={20} className="animate-spin" />
+                      <Loader2 size={18} className="animate-spin" />
                       Postando...
                     </>
                   ) : (
                     <>
-                      <Upload size={20} />
+                      <Upload size={18} />
                       Postar
                     </>
                   )}
@@ -412,10 +412,10 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
               </div>
 
               {/* Content - Scrollable */}
-              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {/* Textarea */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     O que você está pensando?
                   </label>
                   <textarea
@@ -423,44 +423,44 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
                     onChange={(e) => setTextPost(e.target.value)}
                     placeholder="Ex: Mais um dia de treino completo! 💪 Sentindo a evolução..."
                     maxLength={500}
-                    rows={8}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                    rows={10}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
                   />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-right">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 text-right">
                     {textPost.length}/500
                   </p>
                 </div>
 
                 {/* Info */}
-                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    <strong>💬 Dica:</strong> Compartilhe suas conquistas, motivação ou progresso com sua comunidade!
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-3">
+                  <p className="text-xs text-gray-700 dark:text-gray-300">
+                    <strong>💬 Dica:</strong> Compartilhe suas conquistas e motivação!
                   </p>
                 </div>
               </div>
 
               {/* Footer - Fixo */}
-              <div className="flex-shrink-0 p-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex gap-3">
+              <div className="flex-shrink-0 p-3 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex gap-2">
                 <button
                   onClick={closeModal}
                   disabled={uploading}
-                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleTextSubmit}
                   disabled={!textPost.trim() || uploading}
-                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
+                  className="flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
                 >
                   {uploading ? (
                     <>
-                      <Loader2 size={20} className="animate-spin" />
+                      <Loader2 size={18} className="animate-spin" />
                       Postando...
                     </>
                   ) : (
                     <>
-                      <Upload size={20} />
+                      <Upload size={18} />
                       Publicar
                     </>
                   )}
