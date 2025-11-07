@@ -45,24 +45,23 @@ export default function YearCountdown() {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="relative overflow-hidden backdrop-blur-xl bg-gradient-to-br from-indigo-500/90 via-purple-500/90 to-pink-500/90 rounded-2xl p-6 shadow-2xl border border-white/20"
+      className="relative overflow-hidden backdrop-blur-2xl bg-white/40 dark:bg-gray-800/40 rounded-2xl p-6 shadow-2xl border-2 border-white/60 dark:border-gray-700/60"
     >
-      {/* Glass effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-purple-500/10"></div>
-      <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-t-2xl"></div>
+      {/* Liquid Glass Layers */}
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10"></div>
+      <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/30 to-transparent rounded-t-2xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
 
-      {/* Animated background pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')]"></div>
-      </div>
+      {/* Grid pattern overlay */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30"></div>
 
       <div className="relative z-10">
         {/* Header */}
         <div className="flex items-center gap-2 mb-4">
-          <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg border border-white/30">
-            <Calendar className="text-white" size={20} />
+          <div className="p-2 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 rounded-lg border border-white/70 dark:border-gray-700/70">
+            <Calendar className="text-indigo-600 dark:text-indigo-400" size={20} />
           </div>
-          <h3 className="text-white font-bold text-lg">Dias Restantes de {new Date().getFullYear()}</h3>
+          <h3 className="text-gray-900 dark:text-white font-bold text-lg">Dias Restantes de {new Date().getFullYear()}</h3>
         </div>
 
         {/* Contador Principal */}
@@ -71,25 +70,25 @@ export default function YearCountdown() {
             key={daysLeft}
             initial={{ scale: 1.2, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="text-6xl md:text-7xl font-black text-white drop-shadow-2xl"
+            className="text-6xl md:text-7xl font-black bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent drop-shadow-2xl"
           >
             {daysLeft}
           </motion.div>
-          <p className="text-white/90 text-lg font-semibold mt-2">dias para acabar o ano</p>
+          <p className="text-gray-700 dark:text-gray-300 text-lg font-semibold mt-2">dias para acabar o ano</p>
         </div>
 
         {/* Barra de Progresso do Ano */}
         <div className="space-y-2 mb-4">
-          <div className="flex justify-between text-sm text-white/90 font-medium">
+          <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300 font-medium">
             <span>Progresso do ano</span>
             <span>{progress.toFixed(1)}%</span>
           </div>
-          <div className="h-3 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm border border-white/30">
+          <div className="h-3 bg-white/50 dark:bg-gray-700/50 rounded-full overflow-hidden backdrop-blur-sm border border-white/70 dark:border-gray-600/70">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 1.5, ease: 'easeOut' }}
-              className="h-full bg-gradient-to-r from-yellow-300 via-orange-300 to-red-300 rounded-full shadow-lg relative"
+              className="h-full bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 rounded-full shadow-lg relative"
             >
               {/* Shimmer effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"></div>
@@ -98,24 +97,24 @@ export default function YearCountdown() {
         </div>
 
         {/* Mensagem Motivacional */}
-        <div className="flex items-center justify-center gap-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl p-3">
-          <Clock className="text-yellow-300" size={18} />
-          <p className="text-white font-semibold text-sm">
+        <div className="flex items-center justify-center gap-2 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 border border-white/70 dark:border-gray-700/70 rounded-xl p-3">
+          <Clock className="text-yellow-600 dark:text-yellow-400" size={18} />
+          <p className="text-gray-900 dark:text-white font-semibold text-sm">
             {getMotivationMessage()}
           </p>
         </div>
 
         {/* Info adicional */}
         <div className="mt-4 grid grid-cols-2 gap-3">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
-            <p className="text-white/80 text-xs font-medium">Dia do Ano</p>
-            <p className="text-white text-xl font-bold">
+          <div className="backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 rounded-lg p-3 border border-white/70 dark:border-gray-700/70">
+            <p className="text-gray-600 dark:text-gray-400 text-xs font-medium">Dia do Ano</p>
+            <p className="text-gray-900 dark:text-white text-xl font-bold">
               {Math.ceil((new Date().getTime() - new Date(new Date().getFullYear(), 0, 1).getTime()) / (1000 * 60 * 60 * 24))}
             </p>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
-            <p className="text-white/80 text-xs font-medium">Semana</p>
-            <p className="text-white text-xl font-bold">
+          <div className="backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 rounded-lg p-3 border border-white/70 dark:border-gray-700/70">
+            <p className="text-gray-600 dark:text-gray-400 text-xs font-medium">Semana</p>
+            <p className="text-gray-900 dark:text-white text-xl font-bold">
               {Math.ceil(((new Date().getTime() - new Date(new Date().getFullYear(), 0, 1).getTime()) / (1000 * 60 * 60 * 24)) / 7)}
             </p>
           </div>
