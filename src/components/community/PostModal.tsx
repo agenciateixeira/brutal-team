@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { X, Heart, MessageCircle, Send, Trash2, Loader2 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
