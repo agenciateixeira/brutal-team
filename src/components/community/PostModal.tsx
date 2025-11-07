@@ -183,27 +183,27 @@ export default function PostModal({ post, currentUserId, isOpen, onClose }: Post
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <>
-      {/* Overlay */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
-      />
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Overlay */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
+          />
 
-      {/* Modal - PERFEITAMENTE CENTRALIZADO E RESPONSIVO */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 pointer-events-none">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          className="w-full h-full md:h-auto md:w-full md:max-w-5xl md:max-h-[85vh] bg-white dark:bg-gray-900 md:rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row pointer-events-auto"
-        >
+          {/* Modal - PERFEITAMENTE CENTRALIZADO E RESPONSIVO */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full h-full md:h-auto md:w-full md:max-w-5xl md:max-h-[85vh] bg-white dark:bg-gray-900 md:rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row pointer-events-auto"
+            >
           {/* Foto (Esquerda no desktop, topo no mobile) */}
           <div className="relative w-full md:w-3/5 aspect-square md:aspect-auto bg-black flex items-center justify-center md:max-h-[85vh]">
           <Image
@@ -394,8 +394,10 @@ export default function PostModal({ post, currentUserId, isOpen, onClose }: Post
               </button>
             </div>
           </div>
-        </motion.div>
-      </div>
-    </>
+            </motion.div>
+          </div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
