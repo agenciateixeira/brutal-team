@@ -9,6 +9,7 @@ import DashboardWithFirstAccess from '@/components/aluno/DashboardWithFirstAcces
 import WelcomeMessage from '@/components/aluno/WelcomeMessage';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
+import GamificationDashboard from '@/components/gamification/GamificationDashboard';
 import { TrendingUp, Calendar, Apple, AlertCircle, FileQuestion, Bell, Sparkles, Activity } from 'lucide-react';
 import Link from 'next/link';
 
@@ -33,6 +34,51 @@ export default async function AlunoDashboard() {
   if (profile?.role !== 'aluno') {
     redirect('/coach/dashboard');
   }
+
+  // ===== GAMIFICAÇÃO: Buscar dados =====
+
+  // Buscar stats do aluno
+  const { data: userStats } = await supabase
+    .from('user_stats')
+    .select('*')
+    .eq('aluno_id', session.user.id)
+    .single();
+
+  // Buscar todos os achievements disponíveis
+  const { data: allAchievements } = await supabase
+    .from('achievements')
+    .select('*')
+    .order('tier', { ascending: true });
+
+  // Buscar achievements desbloqueados pelo aluno
+  const { data: userAchievementsData } = await supabase
+    .from('user_achievements')
+    .select(`
+      *,
+      achievements (*)
+    `)
+    .eq('aluno_id', session.user.id);
+
+  // Extrair apenas os achievements
+  const userAchievements = userAchievementsData?.map(ua => ua.achievements).filter(Boolean) || [];
+
+  // Buscar stats do dia atual
+  const today = new Date().toISOString().split('T')[0];
+  const { data: todayStats } = await supabase
+    .from('daily_stats')
+    .select('*')
+    .eq('aluno_id', session.user.id)
+    .eq('date', today)
+    .maybeSingle();
+
+  // Criar stats default se não existir
+  if (!userStats) {
+    await supabase
+      .from('user_stats')
+      .insert({ aluno_id: session.user.id });
+  }
+
+  // ===== FIM GAMIFICAÇÃO =====
 
   // Buscar dieta e treino ativos
   const { data: dietaAtiva } = await supabase
@@ -181,6 +227,17 @@ export default async function AlunoDashboard() {
                   Bem-vindo de volta, {profile.full_name || 'Atleta'}!
                 </p>
               </div>
+
+              {/* Gamification Dashboard */}
+              {userStats && allAchievements && (
+                <GamificationDashboard
+                  userStats={userStats}
+                  achievements={allAchievements}
+                  userAchievements={userAchievements as any}
+                  todayStats={todayStats}
+                  userName={profile.full_name}
+                />
+              )}
 
               {/* Onboarding Checklist */}
               <OnboardingChecklist
