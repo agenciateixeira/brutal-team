@@ -88,6 +88,20 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
 
       if (postError) throw postError;
 
+      // 4. Criar check-in automático (data de hoje)
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      const { error: checkInError } = await supabase
+        .from('community_check_ins')
+        .insert({
+          aluno_id: alunoId,
+          check_in_date: today,
+        });
+
+      if (checkInError) {
+        // Se já tem check-in hoje, ignora o erro (é esperado)
+        console.log('ℹ️ Check-in já existe hoje ou erro ao criar:', checkInError);
+      }
+
       // Sucesso!
       setToast({ type: 'success', message: '🔥 Treino postado! Check-in marcado!' });
 
@@ -137,8 +151,22 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
 
       if (postError) throw postError;
 
+      // Criar check-in automático (data de hoje)
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      const { error: checkInError } = await supabase
+        .from('community_check_ins')
+        .insert({
+          aluno_id: alunoId,
+          check_in_date: today,
+        });
+
+      if (checkInError) {
+        // Se já tem check-in hoje, ignora o erro (é esperado)
+        console.log('ℹ️ Check-in já existe hoje ou erro ao criar:', checkInError);
+      }
+
       // Sucesso!
-      setToast({ type: 'success', message: '✅ Post publicado!' });
+      setToast({ type: 'success', message: '✅ Post publicado! Check-in marcado!' });
 
       // Resetar form
       setModalType(null);
