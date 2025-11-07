@@ -154,23 +154,31 @@ export default function ReferralDashboard({ profile, stats, referrals }: Referra
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden backdrop-blur-xl bg-gradient-to-br from-purple-500/90 via-pink-500/90 to-orange-500/90 rounded-2xl p-8 shadow-2xl border-2 border-white/30"
+          className="relative overflow-hidden backdrop-blur-2xl bg-white/40 dark:bg-gray-800/40 rounded-2xl p-8 shadow-2xl border-2 border-white/60 dark:border-gray-700/60"
         >
-          {/* Glass effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-purple-500/10"></div>
-          <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-t-2xl"></div>
+          {/* Liquid Glass Layers */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-500/10 via-blue-500/10 to-purple-500/10"></div>
+
+          {/* Glass shine effect - top */}
+          <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/30 to-transparent rounded-t-2xl"></div>
+
+          {/* Shimmer animation */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+
+          {/* Grid pattern overlay */}
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30"></div>
 
           {/* Locked badge */}
-          <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm border border-white/40 rounded-full p-3">
+          <div className="absolute top-4 right-4 backdrop-blur-sm bg-white/30 dark:bg-gray-800/30 border border-white/50 dark:border-gray-700/50 rounded-full p-3 shadow-lg">
             <span className="text-3xl">🔒</span>
           </div>
 
           <div className="relative z-10 space-y-6">
             <div className="space-y-2">
-              <h3 className="text-2xl md:text-3xl font-black text-white drop-shadow-lg">
+              <h3 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white drop-shadow-sm">
                 🏆 Desbloqueie a Comunidade!
               </h3>
-              <p className="text-white/90 text-base md:text-lg font-semibold">
+              <p className="text-gray-700 dark:text-gray-300 text-base md:text-lg font-semibold">
                 Indique <strong>1 amigo</strong> e ganhe acesso exclusivo à comunidade privada!
               </p>
             </div>
@@ -182,48 +190,61 @@ export default function ReferralDashboard({ profile, stats, referrals }: Referra
                 { emoji: '🔥', text: 'Streaks e check-ins' },
                 { emoji: '💬', text: 'Curtir e comentar' },
               ].map((item, i) => (
-                <div key={i} className="bg-white/20 backdrop-blur-sm border border-white/40 rounded-xl p-3 flex items-center gap-2">
+                <div key={i} className="backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 border border-white/70 dark:border-gray-700/70 rounded-xl p-3 flex items-center gap-2 shadow-md">
                   <span className="text-2xl">{item.emoji}</span>
-                  <span className="text-white text-sm font-semibold">{item.text}</span>
+                  <span className="text-gray-900 dark:text-white text-sm font-semibold">{item.text}</span>
                 </div>
               ))}
             </div>
 
-            <div className="bg-white/20 backdrop-blur-sm border border-white/40 rounded-xl p-4 text-center">
-              <p className="text-white font-bold text-lg">
-                💪 Compartilhe o código abaixo e desbloqueie agora!
+            <div className="backdrop-blur-sm bg-gradient-to-r from-primary-500/20 to-blue-500/20 border-2 border-primary-500/50 rounded-xl p-4 text-center shadow-lg">
+              <p className="text-gray-900 dark:text-white font-bold text-lg flex items-center justify-center gap-2">
+                <span>💪</span>
+                <span>Compartilhe o código abaixo e desbloqueie agora!</span>
               </p>
             </div>
           </div>
+
+          {/* Bottom highlight line */}
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
         </motion.div>
       ) : (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="relative overflow-hidden backdrop-blur-xl bg-gradient-to-br from-green-500/90 via-emerald-500/90 to-teal-500/90 rounded-2xl p-6 shadow-2xl border-2 border-white/30"
+          className="relative overflow-hidden backdrop-blur-2xl bg-white/40 dark:bg-gray-800/40 rounded-2xl p-6 shadow-2xl border-2 border-white/60 dark:border-gray-700/60"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-green-500/10"></div>
-          <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-t-2xl"></div>
+          {/* Liquid Glass Layers */}
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-emerald-500/10 to-teal-500/10"></div>
 
-          <div className="relative z-10 flex items-center gap-4">
-            <div className="p-4 bg-white/20 backdrop-blur-sm border border-white/40 rounded-xl">
+          {/* Glass shine effect */}
+          <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/30 to-transparent rounded-t-2xl"></div>
+
+          {/* Shimmer animation */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-4">
+            <div className="p-4 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 border border-white/70 dark:border-gray-700/70 rounded-xl shadow-lg">
               <span className="text-4xl">🎉</span>
             </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-black text-white drop-shadow-lg mb-1">
+            <div className="flex-1 text-center md:text-left">
+              <h3 className="text-xl font-black text-gray-900 dark:text-white mb-1">
                 Comunidade Desbloqueada!
               </h3>
-              <p className="text-white/90 text-sm font-semibold">
+              <p className="text-gray-700 dark:text-gray-300 text-sm font-semibold">
                 Você tem acesso à comunidade privada. Compartilhe treinos e compita com seus amigos!
               </p>
             </div>
             <a
               href="/aluno/comunidade"
-              className="flex-shrink-0 px-6 py-3 bg-white text-green-600 font-bold rounded-xl hover:bg-gray-100 transition-colors shadow-lg"
+              className="flex-shrink-0 px-6 py-3 bg-gradient-to-r from-primary-600 to-blue-600 hover:from-primary-700 hover:to-blue-700 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105"
             >
               Acessar
             </a>
           </div>
+
+          {/* Bottom highlight line */}
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
         </motion.div>
       )}
 
