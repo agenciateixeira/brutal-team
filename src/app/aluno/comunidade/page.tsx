@@ -123,6 +123,15 @@ export default async function ComunidadePage() {
     .in('aluno_id', memberIds)
     .order('yearly_check_ins', { ascending: false });
 
+  // Buscar avatares dos membros
+  const { data: membersProfiles } = await supabase
+    .from('profiles')
+    .select('id, avatar_url')
+    .in('id', memberIds);
+
+  // Criar mapa de avatares para lookup rápido
+  const avatarMap = new Map(membersProfiles?.map(p => [p.id, p.avatar_url]) || []);
+
   // Buscar posts da rede
   const { data: communityPosts } = await supabase
     .from('community_posts')
@@ -135,7 +144,7 @@ export default async function ComunidadePage() {
   const topMembers = membersStats?.slice(0, 2).map(member => ({
     id: member.aluno_id,
     full_name: member.full_name,
-    avatar_url: null, // Buscar depois se necessário
+    avatar_url: avatarMap.get(member.aluno_id) || null,
     yearly_check_ins: member.yearly_check_ins,
     current_streak: member.current_streak,
   })) || [];
@@ -144,7 +153,7 @@ export default async function ComunidadePage() {
   const rankingMembers = membersStats?.map(member => ({
     id: member.aluno_id,
     full_name: member.full_name,
-    avatar_url: null,
+    avatar_url: avatarMap.get(member.aluno_id) || null,
     yearly_check_ins: member.yearly_check_ins,
     current_streak: member.current_streak,
     total_posts: member.total_posts,

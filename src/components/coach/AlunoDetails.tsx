@@ -135,32 +135,32 @@ export default function AlunoDetails({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-        <div className="flex items-center gap-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 md:p-6 shadow-sm">
+        <div className="flex items-center gap-3 md:gap-4">
           <Link
             href="/coach/dashboard"
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="flex-shrink-0 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <ArrowLeft size={24} className="text-gray-900 dark:text-white" />
           </Link>
-          <div className="flex items-center gap-4 flex-1">
+          <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0 overflow-hidden">
             {aluno.avatar_url ? (
               <img
                 src={aluno.avatar_url}
                 alt={aluno.full_name || 'Avatar'}
-                className="w-16 h-16 rounded-full object-cover border-4 border-primary-500"
+                className="w-12 h-12 md:w-16 md:h-16 flex-shrink-0 rounded-full object-cover border-2 md:border-4 border-primary-500"
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold text-2xl">
+              <div className="w-12 h-12 md:w-16 md:h-16 flex-shrink-0 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold text-lg md:text-2xl">
                 {aluno.full_name?.[0]?.toUpperCase() || aluno.email[0].toUpperCase()}
               </div>
             )}
-            <div className="flex-1 min-w-0">
-              <h1 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white truncate">
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <h1 className="text-base md:text-2xl font-bold text-gray-900 dark:text-white truncate">
                 {aluno.full_name || 'Nome não definido'}
               </h1>
-              <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 truncate">{aluno.email}</p>
-              <p className="text-xs md:text-sm text-gray-500 dark:text-gray-500 mt-1">
+              <p className="text-xs md:text-base text-gray-600 dark:text-gray-400 truncate">{aluno.email}</p>
+              <p className="text-xs md:text-sm text-gray-500 dark:text-gray-500 mt-1 hidden sm:block">
                 Cliente desde {format(new Date(aluno.created_at), "dd/MM/yyyy", { locale: ptBR })}
               </p>
             </div>

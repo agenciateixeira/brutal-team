@@ -210,13 +210,21 @@ export default function Sidebar({ profile }: SidebarProps) {
           </div>
 
           {/* User Info */}
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold">
-                {profile.full_name?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
-              </div>
+              {profile.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.full_name || 'Avatar'}
+                  className="w-10 h-10 rounded-full object-cover border-2 border-primary-500"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold flex-shrink-0">
+                  {profile.full_name?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                   {profile.full_name || 'Usuário'}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
