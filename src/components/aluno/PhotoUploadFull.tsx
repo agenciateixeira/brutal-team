@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Toast from '@/components/ui/Toast';
 import { sendPushNotification } from '@/lib/push-notifications';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface PhotoUploadFullProps {
   alunoId: string;
@@ -400,11 +401,24 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
   return (
     <div className="space-y-6">
       {/* Upload Form */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Upload size={24} className="text-primary-600" />
-          Enviar Nova Foto
-        </h2>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="relative overflow-hidden backdrop-blur-xl bg-white/80 dark:bg-gray-800/80 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-6"
+      >
+        {/* Glassmorphism effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 pointer-events-none" />
+
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl shadow-lg">
+              <Upload size={24} className="text-white" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              Enviar Nova Foto
+            </h2>
+          </div>
 
         <div className="space-y-4">
           {/* Week Number Input */}
@@ -852,28 +866,61 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
             </button>
           )}
         </div>
-      </div>
+        </div>
+      </motion.div>
 
       {/* Photos Grid */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <ImageIcon size={24} className="text-primary-600" />
-          Histórico de Fotos ({photos.length})
-        </h2>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+        className="relative overflow-hidden backdrop-blur-xl bg-white/80 dark:bg-gray-800/80 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-6"
+      >
+        {/* Glassmorphism effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-orange-500/5 pointer-events-none" />
+
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl shadow-lg">
+              <ImageIcon size={24} className="text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                Histórico de Fotos
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {photos.length} {photos.length === 1 ? 'foto enviada' : 'fotos enviadas'}
+              </p>
+            </div>
+          </div>
 
         {photos.length === 0 ? (
-          <div className="text-center py-12">
-            <ImageIcon size={48} className="mx-auto text-gray-400 mb-4" />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-12"
+          >
+            <motion.div
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <ImageIcon size={48} className="mx-auto text-gray-400 mb-4" />
+            </motion.div>
             <p className="text-gray-500 dark:text-gray-400">
               Nenhuma foto enviada ainda. Comece seu acompanhamento!
             </p>
-          </div>
+          </motion.div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {photos.map((photo) => (
-              <div
+            {photos.map((photo, index) => (
+              <motion.div
                 key={photo.id}
-                className="group relative bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary-500 transition-all"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                whileHover={{ scale: 1.05, y: -5 }}
+                whileTap={{ scale: 0.98 }}
+                className="group relative bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800 rounded-xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all"
                 onClick={() => setSelectedPhoto(photo)}
               >
                 <div className="aspect-square relative">
@@ -902,29 +949,55 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
                     </button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
-      </div>
+        </div>
+      </motion.div>
 
       {/* Modal de Visualização */}
-      {selectedPhoto && (
-        <div
-          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedPhoto(null)}
-        >
-          <div className="max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="relative aspect-square mb-4">
-              <Image
-                src={selectedPhoto.photo_url}
-                alt={`Semana ${selectedPhoto.week_number}`}
-                fill
-                className="object-contain"
-              />
-            </div>
+      <AnimatePresence>
+        {selectedPhoto && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+            onClick={() => setSelectedPhoto(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 25 }}
+              className="max-w-4xl w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+                className="relative aspect-square mb-4"
+              >
+                <Image
+                  src={selectedPhoto.photo_url}
+                  alt={`Semana ${selectedPhoto.week_number}`}
+                  fill
+                  className="object-contain rounded-2xl"
+                />
+              </motion.div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="relative overflow-hidden backdrop-blur-xl bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 p-6"
+              >
+                {/* Glassmorphism effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 pointer-events-none" />
+
+                <div className="relative z-10">
               <div className="flex items-center gap-4 mb-3">
                 <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                   <Calendar size={18} />
@@ -974,21 +1047,35 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
                 </div>
               )}
 
-              {selectedPhoto.notes && (
-                <div className="flex gap-2 text-gray-700 dark:text-gray-300">
-                  <FileText size={18} className="flex-shrink-0 mt-0.5" />
-                  <p className="text-sm">{selectedPhoto.notes}</p>
+                {selectedPhoto.notes && (
+                  <div className="flex gap-2 text-gray-700 dark:text-gray-300">
+                    <FileText size={18} className="flex-shrink-0 mt-0.5" />
+                    <p className="text-sm">{selectedPhoto.notes}</p>
+                  </div>
+                )}
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Modal da Câmera */}
-      {showCamera && (
-        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
-          <div className="max-w-lg w-full">
+      <AnimatePresence>
+        {showCamera && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 25 }}
+              className="max-w-lg w-full"
+            >
             <div className="relative aspect-[9/16] bg-black rounded-lg overflow-hidden mb-4">
               <video
                 ref={videoRef}
@@ -1016,9 +1103,10 @@ export default function PhotoUploadFull({ alunoId, photos }: PhotoUploadFullProp
                 Capturar Foto
               </button>
             </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Toast Notification */}
       {toast && (
