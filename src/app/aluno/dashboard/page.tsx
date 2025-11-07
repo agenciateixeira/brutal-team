@@ -2,7 +2,6 @@ import { createServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Sidebar from '@/components/ui/Sidebar';
 import BottomNavigation from '@/components/ui/BottomNavigation';
-import ProgressChart from '@/components/aluno/ProgressChart';
 import WeeklySummary from '@/components/aluno/WeeklySummary';
 import MonthlyPhotoProgress from '@/components/aluno/MonthlyPhotoProgress';
 import DashboardWithFirstAccess from '@/components/aluno/DashboardWithFirstAccess';
@@ -10,7 +9,7 @@ import WelcomeMessage from '@/components/aluno/WelcomeMessage';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import GamificationDashboard from '@/components/gamification/GamificationDashboard';
-import { TrendingUp, Calendar, Apple, AlertCircle, FileQuestion, Bell, Sparkles, Activity } from 'lucide-react';
+import { TrendingUp, Apple, AlertCircle, FileQuestion, Bell, Sparkles, Activity } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function AlunoDashboard() {
@@ -124,58 +123,8 @@ export default async function AlunoDashboard() {
   const hasPaymentReminder = paymentReminders && paymentReminders.length > 0;
   const reminderData = hasPaymentReminder ? paymentReminders[0] : null;
 
-  // Buscar fotos de progresso para o gráfico
-  const { data: photos } = await supabase
-    .from('progress_photos')
-    .select('*')
-    .eq('aluno_id', session.user.id)
-    .order('week_number', { ascending: true });
-
-  // Buscar dados do ano inteiro para progresso anual
-  const now = new Date();
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const daysPassedInYear = Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-
-  // Buscar meal tracking do ano
-  const { data: mealTracking } = await supabase
-    .from('meal_tracking')
-    .select('*')
-    .eq('aluno_id', session.user.id)
-    .gte('date', startOfYear.toISOString().split('T')[0]);
-
-  // Buscar workout tracking do ano
-  const { data: workoutTracking } = await supabase
-    .from('workout_tracking')
-    .select('*')
-    .eq('aluno_id', session.user.id)
-    .gte('date', startOfYear.toISOString().split('T')[0]);
-
-  // Calcular % de conclusão de refeições
-  // 6 refeições por dia * dias passados no ano
-  const expectedMeals = daysPassedInYear * 6;
-  let completedMeals = 0;
-  mealTracking?.forEach((day) => {
-    if (day.cafe_da_manha) completedMeals++;
-    if (day.lanche_manha) completedMeals++;
-    if (day.almoco) completedMeals++;
-    if (day.lanche_tarde) completedMeals++;
-    if (day.janta) completedMeals++;
-    if (day.ceia) completedMeals++;
-  });
-  const mealCompletionPercentage = Math.round((completedMeals / expectedMeals) * 100);
-
-  // Calcular % de conclusão de treinos
-  // 3 períodos por dia * dias passados no ano
-  const expectedWorkouts = daysPassedInYear * 3;
-  const completedWorkouts = workoutTracking?.filter(w => w.completed).length || 0;
-  const workoutCompletionPercentage = Math.round((completedWorkouts / expectedWorkouts) * 100);
-
-  // Progresso anual combinado (média de refeições e treinos)
-  const overallCompletionPercentage = Math.round((mealCompletionPercentage + workoutCompletionPercentage) / 2);
-
-  // Se o aluno tem fotos antigas, considerar primeiro acesso como completo
-  const hasOldPhotos = photos && photos.length > 0;
-  const shouldShowFirstAccessModal = !profile.first_access_completed && !hasOldPhotos;
+  // Verificar primeiro acesso
+  const shouldShowFirstAccessModal = !profile.first_access_completed;
 
   // Verificar se o aluno completou o questionário (anamnese)
   const { data: anamneseResponse } = await supabase
@@ -200,6 +149,7 @@ export default async function AlunoDashboard() {
   // Verificar se a observação foi enviada nos últimos 7 dias
   let showCoachObservation = false;
   if (coachObservation?.coach_public_observation_sent_at) {
+    const now = new Date();
     const sentDate = new Date(coachObservation.coach_public_observation_sent_at);
     const daysSinceSent = Math.floor((now.getTime() - sentDate.getTime()) / (1000 * 60 * 60 * 24));
     showCoachObservation = daysSinceSent < 7;
@@ -225,6 +175,14 @@ export default async function AlunoDashboard() {
                 <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
                 <p className="text-gray-700 mt-1">
                   Bem-vindo de volta, {profile.full_name || 'Atleta'}!
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {new Date().toLocaleDateString('pt-BR', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })}
                 </p>
               </div>
 
@@ -385,74 +343,6 @@ export default async function AlunoDashboard() {
 
               {/* Monthly Photo Progress - Progresso Mensal de Fotos */}
               <MonthlyPhotoProgress alunoId={session.user.id} />
-
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Total de Fotos */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        Fotos de Progresso
-                      </p>
-                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                        {photos?.length || 0}
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
-                      <TrendingUp className="text-primary-600 dark:text-primary-400" size={24} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Semanas de Progresso */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        Semanas de Treino
-                      </p>
-                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                        {photos && photos.length > 0 ? Math.max(...photos.map(p => p.week_number)) : 0}
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 bg-secondary-100 dark:bg-secondary-900/30 rounded-lg flex items-center justify-center">
-                      <Calendar className="text-secondary-600 dark:text-secondary-400" size={24} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Progresso Anual */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        Progresso Anual
-                      </p>
-                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                        {overallCompletionPercentage}%
-                      </p>
-                      <div className="mt-2 space-y-1">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          🍎 Dieta: {mealCompletionPercentage}% ({completedMeals}/{expectedMeals})
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          💪 Treino: {workoutCompletionPercentage}% ({completedWorkouts}/{expectedWorkouts})
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Dia {daysPassedInYear} de 365
-                        </p>
-                      </div>
-                    </div>
-                    <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                      <Apple className="text-green-600 dark:text-green-400" size={24} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Gráfico de Progresso */}
-              <ProgressChart photos={photos || []} />
             </div>
           </div>
         </main>
