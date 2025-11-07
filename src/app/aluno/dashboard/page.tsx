@@ -2,13 +2,12 @@ import { createServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Sidebar from '@/components/ui/Sidebar';
 import BottomNavigation from '@/components/ui/BottomNavigation';
-import WeeklySummary from '@/components/aluno/WeeklySummary';
 import MonthlyPhotoProgress from '@/components/aluno/MonthlyPhotoProgress';
 import DashboardWithFirstAccess from '@/components/aluno/DashboardWithFirstAccess';
 import WelcomeMessage from '@/components/aluno/WelcomeMessage';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
-import GamificationDashboard from '@/components/gamification/GamificationDashboard';
+import GamificationDashboardWrapper from '@/components/gamification/GamificationDashboardWrapper';
 import { TrendingUp, Apple, AlertCircle, FileQuestion, Bell, Sparkles, Activity } from 'lucide-react';
 import Link from 'next/link';
 
@@ -187,15 +186,14 @@ export default async function AlunoDashboard() {
               </div>
 
               {/* Gamification Dashboard */}
-              {userStats && allAchievements && (
-                <GamificationDashboard
-                  userStats={userStats}
-                  achievements={allAchievements}
-                  userAchievements={userAchievements as any}
-                  todayStats={todayStats}
-                  userName={profile.full_name}
-                />
-              )}
+              <GamificationDashboardWrapper
+                alunoId={session.user.id}
+                userName={profile.full_name}
+                initialUserStats={userStats}
+                initialAchievements={allAchievements || []}
+                initialUserAchievements={userAchievements}
+                initialTodayStats={todayStats}
+              />
 
               {/* Onboarding Checklist */}
               <OnboardingChecklist
@@ -337,9 +335,6 @@ export default async function AlunoDashboard() {
                   </div>
                 </div>
               )}
-
-              {/* Weekly Summary - Resumo Semanal */}
-              <WeeklySummary alunoId={session.user.id} />
 
               {/* Monthly Photo Progress - Progresso Mensal de Fotos */}
               <MonthlyPhotoProgress alunoId={session.user.id} />

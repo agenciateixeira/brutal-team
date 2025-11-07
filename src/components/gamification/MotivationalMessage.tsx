@@ -20,28 +20,32 @@ interface Message {
 
 const messageStyles = {
   excellent: {
-    bg: 'bg-gradient-to-r from-green-500 to-emerald-600',
-    border: 'border-green-400',
+    bg: 'from-green-500/20 via-emerald-500/20 to-green-600/20',
+    border: 'border-green-400/50',
     icon: CheckCircle,
-    glow: 'shadow-green-500/50'
+    glow: 'shadow-green-500/30',
+    iconColor: 'text-green-600 dark:text-green-400'
   },
   good: {
-    bg: 'bg-gradient-to-r from-blue-500 to-cyan-600',
-    border: 'border-blue-400',
+    bg: 'from-blue-500/20 via-cyan-500/20 to-blue-600/20',
+    border: 'border-blue-400/50',
     icon: TrendingUp,
-    glow: 'shadow-blue-500/50'
+    glow: 'shadow-blue-500/30',
+    iconColor: 'text-blue-600 dark:text-blue-400'
   },
   warning: {
-    bg: 'bg-gradient-to-r from-yellow-500 to-orange-600',
-    border: 'border-yellow-400',
+    bg: 'from-yellow-500/20 via-orange-500/20 to-yellow-600/20',
+    border: 'border-yellow-400/50',
     icon: AlertCircle,
-    glow: 'shadow-yellow-500/50'
+    glow: 'shadow-yellow-500/30',
+    iconColor: 'text-yellow-600 dark:text-yellow-400'
   },
   motivational: {
-    bg: 'bg-gradient-to-r from-purple-500 to-pink-600',
-    border: 'border-purple-400',
+    bg: 'from-purple-500/20 via-pink-500/20 to-purple-600/20',
+    border: 'border-purple-400/50',
     icon: Sparkles,
-    glow: 'shadow-purple-500/50'
+    glow: 'shadow-purple-500/30',
+    iconColor: 'text-purple-600 dark:text-purple-400'
   }
 };
 
@@ -156,15 +160,25 @@ export default function MotivationalMessage({
       transition={{ duration: 0.5 }}
       className={`
         relative overflow-hidden
-        ${style.bg}
+        backdrop-blur-xl
+        bg-gradient-to-br ${style.bg}
         border-2 ${style.border}
-        shadow-xl ${style.glow}
+        shadow-2xl ${style.glow}
         rounded-2xl p-6
+        before:absolute before:inset-0 before:bg-white/10 before:backdrop-blur-3xl before:-z-10
       `}
+      style={{
+        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+      }}
     >
+      {/* Glassmorphism layers */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${style.bg} opacity-80`} />
+
       {/* Animated background pattern */}
       <motion.div
-        className="absolute inset-0 opacity-20"
+        className="absolute inset-0 opacity-10"
         animate={{
           backgroundPosition: ['0% 0%', '100% 100%'],
         }}
@@ -174,13 +188,21 @@ export default function MotivationalMessage({
           repeatType: 'reverse'
         }}
         style={{
-          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.3) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 1px)',
           backgroundSize: '30px 30px'
         }}
       />
 
+      {/* Glass shine effect */}
+      <motion.div
+        className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-t-2xl"
+        initial={{ opacity: 0.3 }}
+        animate={{ opacity: [0.3, 0.5, 0.3] }}
+        transition={{ duration: 3, repeat: Infinity }}
+      />
+
       <div className="relative z-10 flex items-center gap-4">
-        {/* Icon */}
+        {/* Icon with glass effect */}
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
@@ -189,8 +211,12 @@ export default function MotivationalMessage({
             stiffness: 260,
             damping: 20
           }}
+          className="relative"
         >
-          <Icon size={32} className="text-white drop-shadow-lg" />
+          <div className={`absolute inset-0 ${style.iconColor} opacity-20 blur-xl`} />
+          <div className="relative p-3 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30">
+            <Icon size={28} className={`${style.iconColor} drop-shadow-lg`} />
+          </div>
         </motion.div>
 
         {/* Message text */}
@@ -198,7 +224,7 @@ export default function MotivationalMessage({
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
-          className="flex-1 text-base md:text-lg font-semibold text-white drop-shadow-lg"
+          className="flex-1 text-base md:text-lg font-bold text-gray-900 dark:text-white drop-shadow-lg"
         >
           {message.text}
         </motion.p>
@@ -206,7 +232,7 @@ export default function MotivationalMessage({
 
       {/* Shimmer effect */}
       <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
         animate={{
           x: ['-100%', '100%']
         }}
@@ -217,6 +243,9 @@ export default function MotivationalMessage({
           repeatDelay: 5
         }}
       />
+
+      {/* Bottom highlight */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent" />
     </motion.div>
   );
 }

@@ -7,6 +7,7 @@ import { Camera, TrendingUp, Calendar, Upload } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, getWeek, getYear } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 
 interface MonthlyPhotoProgressProps {
   alunoId: string;
@@ -52,22 +53,6 @@ export default function MonthlyPhotoProgress({ alunoId }: MonthlyPhotoProgressPr
     return Math.min((currentPhotos / targetPhotos) * 100, 100);
   };
 
-  const getProgressColor = () => {
-    const percentage = getProgressPercentage();
-    if (percentage === 100) return 'bg-green-600';
-    if (percentage >= 75) return 'bg-yellow-600';
-    if (percentage >= 50) return 'bg-orange-600';
-    return 'bg-red-600';
-  };
-
-  const getProgressTextColor = () => {
-    const percentage = getProgressPercentage();
-    if (percentage === 100) return 'text-green-600 dark:text-green-400';
-    if (percentage >= 75) return 'text-yellow-600 dark:text-yellow-400';
-    if (percentage >= 50) return 'text-orange-600 dark:text-orange-400';
-    return 'text-red-600 dark:text-red-400';
-  };
-
   const getCurrentWeekOfMonth = () => {
     const weekOfYear = getWeek(today);
     const weekOfMonthStart = getWeek(monthStart);
@@ -80,12 +65,16 @@ export default function MonthlyPhotoProgress({ alunoId }: MonthlyPhotoProgressPr
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+      >
         <div className="animate-pulse space-y-4">
           <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
           <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -97,53 +86,76 @@ export default function MonthlyPhotoProgress({ alunoId }: MonthlyPhotoProgressPr
   }).length;
 
   return (
-    <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.6 }}
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+    >
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Camera size={24} className="text-primary-600" />
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+            <Camera size={24} className="text-purple-600 dark:text-purple-400" />
+          </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
               Progresso Mensal
             </h3>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {format(today, "MMMM 'de' yyyy", { locale: ptBR })}
             </p>
           </div>
         </div>
-        <button
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={handleUploadClick}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors text-sm font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-all shadow-md text-sm font-medium"
         >
           <Upload size={16} />
           Upload
-        </button>
+        </motion.button>
       </div>
 
       {/* Barra de Progresso */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-700 dark:text-gray-300">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Fotos do Mês
           </span>
-          <span className={`text-sm font-semibold ${getProgressTextColor()}`}>
+          <span className="text-sm font-bold text-purple-600 dark:text-purple-400">
             {monthlyPhotos.length}/4 ({Math.round(percentage)}%)
           </span>
         </div>
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-          <div
-            className={`h-3 rounded-full transition-all ${getProgressColor()}`}
-            style={{ width: `${percentage}%` }}
-          ></div>
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${percentage}%` }}
+            transition={{ duration: 1, ease: 'easeOut', delay: 0.2 }}
+            className="h-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg relative overflow-hidden"
+          >
+            {/* Shimmer effect */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+              animate={{ x: ['-100%', '100%'] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+            />
+          </motion.div>
         </div>
       </div>
 
       {/* Status da Semana */}
-      <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.4 }}
+        className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-200 dark:border-purple-700"
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Calendar size={18} className="text-blue-600 dark:text-blue-400" />
-            <span className="text-sm font-medium text-blue-900 dark:text-blue-300">
+            <Calendar size={18} className="text-purple-600 dark:text-purple-400" />
+            <span className="text-sm font-medium text-purple-900 dark:text-purple-300">
               Semana {currentWeek} de {format(monthEnd, 'MMMM', { locale: ptBR })}
             </span>
           </div>
@@ -158,54 +170,68 @@ export default function MonthlyPhotoProgress({ alunoId }: MonthlyPhotoProgressPr
             </span>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Grid de Fotos */}
       {monthlyPhotos.length > 0 ? (
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-3">
           {monthlyPhotos.map((photo, index) => (
-            <div
+            <motion.div
               key={photo.id}
-              className="relative aspect-square rounded-lg overflow-hidden border-2 border-primary-200 dark:border-primary-700 group cursor-pointer"
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.6 + index * 0.1 }}
+              className="relative aspect-square rounded-lg overflow-hidden border-2 border-purple-300 dark:border-purple-700 group cursor-pointer shadow-md hover:shadow-xl transition-shadow"
               onClick={() => router.push('/aluno/progresso')}
             >
               <img
                 src={photo.photo_url}
                 alt={`Semana ${index + 1}`}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                <span className="text-white opacity-0 group-hover:opacity-100 text-xs font-semibold">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-2">
+                <span className="text-white text-xs font-bold">
                   Semana {index + 1}
                 </span>
               </div>
-            </div>
+            </motion.div>
           ))}
           {/* Slots vazios */}
           {Array.from({ length: 4 - monthlyPhotos.length }).map((_, index) => (
-            <div
+            <motion.div
               key={`empty-${index}`}
-              className="relative aspect-square rounded-lg bg-gray-100 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:border-primary-400 dark:hover:border-primary-600 transition-colors"
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.6 + (monthlyPhotos.length + index) * 0.1 }}
+              className="relative aspect-square rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:border-purple-400 dark:hover:border-purple-600 hover:shadow-md transition-all"
               onClick={handleUploadClick}
             >
               <Camera size={24} className="text-gray-400 dark:text-gray-500" />
-            </div>
+            </motion.div>
           ))}
         </div>
       ) : (
-        <div
-          className="p-8 bg-gray-50 dark:bg-gray-900 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 text-center cursor-pointer hover:border-primary-400 dark:hover:border-primary-600 transition-colors"
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="p-8 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 text-center cursor-pointer hover:border-purple-400 dark:hover:border-purple-600 hover:shadow-md transition-all"
           onClick={handleUploadClick}
         >
-          <Camera size={48} className="mx-auto text-gray-400 mb-3" />
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
+          <motion.div
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <Camera size={48} className="mx-auto text-gray-400 mb-3" />
+          </motion.div>
+          <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
             Nenhuma foto enviada este mês
           </p>
           <p className="text-gray-500 dark:text-gray-500 text-xs mt-1">
             Clique para enviar sua primeira foto
           </p>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }
