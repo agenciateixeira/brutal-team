@@ -39,27 +39,30 @@ export default async function ProgressoPage() {
     <AppLayout profile={profile}>
       <div className="space-y-6">
         {/* Header Moderno com Liquid Glass */}
-        <div className="relative overflow-hidden backdrop-blur-2xl bg-gradient-to-r from-purple-600/80 via-pink-600/80 to-orange-600/80 rounded-2xl p-8 shadow-2xl border border-white/20">
-          {/* Liquid glass layers */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-purple-500/10"></div>
+        <div className="relative overflow-hidden backdrop-blur-2xl bg-white/40 dark:bg-gray-800/40 rounded-2xl p-8 shadow-2xl border-2 border-white/60 dark:border-gray-700/60">
+          {/* Liquid Glass Layers */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-500/10 via-blue-500/10 to-purple-500/10"></div>
 
-          {/* Glass shine effect */}
-          <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-t-2xl"></div>
+          {/* Glass shine effect - top */}
+          <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/30 to-transparent rounded-t-2xl"></div>
 
-          {/* Efeito de brilho animado */}
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLW9wYWNpdHk9IjAuMSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-20"></div>
+          {/* Shimmer animation */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+
+          {/* Grid pattern overlay */}
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30"></div>
 
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl border border-white/30 shadow-lg">
-                <TrendingUp className="text-white" size={32} />
+              <div className="p-3 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 rounded-xl border border-white/70 dark:border-gray-700/70 shadow-lg">
+                <TrendingUp className="text-primary-600 dark:text-primary-400" size={32} />
               </div>
               <div>
-                <h1 className="text-3xl md:text-4xl font-semibold text-white drop-shadow-lg">
+                <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 dark:text-white drop-shadow-sm">
                   Evolução & Progresso
                 </h1>
-                <p className="text-white/90 text-sm md:text-base mt-1 flex items-center gap-2">
-                  <Sparkles size={16} />
+                <p className="text-gray-700 dark:text-gray-300 text-sm md:text-base mt-1 flex items-center gap-2">
+                  <Sparkles size={16} className="text-primary-600 dark:text-primary-400" />
                   Sua jornada de transformação em números e imagens
                 </p>
               </div>
@@ -67,27 +70,27 @@ export default async function ProgressoPage() {
 
             {/* Stats rápidas com Liquid Glass */}
             <div className="grid grid-cols-3 gap-4 mt-6">
-              <div className="relative overflow-hidden bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/30 shadow-lg">
+              <div className="relative overflow-hidden backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 rounded-xl p-3 border border-white/70 dark:border-gray-700/70 shadow-lg">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
                 <div className="relative z-10">
-                  <p className="text-white/90 text-xs font-medium">Fotos enviadas</p>
-                  <p className="text-white text-2xl font-bold mt-1">{photos?.length || 0}</p>
+                  <p className="text-gray-600 dark:text-gray-400 text-xs font-medium">Fotos enviadas</p>
+                  <p className="text-gray-900 dark:text-white text-2xl font-bold mt-1">{photos?.length || 0}</p>
                 </div>
               </div>
-              <div className="relative overflow-hidden bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/30 shadow-lg">
+              <div className="relative overflow-hidden backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 rounded-xl p-3 border border-white/70 dark:border-gray-700/70 shadow-lg">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
                 <div className="relative z-10">
-                  <p className="text-white/90 text-xs font-medium">Semanas ativas</p>
-                  <p className="text-white text-2xl font-bold mt-1">
+                  <p className="text-gray-600 dark:text-gray-400 text-xs font-medium">Semanas ativas</p>
+                  <p className="text-gray-900 dark:text-white text-2xl font-bold mt-1">
                     {photos?.length ? Math.ceil(photos.length / 4) : 0}
                   </p>
                 </div>
               </div>
-              <div className="relative overflow-hidden bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/30 shadow-lg">
+              <div className="relative overflow-hidden backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 rounded-xl p-3 border border-white/70 dark:border-gray-700/70 shadow-lg">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
                 <div className="relative z-10">
-                  <p className="text-white/90 text-xs font-medium">Esta semana</p>
-                  <p className="text-white text-2xl font-bold mt-1">
+                  <p className="text-gray-600 dark:text-gray-400 text-xs font-medium">Esta semana</p>
+                  <p className="text-gray-900 dark:text-white text-2xl font-bold mt-1">
                     {photos?.filter(p => {
                       const weekAgo = new Date();
                       weekAgo.setDate(weekAgo.getDate() - 7);
@@ -98,6 +101,9 @@ export default async function ProgressoPage() {
               </div>
             </div>
           </div>
+
+          {/* Bottom highlight line */}
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
         </div>
 
         {/* Upload de Fotos */}
