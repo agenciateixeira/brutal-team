@@ -18,7 +18,8 @@ import {
   LogOut,
   DollarSign,
   BookOpen,
-  Gift
+  Gift,
+  Users2
 } from 'lucide-react';
 import { Profile } from '@/types';
 import { createClient } from '@/lib/supabase/client';
@@ -34,6 +35,7 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
   const supabase = createClient();
   const { showLoading } = useLoading();
   const [showMenu, setShowMenu] = useState(false);
+  const [hasReferrals, setHasReferrals] = useState(false);
   const isAluno = profile.role === 'aluno';
 
   // Prefetch das páginas principais para navegação instantânea
@@ -46,6 +48,28 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
       router.prefetch(path);
     });
   }, [isAluno, router]);
+
+  // Verificar se tem indicados (para mostrar comunidade)
+  useEffect(() => {
+    if (isAluno) {
+      checkHasReferrals();
+    }
+  }, [isAluno]);
+
+  const checkHasReferrals = async () => {
+    try {
+      const { data: referrals } = await supabase
+        .from('referrals')
+        .select('id')
+        .eq('referrer_id', profile.id)
+        .eq('status', 'active')
+        .limit(1);
+
+      setHasReferrals(referrals && referrals.length > 0);
+    } catch (error) {
+      console.error('Erro ao verificar indicações:', error);
+    }
+  };
 
   const handleLogout = async () => {
     const userName = profile.full_name || profile.email.split('@')[0];
@@ -101,6 +125,7 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
         { href: '/aluno/mensagens', icon: MessageCircle, label: 'Mensagens' },
         { href: '/aluno/progresso', icon: Calendar, label: 'Progresso' },
         { href: '/aluno/guia-nutricional', icon: BookOpen, label: 'Guia Nutricional' },
+        ...(hasReferrals ? [{ href: '/aluno/comunidade', icon: Users2, label: 'Comunidade' }] : []),
         { href: '/aluno/indicacao', icon: Gift, label: 'Indicação' },
       ]
     : [

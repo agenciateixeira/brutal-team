@@ -149,6 +149,84 @@ export default function ReferralDashboard({ profile, stats, referrals }: Referra
         </div>
       </motion.div>
 
+      {/* Desbloqueie a Comunidade */}
+      {activeCount === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden backdrop-blur-xl bg-gradient-to-br from-purple-500/90 via-pink-500/90 to-orange-500/90 rounded-2xl p-8 shadow-2xl border-2 border-white/30"
+        >
+          {/* Glass effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-purple-500/10"></div>
+          <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-t-2xl"></div>
+
+          {/* Locked badge */}
+          <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm border border-white/40 rounded-full p-3">
+            <span className="text-3xl">🔒</span>
+          </div>
+
+          <div className="relative z-10 space-y-6">
+            <div className="space-y-2">
+              <h3 className="text-2xl md:text-3xl font-black text-white drop-shadow-lg">
+                🏆 Desbloqueie a Comunidade!
+              </h3>
+              <p className="text-white/90 text-base md:text-lg font-semibold">
+                Indique <strong>1 amigo</strong> e ganhe acesso exclusivo à comunidade privada!
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { emoji: '📸', text: 'Feed de treinos' },
+                { emoji: '🏆', text: 'Ranking live' },
+                { emoji: '🔥', text: 'Streaks e check-ins' },
+                { emoji: '💬', text: 'Curtir e comentar' },
+              ].map((item, i) => (
+                <div key={i} className="bg-white/20 backdrop-blur-sm border border-white/40 rounded-xl p-3 flex items-center gap-2">
+                  <span className="text-2xl">{item.emoji}</span>
+                  <span className="text-white text-sm font-semibold">{item.text}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-white/20 backdrop-blur-sm border border-white/40 rounded-xl p-4 text-center">
+              <p className="text-white font-bold text-lg">
+                💪 Compartilhe o código abaixo e desbloqueie agora!
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative overflow-hidden backdrop-blur-xl bg-gradient-to-br from-green-500/90 via-emerald-500/90 to-teal-500/90 rounded-2xl p-6 shadow-2xl border-2 border-white/30"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-green-500/10"></div>
+          <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-t-2xl"></div>
+
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="p-4 bg-white/20 backdrop-blur-sm border border-white/40 rounded-xl">
+              <span className="text-4xl">🎉</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-black text-white drop-shadow-lg mb-1">
+                Comunidade Desbloqueada!
+              </h3>
+              <p className="text-white/90 text-sm font-semibold">
+                Você tem acesso à comunidade privada. Compartilhe treinos e compita com seus amigos!
+              </p>
+            </div>
+            <a
+              href="/aluno/comunidade"
+              className="flex-shrink-0 px-6 py-3 bg-white text-green-600 font-bold rounded-xl hover:bg-gray-100 transition-colors shadow-lg"
+            >
+              Acessar
+            </a>
+          </div>
+        </motion.div>
+      )}
+
       {/* Seu Código */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">

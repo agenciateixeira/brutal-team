@@ -16,6 +16,7 @@ import {
   X,
   LogOut,
   Users,
+  Users2,
   DollarSign,
   FileText,
   BookOpen,
@@ -47,6 +48,7 @@ export default function Sidebar({ profile }: SidebarProps) {
     treinos: 0,
     protocolos: 0,
   });
+  const [hasReferrals, setHasReferrals] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
@@ -69,6 +71,7 @@ export default function Sidebar({ profile }: SidebarProps) {
   useEffect(() => {
     if (!isCoach) {
       loadUnreadCounts();
+      checkHasReferrals();
 
       // Subscription apenas para mensagens (único com controle de read/unread)
       const messagesChannel = supabase
@@ -88,6 +91,21 @@ export default function Sidebar({ profile }: SidebarProps) {
       };
     }
   }, [isCoach, profile.id]);
+
+  const checkHasReferrals = async () => {
+    try {
+      const { data: referrals } = await supabase
+        .from('referrals')
+        .select('id')
+        .eq('referrer_id', profile.id)
+        .eq('status', 'active')
+        .limit(1);
+
+      setHasReferrals(referrals && referrals.length > 0);
+    } catch (error) {
+      console.error('Erro ao verificar indicações:', error);
+    }
+  };
 
   const loadUnreadCounts = async () => {
     try {
@@ -125,6 +143,7 @@ export default function Sidebar({ profile }: SidebarProps) {
     { icon: Dumbbell, label: 'Treino', href: '/aluno/treino' },
     { icon: Syringe, label: 'Protocolo', href: '/aluno/protocolo' },
     { icon: BookOpen, label: 'Guia Nutricional', href: '/aluno/guia-nutricional' },
+    ...(hasReferrals ? [{ icon: Users2, label: 'Comunidade', href: '/aluno/comunidade' }] : []),
     { icon: Gift, label: 'Indicação', href: '/aluno/indicacao' },
     { icon: User, label: 'Perfil', href: '/aluno/perfil' },
   ];
