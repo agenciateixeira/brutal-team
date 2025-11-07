@@ -254,7 +254,7 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed inset-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg z-50 bg-white dark:bg-gray-800 md:rounded-2xl shadow-2xl flex flex-col md:max-h-[90vh]"
+              className="fixed inset-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg z-50 bg-white dark:bg-gray-800 md:rounded-2xl shadow-2xl flex flex-col max-h-screen md:max-h-[90vh]"
             >
               {/* Header */}
               <div className="flex-shrink-0 bg-gradient-to-r from-primary-600 to-blue-600 text-white p-4 flex items-center justify-between">
@@ -272,10 +272,10 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
               </div>
 
               {/* Content - Scrollable */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
                 {/* Preview ou upload */}
                 {preview ? (
-                  <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-900">
+                  <div className="relative w-full rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-900" style={{ aspectRatio: '1' }}>
                     <Image
                       src={preview}
                       alt="Preview"
@@ -295,7 +295,7 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
                 ) : (
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="aspect-square rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-primary-500 dark:hover:border-primary-500 transition-colors cursor-pointer bg-gray-50 dark:bg-gray-900/50 flex flex-col items-center justify-center gap-3 group"
+                    className="w-full min-h-[250px] md:min-h-[300px] rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-primary-500 dark:hover:border-primary-500 transition-colors cursor-pointer bg-gray-50 dark:bg-gray-900/50 flex flex-col items-center justify-center gap-3 group p-8"
                   >
                     <div className="p-4 bg-primary-100 dark:bg-primary-900/50 rounded-full group-hover:scale-110 transition-transform">
                       <ImageIcon className="text-primary-600" size={32} />
@@ -394,7 +394,7 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed inset-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg z-50 bg-white dark:bg-gray-800 md:rounded-2xl shadow-2xl flex flex-col md:max-h-[90vh]"
+              className="fixed inset-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg z-50 bg-white dark:bg-gray-800 md:rounded-2xl shadow-2xl flex flex-col max-h-screen md:max-h-[90vh]"
             >
               {/* Header */}
               <div className="flex-shrink-0 bg-gradient-to-r from-primary-600 to-blue-600 text-white p-4 flex items-center justify-between">
@@ -412,7 +412,7 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
               </div>
 
               {/* Content - Scrollable */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
                 {/* Textarea */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
