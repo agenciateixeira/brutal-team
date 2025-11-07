@@ -249,12 +249,12 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
             />
 
-            {/* Modal - MOBILE: fullscreen fixo, DESKTOP: centralizado */}
+            {/* Modal - MOBILE: bottom sheet, DESKTOP: centralizado menor */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed inset-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg z-50 bg-white dark:bg-gray-800 md:rounded-2xl shadow-2xl flex flex-col max-h-screen md:max-h-[90vh]"
+              className="fixed bottom-0 left-0 right-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-md z-50 bg-white dark:bg-gray-800 rounded-t-2xl md:rounded-2xl shadow-2xl flex flex-col max-h-[85vh] md:max-h-[70vh]"
             >
               {/* Header */}
               <div className="flex-shrink-0 bg-gradient-to-r from-primary-600 to-blue-600 text-white p-3 flex items-center justify-between rounded-t-2xl">
@@ -382,12 +382,12 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
             />
 
-            {/* Modal - MOBILE: fullscreen fixo, DESKTOP: centralizado */}
+            {/* Modal - MOBILE: bottom sheet, DESKTOP: centralizado menor */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed inset-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg z-50 bg-white dark:bg-gray-800 md:rounded-2xl shadow-2xl flex flex-col max-h-screen md:max-h-[90vh]"
+              className="fixed bottom-0 left-0 right-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-md z-50 bg-white dark:bg-gray-800 rounded-t-2xl md:rounded-2xl shadow-2xl flex flex-col max-h-[85vh] md:max-h-[70vh]"
             >
               {/* Header */}
               <div className="flex-shrink-0 bg-gradient-to-r from-primary-600 to-blue-600 text-white p-3 flex items-center justify-between rounded-t-2xl">
