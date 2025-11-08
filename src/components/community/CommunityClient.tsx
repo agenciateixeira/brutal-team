@@ -30,7 +30,7 @@ interface RankingMember extends TopMember {
   total_posts: number;
 }
 
-interface Friend {
+interface Student {
   id: string;
   full_name: string;
   avatar_url: string | null;
@@ -43,7 +43,7 @@ interface CommunityClientProps {
   initialPosts: any[];
   rankingMembers: RankingMember[];
   currentUserId: string;
-  friends: Friend[];
+  allStudents: Student[];
 }
 
 export default function CommunityClient({
@@ -53,7 +53,7 @@ export default function CommunityClient({
   initialPosts,
   rankingMembers,
   currentUserId,
-  friends,
+  allStudents,
 }: CommunityClientProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const router = useRouter();
@@ -109,6 +109,7 @@ export default function CommunityClient({
       <FloatingPostButton
         alunoId={currentUserId}
         communityId={currentCommunity.id}
+        allStudents={allStudents}
       />
 
       {/* Create Community Modal */}
@@ -117,7 +118,7 @@ export default function CommunityClient({
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={handleCreateSuccess}
         alunoId={currentUserId}
-        friends={friends}
+        friends={allStudents}
       />
     </div>
   );

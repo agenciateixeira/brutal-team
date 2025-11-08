@@ -1,27 +1,36 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Camera, X, Upload, Loader2, Image as ImageIcon, Plus, UserPlus, MessageSquare } from 'lucide-react';
+import { Camera, X, Upload, Loader2, Image as ImageIcon, Plus, UserPlus, MessageSquare, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import Toast from '@/components/ui/Toast';
 import Image from 'next/image';
+import CreateCommunityModal from './CreateCommunityModal';
+
+interface Student {
+  id: string;
+  full_name: string;
+  avatar_url: string | null;
+}
 
 interface FloatingPostButtonProps {
   alunoId: string;
   communityId: string;
+  allStudents: Student[];
   onPostCreated?: () => void;
 }
 
 type ModalType = 'menu' | 'photo' | 'text' | null;
 
-export default function FloatingPostButton({ alunoId, communityId, onPostCreated }: FloatingPostButtonProps) {
+export default function FloatingPostButton({ alunoId, communityId, allStudents, onPostCreated }: FloatingPostButtonProps) {
   const [modalType, setModalType] = useState<ModalType>(null);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
   const [textPost, setTextPost] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isCreateCommunityModalOpen, setIsCreateCommunityModalOpen] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
@@ -267,12 +276,28 @@ export default function FloatingPostButton({ alunoId, communityId, onPostCreated
                   </div>
                 </button>
 
+                <button
+                  onClick={() => {
+                    setModalType(null);
+                    setIsCreateCommunityModalOpen(true);
+                  }}
+                  className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group"
+                >
+                  <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-full group-hover:scale-110 transition-transform">
+                    <Users className="text-purple-600" size={24} />
+                  </div>
+                  <div className="text-left flex-1">
+                    <p className="font-semibold text-gray-900 dark:text-white">Criar Comunidade Privada</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Grupo exclusivo com amigos</p>
+                  </div>
+                </button>
+
                 <a
                   href="/aluno/indicacao"
                   className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group"
                 >
-                  <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-full group-hover:scale-110 transition-transform">
-                    <UserPlus className="text-purple-600" size={24} />
+                  <div className="p-3 bg-orange-100 dark:bg-orange-900/50 rounded-full group-hover:scale-110 transition-transform">
+                    <UserPlus className="text-orange-600" size={24} />
                   </div>
                   <div className="text-left flex-1">
                     <p className="font-semibold text-gray-900 dark:text-white">Convidar Amigo</p>
@@ -516,6 +541,18 @@ export default function FloatingPostButton({ alunoId, communityId, onPostCreated
           onClose={() => setToast(null)}
         />
       )}
+
+      {/* Create Community Modal */}
+      <CreateCommunityModal
+        isOpen={isCreateCommunityModalOpen}
+        onClose={() => setIsCreateCommunityModalOpen(false)}
+        onSuccess={() => {
+          setIsCreateCommunityModalOpen(false);
+          onPostCreated?.();
+        }}
+        alunoId={alunoId}
+        friends={allStudents}
+      />
     </>
   );
 }

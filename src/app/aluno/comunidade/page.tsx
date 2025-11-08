@@ -51,47 +51,49 @@ export default async function ComunidadePage({
 
   const communities = userCommunities?.map((uc: any) => uc.communities).filter(Boolean) || [];
 
-  // Se houver erro (tabela não existe) ou não tem comunidades, usar sistema antigo baseado em rede
-  if (communitiesError || communities.length === 0) {
-    // Verificar se o usuário tem indicados (sistema antigo)
-    const { data: referrals } = await supabase
-      .from('referrals')
-      .select('id')
-      .eq('referrer_id', session.user.id)
-      .eq('status', 'active');
-
-    const hasReferrals = referrals && referrals.length > 0;
-
-    // Se não tem indicados E não tem comunidades, redirecionar
-    if (!hasReferrals && communities.length === 0) {
-      redirect('/aluno/indicacao');
-    }
-
-    // Se tem indicados mas não tem comunidades (migration não foi executada), usar view antiga
-    if (hasReferrals && communities.length === 0) {
-      // Sistema antigo - redirecionar para versão sem múltiplas comunidades
-      // Por enquanto, mostrar mensagem
-      return (
-        <AppLayout profile={profile}>
-          <div className="min-h-[70vh] flex items-center justify-center p-4">
-            <div className="max-w-2xl mx-auto text-center space-y-6 p-8 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-800 rounded-2xl">
-              <div className="text-6xl mb-4">⚠️</div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Migração Pendente
-              </h1>
-              <p className="text-lg text-gray-700 dark:text-gray-300">
-                O sistema de comunidades foi atualizado! Para acessar as novas funcionalidades, é necessário executar a migração do banco de dados.
-              </p>
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-left">
-                <p className="font-semibold text-gray-900 dark:text-white mb-2">Execute no Supabase:</p>
-                <code className="text-sm text-gray-600 dark:text-gray-400">
-                  sql/add_multiple_communities.sql
-                </code>
-              </div>
+  // Se houver erro de tabela não existir, mostrar mensagem de migração
+  if (communitiesError && communitiesError.code === '42P01') {
+    return (
+      <AppLayout profile={profile}>
+        <div className="min-h-[70vh] flex items-center justify-center p-4">
+          <div className="max-w-2xl mx-auto text-center space-y-6 p-8 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-800 rounded-2xl">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Migração Pendente
+            </h1>
+            <p className="text-lg text-gray-700 dark:text-gray-300">
+              O sistema de comunidades foi atualizado! Execute a migração do banco de dados.
+            </p>
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-left">
+              <p className="font-semibold text-gray-900 dark:text-white mb-2">Execute no Supabase:</p>
+              <code className="text-sm text-gray-600 dark:text-gray-400">
+                sql/add_multiple_communities.sql
+              </code>
             </div>
-          </AppLayout>
-        );
-    }
+          </div>
+        </AppLayout>
+      );
+  }
+
+  // Se não tem comunidades, algo deu errado - usuário deveria estar na pública
+  if (communities.length === 0) {
+    return (
+      <AppLayout profile={profile}>
+        <div className="min-h-[70vh] flex items-center justify-center p-4">
+          <div className="max-w-2xl mx-auto text-center space-y-6 p-8 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-2xl">
+            <div className="text-6xl mb-4">❌</div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Erro de Configuração
+            </h1>
+            <p className="text-lg text-gray-700 dark:text-gray-300">
+              Você não foi adicionado à comunidade pública automaticamente.
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Entre em contato com o suporte ou execute a migração novamente.
+            </p>
+          </div>
+        </AppLayout>
+      );
   }
 
   // Comunidade atual (da query string ou pública por padrão)
@@ -151,17 +153,12 @@ export default async function ComunidadePage({
       total_posts: member.total_posts,
     })) || [];
 
-  // Buscar amigos da rede (para adicionar em comunidades privadas)
-  const { data: networkMembers } = await supabase.rpc('get_community_network', {
-    user_id: session.user.id,
-  });
-
-  const friendIds = networkMembers?.map((m: any) => m.member_id).filter((id: string) => id !== session.user.id) || [];
-
-  const { data: friends } = await supabase
+  // Buscar TODOS os alunos (para adicionar em comunidades privadas)
+  const { data: allStudents } = await supabase
     .from('profiles')
     .select('id, full_name, avatar_url')
-    .in('id', friendIds)
+    .eq('role', 'aluno')
+    .neq('id', session.user.id)
     .order('full_name');
 
   // Contar membros de cada comunidade
@@ -191,7 +188,7 @@ export default async function ComunidadePage({
         initialPosts={communityPosts || []}
         rankingMembers={rankingMembers}
         currentUserId={session.user.id}
-        friends={friends || []}
+        allStudents={allStudents || []}
       />
     </AppLayout>
   );
