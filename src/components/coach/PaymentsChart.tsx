@@ -20,21 +20,38 @@ export default function PaymentsChart({ paymentHistory, students }: PaymentsChar
   // Calcular datas baseado no período
   const { startDate, endDate } = useMemo(() => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalizar para meia-noite
 
     switch (period) {
       case 'today':
         return { startDate: today, endDate: today };
       case '7days':
-        return { startDate: subDays(today, 6), endDate: today };
+        const sevenDaysAgo = subDays(today, 6);
+        sevenDaysAgo.setHours(0, 0, 0, 0);
+        return { startDate: sevenDaysAgo, endDate: today };
       case 'month':
-        return { startDate: startOfMonth(today), endDate: endOfMonth(today) };
+        const monthStart = startOfMonth(today);
+        const monthEnd = endOfMonth(today);
+        monthStart.setHours(0, 0, 0, 0);
+        monthEnd.setHours(23, 59, 59, 999);
+        return { startDate: monthStart, endDate: monthEnd };
       case 'custom':
-        return {
-          startDate: customStartDate ? new Date(customStartDate) : startOfMonth(today),
-          endDate: customEndDate ? new Date(customEndDate) : endOfMonth(today)
-        };
+        if (customStartDate && customEndDate) {
+          const start = new Date(customStartDate + 'T00:00:00');
+          const end = new Date(customEndDate + 'T23:59:59');
+          return { startDate: start, endDate: end };
+        }
+        const defaultStart = startOfMonth(today);
+        const defaultEnd = endOfMonth(today);
+        defaultStart.setHours(0, 0, 0, 0);
+        defaultEnd.setHours(23, 59, 59, 999);
+        return { startDate: defaultStart, endDate: defaultEnd };
       default:
-        return { startDate: startOfMonth(today), endDate: endOfMonth(today) };
+        const defStart = startOfMonth(today);
+        const defEnd = endOfMonth(today);
+        defStart.setHours(0, 0, 0, 0);
+        defEnd.setHours(23, 59, 59, 999);
+        return { startDate: defStart, endDate: defEnd };
     }
   }, [period, customStartDate, customEndDate]);
 
@@ -42,6 +59,7 @@ export default function PaymentsChart({ paymentHistory, students }: PaymentsChar
   const filteredPayments = useMemo(() => {
     return paymentHistory.filter(payment => {
       const paymentDate = new Date(payment.payment_date || payment.created_at);
+      paymentDate.setHours(0, 0, 0, 0); // Normalizar para meia-noite
       return paymentDate >= startDate && paymentDate <= endDate;
     });
   }, [paymentHistory, startDate, endDate]);
@@ -132,14 +150,14 @@ export default function PaymentsChart({ paymentHistory, students }: PaymentsChar
   return (
     <div className="space-y-6">
       {/* Filtros de Período */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center gap-4">
-          <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-            <Calendar size={18} className="text-primary-600" />
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 flex-shrink-0">
+            <Calendar size={18} className="text-primary-600 flex-shrink-0" />
             Período:
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 min-w-0">
             <button
               onClick={() => setPeriod('today')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
@@ -186,8 +204,8 @@ export default function PaymentsChart({ paymentHistory, students }: PaymentsChar
 
         {/* Date pickers para período personalizado */}
         {period === 'custom' && (
-          <div className="flex flex-col sm:flex-row gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex-1">
+          <div className="flex flex-col sm:flex-row gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 min-w-0 w-full">
+            <div className="flex-1 min-w-0">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Data Início
               </label>
@@ -195,10 +213,10 @@ export default function PaymentsChart({ paymentHistory, students }: PaymentsChar
                 type="date"
                 value={customStartDate}
                 onChange={(e) => setCustomStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 min-w-0"
               />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Data Fim
               </label>
@@ -206,7 +224,7 @@ export default function PaymentsChart({ paymentHistory, students }: PaymentsChar
                 type="date"
                 value={customEndDate}
                 onChange={(e) => setCustomEndDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 min-w-0"
               />
             </div>
           </div>
