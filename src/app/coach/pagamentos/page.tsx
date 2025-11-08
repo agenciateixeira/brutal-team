@@ -30,20 +30,34 @@ export default async function CoachPagamentosPage() {
     redirect('/aluno/dashboard');
   }
 
-  // Buscar planos ativos para o gráfico
-  const { data: plans } = await supabase
+  // Buscar TODOS os históricos de pagamentos (sem limit) para o gráfico
+  const { data: paymentHistory } = await supabase
+    .from('payment_history')
+    .select(`
+      *,
+      profiles!payment_history_aluno_id_fkey (
+        id,
+        full_name,
+        email
+      )
+    `)
+    .order('created_at', { ascending: false });
+
+  // Buscar TODOS os alunos (ativos e inativos) para calcular churn
+  const { data: allStudents } = await supabase
     .from('student_plans')
-    .select('*')
-    .eq('is_active', true);
+    .select(`
+      *,
+      profiles!student_plans_aluno_id_fkey (
+        id,
+        full_name,
+        email,
+        payment_status
+      )
+    `)
+    .order('created_at', { ascending: false });
 
-  // Contar planos por tipo
-  const plansByType = {
-    mensal: plans?.filter(p => p.plan_type === 'mensal').length || 0,
-    semestral: plans?.filter(p => p.plan_type === 'semestral').length || 0,
-    anual: plans?.filter(p => p.plan_type === 'anual').length || 0,
-  };
-
-  // Buscar histórico de pagamentos recente
+  // Buscar pagamentos recentes para a lista
   const { data: recentPayments } = await supabase
     .from('payment_history')
     .select(`
@@ -57,7 +71,7 @@ export default async function CoachPagamentosPage() {
     .order('created_at', { ascending: false })
     .limit(20);
 
-  // Buscar alunos com planos ativos
+  // Buscar alunos ativos para a lista
   const { data: activeStudents } = await supabase
     .from('student_plans')
     .select(`
@@ -86,8 +100,11 @@ export default async function CoachPagamentosPage() {
             </p>
           </div>
 
-          {/* Gráfico de Distribuição de Planos */}
-          <PaymentsChart plansByType={plansByType} />
+          {/* Gráfico de Evolução Financeira */}
+          <PaymentsChart
+            paymentHistory={paymentHistory || []}
+            students={allStudents || []}
+          />
 
           {/* Lista de Alunos Ativos */}
           <PaymentsList
