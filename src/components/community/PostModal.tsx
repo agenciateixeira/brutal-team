@@ -68,10 +68,25 @@ export default function PostModal({ post, currentUserId, isOpen, onClose }: Post
 
   const handleLike = async () => {
     if (loading) return;
+
+    const wasLiked = isLiked;
+    const currentLikes = [...likes];
+
+    // ✅ ATUALIZAÇÃO OTIMISTA - Atualiza UI imediatamente
+    setIsLiked(!wasLiked);
+    if (wasLiked) {
+      // Remover curtida da UI
+      setLikes(likes.filter(like => like.aluno_id !== currentUserId));
+    } else {
+      // Adicionar curtida na UI
+      setLikes([...likes, { id: 'temp', aluno_id: currentUserId }]);
+    }
+
     setLoading(true);
 
+    // 🔥 Sincronizar com banco de dados em background
     try {
-      if (isLiked) {
+      if (wasLiked) {
         await supabase
           .from('community_likes')
           .delete()
@@ -82,9 +97,13 @@ export default function PostModal({ post, currentUserId, isOpen, onClose }: Post
           .from('community_likes')
           .insert({ post_id: post.id, aluno_id: currentUserId });
       }
+      // Recarregar dados para ter certeza que está sincronizado
       await loadData();
     } catch (error) {
       console.error('Erro ao curtir:', error);
+      // Reverter mudanças em caso de erro
+      setIsLiked(wasLiked);
+      setLikes(currentLikes);
     } finally {
       setLoading(false);
     }
