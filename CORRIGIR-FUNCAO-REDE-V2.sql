@@ -64,7 +64,13 @@ $$ LANGUAGE plpgsql STABLE;
 -- 3. RECRIAR POLICIES DE POSTS
 -- ============================================
 
--- Alunos podem ver próprios posts + posts da rede
+-- Remover policies antigas se existirem
+DROP POLICY IF EXISTS "Alunos podem ver posts da sua rede" ON community_posts;
+DROP POLICY IF EXISTS "Coaches podem ver todos os posts" ON community_posts;
+DROP POLICY IF EXISTS "Alunos podem criar posts" ON community_posts;
+DROP POLICY IF EXISTS "Alunos podem deletar seus posts" ON community_posts;
+
+-- Alunos podem ver próprios posts + posts da rede (EXCLUSIVO - coaches NÃO veem)
 CREATE POLICY "Alunos podem ver posts da sua rede"
 ON community_posts FOR SELECT
 USING (
@@ -73,20 +79,25 @@ USING (
   )
 );
 
--- Coaches podem ver todos os posts
-CREATE POLICY "Coaches podem ver todos os posts"
-ON community_posts FOR SELECT
-USING (
-  EXISTS (
-    SELECT 1 FROM profiles
-    WHERE profiles.id = auth.uid()
-    AND profiles.role = 'coach'
-  )
-);
+-- Alunos podem criar posts
+CREATE POLICY "Alunos podem criar posts"
+ON community_posts FOR INSERT
+WITH CHECK (auth.uid() = aluno_id);
+
+-- Alunos podem deletar posts
+CREATE POLICY "Alunos podem deletar seus posts"
+ON community_posts FOR DELETE
+USING (auth.uid() = aluno_id);
 
 -- ============================================
 -- 4. RECRIAR POLICIES DE LIKES
 -- ============================================
+
+-- Remover policies antigas se existirem
+DROP POLICY IF EXISTS "Alunos podem ver curtidas da rede" ON community_likes;
+DROP POLICY IF EXISTS "Alunos podem curtir posts da rede" ON community_likes;
+DROP POLICY IF EXISTS "Alunos podem remover curtidas" ON community_likes;
+DROP POLICY IF EXISTS "Coaches podem ver todas as curtidas" ON community_likes;
 
 -- Alunos podem ver curtidas de posts da rede
 CREATE POLICY "Alunos podem ver curtidas da rede"
@@ -113,9 +124,20 @@ WITH CHECK (
   )
 );
 
+-- Alunos podem remover suas curtidas
+CREATE POLICY "Alunos podem remover curtidas"
+ON community_likes FOR DELETE
+USING (auth.uid() = aluno_id);
+
 -- ============================================
 -- 5. RECRIAR POLICIES DE COMMENTS
 -- ============================================
+
+-- Remover policies antigas se existirem
+DROP POLICY IF EXISTS "Alunos podem ver comentários da rede" ON community_comments;
+DROP POLICY IF EXISTS "Alunos podem comentar posts da rede" ON community_comments;
+DROP POLICY IF EXISTS "Alunos podem deletar comentários" ON community_comments;
+DROP POLICY IF EXISTS "Coaches podem ver todos os comentários" ON community_comments;
 
 -- Alunos podem ver comentários da rede
 CREATE POLICY "Alunos podem ver comentários da rede"
@@ -142,9 +164,19 @@ WITH CHECK (
   )
 );
 
+-- Alunos podem deletar seus comentários
+CREATE POLICY "Alunos podem deletar comentários"
+ON community_comments FOR DELETE
+USING (auth.uid() = aluno_id);
+
 -- ============================================
 -- 6. RECRIAR POLICIES DE CHECK-INS
 -- ============================================
+
+-- Remover policies antigas se existirem
+DROP POLICY IF EXISTS "Alunos podem ver check-ins da rede" ON community_check_ins;
+DROP POLICY IF EXISTS "Alunos podem criar check-ins" ON community_check_ins;
+DROP POLICY IF EXISTS "Coaches podem ver todos check-ins" ON community_check_ins;
 
 -- Alunos podem ver check-ins da rede
 CREATE POLICY "Alunos podem ver check-ins da rede"
@@ -155,16 +187,10 @@ USING (
   )
 );
 
--- Coaches podem ver todos os check-ins
-CREATE POLICY "Coaches podem ver todos check-ins"
-ON community_check_ins FOR SELECT
-USING (
-  EXISTS (
-    SELECT 1 FROM profiles
-    WHERE profiles.id = auth.uid()
-    AND profiles.role = 'coach'
-  )
-);
+-- Alunos podem criar check-ins
+CREATE POLICY "Alunos podem criar check-ins"
+ON community_check_ins FOR INSERT
+WITH CHECK (auth.uid() = aluno_id);
 
 -- ============================================
 -- 7. RECRIAR VIEW community_stats
@@ -203,3 +229,5 @@ GROUP BY p.id, p.full_name;
 -- ✅ Desce pegando todos os membros
 -- ✅ Todas as policies foram recriadas
 -- ✅ View community_stats recriada
+-- 🔒 COMUNIDADE EXCLUSIVA - Coaches NÃO veem posts
+-- 🔒 Apenas alunos da mesma rede veem entre si
