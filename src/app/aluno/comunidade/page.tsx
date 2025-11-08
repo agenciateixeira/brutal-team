@@ -36,7 +36,7 @@ export default async function ComunidadePage({
   }
 
   // Buscar todas as comunidades do usuário
-  const { data: userCommunities } = await supabase
+  const { data: userCommunities, error: communitiesError } = await supabase
     .from('community_members')
     .select(`
       community_id,
@@ -49,11 +49,49 @@ export default async function ComunidadePage({
     `)
     .eq('aluno_id', session.user.id);
 
-  const communities = userCommunities?.map((uc: any) => uc.communities) || [];
+  const communities = userCommunities?.map((uc: any) => uc.communities).filter(Boolean) || [];
 
-  // Se não tem nenhuma comunidade, redirecionar para página de setup
-  if (communities.length === 0) {
-    redirect('/aluno/indicacao');
+  // Se houver erro (tabela não existe) ou não tem comunidades, usar sistema antigo baseado em rede
+  if (communitiesError || communities.length === 0) {
+    // Verificar se o usuário tem indicados (sistema antigo)
+    const { data: referrals } = await supabase
+      .from('referrals')
+      .select('id')
+      .eq('referrer_id', session.user.id)
+      .eq('status', 'active');
+
+    const hasReferrals = referrals && referrals.length > 0;
+
+    // Se não tem indicados E não tem comunidades, redirecionar
+    if (!hasReferrals && communities.length === 0) {
+      redirect('/aluno/indicacao');
+    }
+
+    // Se tem indicados mas não tem comunidades (migration não foi executada), usar view antiga
+    if (hasReferrals && communities.length === 0) {
+      // Sistema antigo - redirecionar para versão sem múltiplas comunidades
+      // Por enquanto, mostrar mensagem
+      return (
+        <AppLayout profile={profile}>
+          <div className="min-h-[70vh] flex items-center justify-center p-4">
+            <div className="max-w-2xl mx-auto text-center space-y-6 p-8 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-800 rounded-2xl">
+              <div className="text-6xl mb-4">⚠️</div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                Migração Pendente
+              </h1>
+              <p className="text-lg text-gray-700 dark:text-gray-300">
+                O sistema de comunidades foi atualizado! Para acessar as novas funcionalidades, é necessário executar a migração do banco de dados.
+              </p>
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-left">
+                <p className="font-semibold text-gray-900 dark:text-white mb-2">Execute no Supabase:</p>
+                <code className="text-sm text-gray-600 dark:text-gray-400">
+                  sql/add_multiple_communities.sql
+                </code>
+              </div>
+            </div>
+          </AppLayout>
+        );
+    }
   }
 
   // Comunidade atual (da query string ou pública por padrão)
