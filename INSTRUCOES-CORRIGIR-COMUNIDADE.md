@@ -21,10 +21,11 @@ Mas **NÃO retornava**:
 
 ## ✅ SOLUÇÃO
 
-Execute **2 arquivos SQL** no Supabase (nesta ordem):
+Execute **3 arquivos SQL** no Supabase (nesta ordem):
 
-1. **`CORRIGIR-FUNCAO-REDE.sql`** ← Corrige a função de rede
-2. **`CORRIGIR-POLICIES-REDE.sql`** ← Corrige as políticas (IMPORTANTE!)
+1. **`CORRIGIR-FUNCAO-REDE-V2.sql`** ← Função de rede + recria policies (VERSÃO ATUALIZADA!)
+2. **`CORRIGIR-POLICIES-REDE.sql`** ← Políticas adicionais + check-ins
+3. **`CORRIGIR-POST-TEXTO.sql`** ← Permite posts sem foto
 
 ---
 
@@ -38,8 +39,8 @@ Execute **2 arquivos SQL** no Supabase (nesta ordem):
 - No menu lateral, clique em **SQL Editor**
 - Clique em **"New query"**
 
-### 3. Execute o PRIMEIRO SQL
-- Abra o arquivo: **`CORRIGIR-FUNCAO-REDE.sql`**
+### 3. Execute o PRIMEIRO SQL (V2 - ATUALIZADO!)
+- Abra o arquivo: **`CORRIGIR-FUNCAO-REDE-V2.sql`**
 - Copie **TODO** o conteúdo
 - Cole no SQL Editor do Supabase
 - Clique em **"Run"** (ou pressione Ctrl+Enter)
@@ -53,7 +54,15 @@ Execute **2 arquivos SQL** no Supabase (nesta ordem):
 - Clique em **"Run"**
 - Aguarde a mensagem de sucesso
 
-### 5. Verifique
+### 5. Execute o TERCEIRO SQL
+- Clique em **"New query"** novamente
+- Abra o arquivo: **`CORRIGIR-POST-TEXTO.sql`**
+- Copie **TODO** o conteúdo
+- Cole no SQL Editor
+- Clique em **"Run"**
+- Aguarde a mensagem de sucesso
+
+### 6. Verifique
 - Volte na aplicação (http://localhost:3001)
 - Faça **F5** para recarregar
 - Teste:
