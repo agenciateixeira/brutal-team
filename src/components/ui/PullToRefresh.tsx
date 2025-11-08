@@ -15,9 +15,9 @@ export default function PullToRefresh() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [startTime, setStartTime] = useState(0);
   const router = useRouter();
-  const pullThreshold = 120; // Distância para ativar refresh
-  const minActivationDistance = 80; // AUMENTADO: Precisa puxar 80px antes do indicador aparecer
-  const minPullSpeed = 0.5; // AUMENTADO: Velocidade mínima mais exigente (evita arrastar lento)
+  const pullThreshold = 150; // Distância para ativar refresh
+  const minActivationDistance = 120; // MUITO AUMENTADO: Precisa puxar 120px antes do indicador aparecer
+  const minPullSpeed = 1.0; // MUITO AUMENTADO: Precisa ser uma puxada RÁPIDA e intencional
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
