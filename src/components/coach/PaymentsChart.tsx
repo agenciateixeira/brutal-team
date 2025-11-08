@@ -12,10 +12,14 @@ interface PaymentsChartProps {
 
 type PeriodFilter = 'today' | '7days' | 'month' | 'custom';
 
-export default function PaymentsChart({ paymentHistory, students }: PaymentsChartProps) {
+export default function PaymentsChart({ paymentHistory = [], students = [] }: PaymentsChartProps) {
   const [period, setPeriod] = useState<PeriodFilter>('month');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
+
+  // Garantir que sempre temos arrays válidos
+  const safePaymentHistory = Array.isArray(paymentHistory) ? paymentHistory : [];
+  const safeStudents = Array.isArray(students) ? students : [];
 
   // Calcular datas baseado no período
   const { startDate, endDate } = useMemo(() => {
@@ -57,12 +61,12 @@ export default function PaymentsChart({ paymentHistory, students }: PaymentsChar
 
   // Filtrar pagamentos pelo período
   const filteredPayments = useMemo(() => {
-    return paymentHistory.filter(payment => {
+    return safePaymentHistory.filter(payment => {
       const paymentDate = new Date(payment.payment_date || payment.created_at);
       paymentDate.setHours(0, 0, 0, 0); // Normalizar para meia-noite
       return paymentDate >= startDate && paymentDate <= endDate;
     });
-  }, [paymentHistory, startDate, endDate]);
+  }, [safePaymentHistory, startDate, endDate]);
 
   // Calcular métricas
   const metrics = useMemo(() => {
@@ -70,25 +74,25 @@ export default function PaymentsChart({ paymentHistory, students }: PaymentsChar
     const totalRevenue = filteredPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
     // MRR (Monthly Recurring Revenue) - soma dos valores mensais dos planos ativos
-    const mrr = students
+    const mrr = safeStudents
       .filter(s => s.is_active)
       .reduce((sum, s) => sum + (s.monthly_value || 0), 0);
 
     // Churn - alunos inativos no período / total de alunos
-    const inactiveStudents = students.filter(s => !s.is_active);
-    const churnRate = students.length > 0 ? (inactiveStudents.length / students.length) * 100 : 0;
+    const inactiveStudents = safeStudents.filter(s => !s.is_active);
+    const churnRate = safeStudents.length > 0 ? (inactiveStudents.length / safeStudents.length) * 100 : 0;
 
     // Total de alunos ativos
-    const activeStudents = students.filter(s => s.is_active).length;
+    const activeStudents = safeStudents.filter(s => s.is_active).length;
 
     return {
       totalRevenue,
       mrr,
       churnRate,
       activeStudents,
-      totalStudents: students.length
+      totalStudents: safeStudents.length
     };
-  }, [filteredPayments, students]);
+  }, [filteredPayments, safeStudents]);
 
   // Dados para o gráfico de linhas (tipo mercado financeiro)
   const chartData = useMemo(() => {

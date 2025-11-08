@@ -185,7 +185,10 @@ export default function LoginPage() {
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
 
-          <div className="text-center">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-center">
+            <Link href="/recuperar-senha" className="text-sm text-gray-600 hover:text-primary-600 font-medium transition-colors">
+              Esqueci minha senha
+            </Link>
             <Link href="/cadastro" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
               Não tem uma conta? Cadastre-se
             </Link>
