@@ -9,12 +9,13 @@ import Image from 'next/image';
 
 interface FloatingPostButtonProps {
   alunoId: string;
+  communityId: string;
   onPostCreated?: () => void;
 }
 
 type ModalType = 'menu' | 'photo' | 'text' | null;
 
-export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingPostButtonProps) {
+export default function FloatingPostButton({ alunoId, communityId, onPostCreated }: FloatingPostButtonProps) {
   const [modalType, setModalType] = useState<ModalType>(null);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
@@ -81,6 +82,7 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
         .from('community_posts')
         .insert({
           aluno_id: alunoId,
+          community_id: communityId,
           photo_url: publicUrl,
           caption: caption.trim() || null,
           workout_type: 'treino',
@@ -144,6 +146,7 @@ export default function FloatingPostButton({ alunoId, onPostCreated }: FloatingP
         .from('community_posts')
         .insert({
           aluno_id: alunoId,
+          community_id: communityId,
           photo_url: null,
           caption: textPost.trim(),
           workout_type: 'update',

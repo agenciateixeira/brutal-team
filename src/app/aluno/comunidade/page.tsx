@@ -3,14 +3,18 @@ import { redirect } from 'next/navigation';
 import AppLayout from '@/components/layouts/AppLayout';
 import YearCountdown from '@/components/community/YearCountdown';
 import TopMembers from '@/components/community/TopMembers';
-import FloatingPostButton from '@/components/community/FloatingPostButton';
-import CommunityTabs from '@/components/community/CommunityTabs';
-import { Users, Trophy, TrendingUp, Flame } from 'lucide-react';
+import CommunityClient from '@/components/community/CommunityClient';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function ComunidadePage() {
+const PUBLIC_COMMUNITY_ID = '00000000-0000-0000-0000-000000000001';
+
+export default async function ComunidadePage({
+  searchParams,
+}: {
+  searchParams: { community?: string };
+}) {
   const supabase = createServerClient();
 
   const {
@@ -31,89 +35,38 @@ export default async function ComunidadePage() {
     redirect('/coach/dashboard');
   }
 
-  // Verificar se o usuário tem indicados (se não, mostrar mensagem)
-  const { data: referrals } = await supabase
-    .from('referrals')
-    .select('id')
-    .eq('referrer_id', session.user.id)
-    .eq('status', 'active');
+  // Buscar todas as comunidades do usuário
+  const { data: userCommunities } = await supabase
+    .from('community_members')
+    .select(`
+      community_id,
+      communities (
+        id,
+        name,
+        description,
+        type
+      )
+    `)
+    .eq('aluno_id', session.user.id);
 
-  const hasReferrals = referrals && referrals.length > 0;
+  const communities = userCommunities?.map((uc: any) => uc.communities) || [];
 
-  // Se não tem indicados, mostrar página de convite
-  if (!hasReferrals) {
-    return (
-      <AppLayout profile={profile}>
-        <div className="min-h-[70vh] flex items-center justify-center">
-          <div className="max-w-2xl mx-auto text-center space-y-6 p-8">
-            {/* Ilustração */}
-            <div className="relative">
-              <div className="w-32 h-32 mx-auto bg-gradient-to-br from-primary-500 to-blue-600 rounded-full flex items-center justify-center shadow-2xl">
-                <Users className="text-white" size={64} />
-              </div>
-              <div className="absolute -top-2 -right-2 w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg animate-bounce">
-                <span className="text-2xl">🔒</span>
-              </div>
-            </div>
-
-            {/* Texto */}
-            <div className="space-y-3">
-              <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white">
-                Comunidade Trancada
-              </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-400">
-                Para desbloquear a comunidade, você precisa indicar pelo menos <strong>1 amigo</strong>!
-              </p>
-            </div>
-
-            {/* Benefícios */}
-            <div className="bg-gradient-to-br from-primary-50 to-blue-50 dark:from-primary-900/20 dark:to-blue-900/20 border-2 border-primary-200 dark:border-primary-800 rounded-2xl p-6 space-y-4">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center justify-center gap-2">
-                <Flame className="text-orange-500" />
-                O que você ganha na comunidade:
-              </h2>
-              <ul className="space-y-3 text-left max-w-md mx-auto">
-                {[
-                  { emoji: '📸', text: 'Postar treinos e ver posts dos amigos' },
-                  { emoji: '🏆', text: 'Ranking competitivo em tempo real' },
-                  { emoji: '🔥', text: 'Sistema de check-ins e sequências' },
-                  { emoji: '💬', text: 'Comentar e curtir posts' },
-                  { emoji: '🎯', text: 'Ver progresso de toda a rede' },
-                  { emoji: '💪', text: 'Motivação em grupo' },
-                ].map((benefit, i) => (
-                  <li key={i} className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-                    <span className="text-2xl">{benefit.emoji}</span>
-                    <span className="font-semibold">{benefit.text}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* CTA */}
-            <div className="space-y-3">
-              <a
-                href="/aluno/indicacao"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-primary-600 to-blue-600 hover:from-primary-700 hover:to-blue-700 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all"
-              >
-                <Users size={20} />
-                Indicar Amigos e Desbloquear
-              </a>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Compartilhe seu código com amigos e ganhe descontos + acesso à comunidade
-              </p>
-            </div>
-          </div>
-        </div>
-      </AppLayout>
-    );
+  // Se não tem nenhuma comunidade, redirecionar para página de setup
+  if (communities.length === 0) {
+    redirect('/aluno/indicacao');
   }
 
-  // Buscar membros da rede (usando função SQL)
-  const { data: networkMembers } = await supabase.rpc('get_community_network', {
-    user_id: session.user.id,
-  });
+  // Comunidade atual (da query string ou pública por padrão)
+  const currentCommunityId = searchParams.community || PUBLIC_COMMUNITY_ID;
+  const currentCommunity = communities.find((c: any) => c.id === currentCommunityId) || communities[0];
 
-  const memberIds = networkMembers?.map((m: any) => m.member_id) || [];
+  // Buscar membros da comunidade atual
+  const { data: communityMembers } = await supabase
+    .from('community_members')
+    .select('aluno_id')
+    .eq('community_id', currentCommunity.id);
+
+  const memberIds = communityMembers?.map((m) => m.aluno_id) || [];
 
   // Buscar stats dos membros
   const { data: membersStats } = await supabase
@@ -129,67 +82,79 @@ export default async function ComunidadePage() {
     .in('id', memberIds);
 
   // Criar mapa de avatares para lookup rápido
-  const avatarMap = new Map(membersProfiles?.map(p => [p.id, p.avatar_url]) || []);
+  const avatarMap = new Map(membersProfiles?.map((p) => [p.id, p.avatar_url]) || []);
 
-  // Buscar posts da rede
+  // Buscar posts da comunidade atual
   const { data: communityPosts } = await supabase
     .from('community_posts')
     .select('*, profiles(full_name, avatar_url)')
-    .in('aluno_id', memberIds)
+    .eq('community_id', currentCommunity.id)
     .order('created_at', { ascending: false })
     .limit(50);
 
   // Preparar dados para TopMembers (top 3)
-  const topMembers = membersStats?.slice(0, 3).map(member => ({
-    id: member.aluno_id,
-    full_name: member.full_name,
-    avatar_url: avatarMap.get(member.aluno_id) || null,
-    yearly_check_ins: member.yearly_check_ins,
-    current_streak: member.current_streak,
-  })) || [];
+  const topMembers =
+    membersStats?.slice(0, 3).map((member) => ({
+      id: member.aluno_id,
+      full_name: member.full_name,
+      avatar_url: avatarMap.get(member.aluno_id) || null,
+      yearly_check_ins: member.yearly_check_ins,
+      current_streak: member.current_streak,
+    })) || [];
 
   // Preparar dados para CommunityRanking
-  const rankingMembers = membersStats?.map(member => ({
-    id: member.aluno_id,
-    full_name: member.full_name,
-    avatar_url: avatarMap.get(member.aluno_id) || null,
-    yearly_check_ins: member.yearly_check_ins,
-    current_streak: member.current_streak,
-    total_posts: member.total_posts,
-  })) || [];
+  const rankingMembers =
+    membersStats?.map((member) => ({
+      id: member.aluno_id,
+      full_name: member.full_name,
+      avatar_url: avatarMap.get(member.aluno_id) || null,
+      yearly_check_ins: member.yearly_check_ins,
+      current_streak: member.current_streak,
+      total_posts: member.total_posts,
+    })) || [];
+
+  // Buscar amigos da rede (para adicionar em comunidades privadas)
+  const { data: networkMembers } = await supabase.rpc('get_community_network', {
+    user_id: session.user.id,
+  });
+
+  const friendIds = networkMembers?.map((m: any) => m.member_id).filter((id: string) => id !== session.user.id) || [];
+
+  const { data: friends } = await supabase
+    .from('profiles')
+    .select('id, full_name, avatar_url')
+    .in('id', friendIds)
+    .order('full_name');
+
+  // Contar membros de cada comunidade
+  const communitiesWithCounts = await Promise.all(
+    communities.map(async (community: any) => {
+      const { count } = await supabase
+        .from('community_members')
+        .select('*', { count: 'exact', head: true })
+        .eq('community_id', community.id);
+
+      return {
+        ...community,
+        member_count: count || 0,
+      };
+    })
+  );
 
   return (
     <AppLayout profile={profile}>
-      <div className="space-y-6 pb-24 md:pb-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <Users className="text-primary-600" />
-              Comunidade
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Sua rede tem <strong>{memberIds.length}</strong> {memberIds.length === 1 ? 'membro' : 'membros'}
-            </p>
-          </div>
-        </div>
-
-        {/* Countdown do Ano */}
-        <YearCountdown />
-
-        {/* Top Members */}
-        {topMembers.length > 0 && <TopMembers members={topMembers} />}
-
-        {/* Tabs: Feed / Ranking */}
-        <CommunityTabs
-          initialPosts={communityPosts || []}
-          rankingMembers={rankingMembers}
-          currentUserId={session.user.id}
-        />
-
-        {/* Floating Post Button */}
-        <FloatingPostButton alunoId={session.user.id} />
-      </div>
+      <CommunityClient
+        communities={communitiesWithCounts}
+        currentCommunity={{
+          ...currentCommunity,
+          member_count: memberIds.length,
+        }}
+        topMembers={topMembers}
+        initialPosts={communityPosts || []}
+        rankingMembers={rankingMembers}
+        currentUserId={session.user.id}
+        friends={friends || []}
+      />
     </AppLayout>
   );
 }

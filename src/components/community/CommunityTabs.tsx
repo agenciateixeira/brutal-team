@@ -9,9 +9,10 @@ interface CommunityTabsProps {
   initialPosts: any[];
   rankingMembers: any[];
   currentUserId: string;
+  communityId: string;
 }
 
-export default function CommunityTabs({ initialPosts, rankingMembers, currentUserId }: CommunityTabsProps) {
+export default function CommunityTabs({ initialPosts, rankingMembers, currentUserId, communityId }: CommunityTabsProps) {
   const [activeTab, setActiveTab] = useState<'feed' | 'ranking'>('feed');
 
   return (
