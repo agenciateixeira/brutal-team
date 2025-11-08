@@ -106,48 +106,6 @@ export default function PullToRefresh() {
   const pullProgress = Math.min(pullDistance / pullThreshold, 1);
   const showIndicator = isPulling || isRefreshing;
 
-  return (
-    <>
-      {/* Indicador de Pull-to-Refresh */}
-      <div
-        ref={containerRef}
-        className={`fixed top-0 left-0 right-0 z-[9999] flex items-center justify-center transition-all duration-300 ${
-          showIndicator ? 'pointer-events-auto' : 'pointer-events-none'
-        }`}
-        style={{
-          height: isRefreshing ? '80px' : `${pullDistance}px`,
-          opacity: showIndicator ? 1 : 0,
-        }}
-      >
-        <div
-          className="bg-white dark:bg-gray-800 rounded-full p-4 shadow-xl border-2 border-primary-200 dark:border-primary-700"
-          style={{
-            transform: `scale(${0.6 + pullProgress * 0.4})`,
-            transition: 'transform 0.2s ease-out',
-          }}
-        >
-          <RefreshCw
-            size={28}
-            className={`text-primary-600 ${
-              isRefreshing ? 'animate-spin' : ''
-            }`}
-            style={{
-              transform: isRefreshing ? 'none' : `rotate(${pullProgress * 360}deg)`,
-              transition: isRefreshing ? 'none' : 'transform 0.2s ease-out',
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Overlay sutil quando está puxando */}
-      {showIndicator && (
-        <div
-          className="fixed inset-0 bg-black/5 pointer-events-none z-[9998] transition-opacity duration-300"
-          style={{
-            opacity: pullProgress * 0.3,
-          }}
-        />
-      )}
-    </>
-  );
+  // Funcionalidade de refresh mantida, mas SEM indicador visual
+  return null;
 }
