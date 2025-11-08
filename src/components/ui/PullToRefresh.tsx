@@ -15,8 +15,9 @@ export default function PullToRefresh() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [startTime, setStartTime] = useState(0);
   const router = useRouter();
-  const pullThreshold = 120; // Aumentado para 120px - precisa puxar mais para ativar
-  const minPullSpeed = 0.3; // Velocidade mínima necessária (pixels por ms)
+  const pullThreshold = 120; // Distância para ativar refresh
+  const minActivationDistance = 80; // AUMENTADO: Precisa puxar 80px antes do indicador aparecer
+  const minPullSpeed = 0.5; // AUMENTADO: Velocidade mínima mais exigente (evita arrastar lento)
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,13 +39,13 @@ export default function PullToRefresh() {
       // APENAS ativa pull se:
       // 1. Estiver puxando para BAIXO (pullDistance > 0)
       // 2. Estiver NO TOPO da página (scrollY === 0)
-      // 3. Já puxou pelo menos 30px (evita ativação acidental)
-      if (pullDistance > 30 && window.scrollY === 0) {
+      // 3. Já puxou pelo menos 80px (evita ativação acidental durante scroll)
+      if (pullDistance > minActivationDistance && window.scrollY === 0) {
         setCurrentY(currentTouchY);
         setIsPulling(true);
 
-        // Prevenir scroll enquanto está puxando FORÇA
-        if (pullDistance > 50) {
+        // Prevenir scroll enquanto está puxando com força
+        if (pullDistance > minActivationDistance + 20) {
           e.preventDefault();
         }
       }

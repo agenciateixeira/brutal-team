@@ -197,11 +197,11 @@ export default function PostModal({ post, currentUserId, isOpen, onClose }: Post
                   </div>
                 )}
               </div>
-              <div>
-                <p className="font-bold text-gray-900 dark:text-white text-sm">
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-gray-900 dark:text-white text-sm truncate">
                   {post.profiles.full_name}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 truncate">
                   {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ptBR })}
                 </p>
               </div>
@@ -219,7 +219,7 @@ export default function PostModal({ post, currentUserId, isOpen, onClose }: Post
           {/* Legenda */}
           {post.caption && (
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-              <p className="text-gray-900 dark:text-white text-sm">
+              <p className="text-gray-900 dark:text-white text-sm break-words overflow-wrap-anywhere whitespace-pre-wrap">
                 <span className="font-bold">{post.profiles.full_name}</span> {post.caption}
               </p>
             </div>
@@ -251,12 +251,12 @@ export default function PostModal({ post, currentUserId, isOpen, onClose }: Post
                     )}
                   </div>
 
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl px-3 py-2">
-                      <p className="font-semibold text-sm text-gray-900 dark:text-white">
+                      <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">
                         {comment.profiles?.full_name}
                       </p>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                      <p className="text-sm text-gray-700 dark:text-gray-300 break-words overflow-wrap-anywhere whitespace-pre-wrap">
                         {comment.comment}
                       </p>
                     </div>

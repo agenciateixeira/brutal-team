@@ -37,6 +37,7 @@ DROP POLICY IF EXISTS "Coaches podem ver todos check-ins" ON community_check_ins
 -- ============================================
 
 -- Ver: Apenas posts da sua rede (inclui você)
+DROP POLICY IF EXISTS "Alunos veem posts da rede" ON community_posts;
 CREATE POLICY "Alunos veem posts da rede"
 ON community_posts FOR SELECT
 USING (
@@ -46,6 +47,7 @@ USING (
 );
 
 -- Criar: Qualquer aluno pode criar
+DROP POLICY IF EXISTS "Alunos podem criar posts" ON community_posts;
 CREATE POLICY "Alunos podem criar posts"
 ON community_posts FOR INSERT
 WITH CHECK (
@@ -53,6 +55,7 @@ WITH CHECK (
 );
 
 -- Deletar: Apenas próprios posts
+DROP POLICY IF EXISTS "Alunos deletam próprios posts" ON community_posts;
 CREATE POLICY "Alunos deletam próprios posts"
 ON community_posts FOR DELETE
 USING (
@@ -64,6 +67,7 @@ USING (
 -- ============================================
 
 -- Ver: Curtidas de posts da rede
+DROP POLICY IF EXISTS "Alunos veem curtidas da rede" ON community_likes;
 CREATE POLICY "Alunos veem curtidas da rede"
 ON community_likes FOR SELECT
 USING (
@@ -76,6 +80,7 @@ USING (
 );
 
 -- Criar: Pode curtir posts da rede
+DROP POLICY IF EXISTS "Alunos curtem posts da rede" ON community_likes;
 CREATE POLICY "Alunos curtem posts da rede"
 ON community_likes FOR INSERT
 WITH CHECK (
@@ -89,6 +94,7 @@ WITH CHECK (
 );
 
 -- Deletar: Apenas próprias curtidas
+DROP POLICY IF EXISTS "Alunos removem próprias curtidas" ON community_likes;
 CREATE POLICY "Alunos removem próprias curtidas"
 ON community_likes FOR DELETE
 USING (
@@ -100,6 +106,7 @@ USING (
 -- ============================================
 
 -- Ver: Comentários de posts da rede
+DROP POLICY IF EXISTS "Alunos veem comentários da rede" ON community_comments;
 CREATE POLICY "Alunos veem comentários da rede"
 ON community_comments FOR SELECT
 USING (
@@ -112,6 +119,7 @@ USING (
 );
 
 -- Criar: Pode comentar em posts da rede
+DROP POLICY IF EXISTS "Alunos comentam posts da rede" ON community_comments;
 CREATE POLICY "Alunos comentam posts da rede"
 ON community_comments FOR INSERT
 WITH CHECK (
@@ -125,6 +133,7 @@ WITH CHECK (
 );
 
 -- Deletar: Apenas próprios comentários
+DROP POLICY IF EXISTS "Alunos deletam próprios comentários" ON community_comments;
 CREATE POLICY "Alunos deletam próprios comentários"
 ON community_comments FOR DELETE
 USING (
@@ -136,6 +145,7 @@ USING (
 -- ============================================
 
 -- Ver: Check-ins da rede
+DROP POLICY IF EXISTS "Alunos veem check-ins da rede" ON community_check_ins;
 CREATE POLICY "Alunos veem check-ins da rede"
 ON community_check_ins FOR SELECT
 USING (
@@ -145,6 +155,7 @@ USING (
 );
 
 -- Criar: Qualquer aluno pode criar (trigger controla 1 por dia)
+DROP POLICY IF EXISTS "Alunos criam check-ins" ON community_check_ins;
 CREATE POLICY "Alunos criam check-ins"
 ON community_check_ins FOR INSERT
 WITH CHECK (

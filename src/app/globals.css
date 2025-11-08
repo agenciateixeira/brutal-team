@@ -42,6 +42,9 @@
     -webkit-tap-highlight-color: transparent;
     height: 100%;
     overflow-x: hidden;
+    /* PREVINE pull-to-refresh nativo do browser */
+    overscroll-behavior-y: contain;
+    -webkit-overscroll-behavior-y: contain;
   }
 
   /* Permitir seleção de texto em elementos específicos */
@@ -68,6 +71,20 @@
   /* Desabilita zoom em qualquer elemento - FORÇA MÁXIMA */
   *, *::before, *::after {
     touch-action: pan-x pan-y !important;
+  }
+
+  /* PROTEÇÃO CONTRA OVERFLOW HORIZONTAL */
+  * {
+    /* Previne palavras muito longas (URLs, hashes) de quebrar layout */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    /* Garante que conteúdo não ultrapasse o container */
+    max-width: 100%;
+  }
+
+  /* Containers principais não devem permitir scroll horizontal */
+  body, html {
+    overflow-x: hidden !important;
   }
 
   /* Elementos interativos - previne zoom e double-tap */

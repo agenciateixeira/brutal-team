@@ -42,7 +42,26 @@ export default function CommunityFeed({ initialPosts, currentUserId }: Community
 
   useEffect(() => {
     loadInteractions();
-    setupRealtimeSubscriptions();
+    const cleanup = setupRealtimeSubscriptions();
+
+    // Polling como fallback caso Realtime falhe
+    const pollingInterval = setInterval(async () => {
+      // Buscar novos posts a cada 5 segundos
+      const { data: latestPosts } = await supabase
+        .from('community_posts')
+        .select('*, profiles(full_name, avatar_url)')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (latestPosts) {
+        setPosts(latestPosts);
+      }
+    }, 5000); // 5 segundos
+
+    return () => {
+      cleanup?.();
+      clearInterval(pollingInterval);
+    };
   }, []);
 
   const loadInteractions = async () => {
@@ -83,24 +102,42 @@ export default function CommunityFeed({ initialPosts, currentUserId }: Community
   const setupRealtimeSubscriptions = () => {
     // Subscribe to new posts (REAL-TIME)
     const postsChannel = supabase
-      .channel('community-posts-feed')
+      .channel('community-posts-feed', {
+        config: {
+          broadcast: { self: true },
+          presence: { key: currentUserId }
+        }
+      })
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'community_posts',
       }, async (payload) => {
+        console.log('🔔 REALTIME: Novo post detectado!', payload.new.id);
+
         // Buscar dados completos do novo post
-        const { data: newPost } = await supabase
+        const { data: newPost, error } = await supabase
           .from('community_posts')
           .select('*, profiles(full_name, avatar_url)')
           .eq('id', payload.new.id)
           .single();
 
+        if (error) {
+          console.error('❌ REALTIME: Erro ao buscar post completo:', error);
+          return;
+        }
+
         if (newPost) {
+          console.log('✅ REALTIME: Post adicionado ao feed!', newPost);
           setPosts(prev => [newPost as Post, ...prev]);
         }
       })
-      .subscribe();
+      .subscribe((status, err) => {
+        console.log('📡 REALTIME STATUS:', status);
+        if (err) {
+          console.error('❌ REALTIME ERROR:', err);
+        }
+      });
 
     // Subscribe to likes changes (REAL-TIME)
     const likesChannel = supabase
@@ -126,6 +163,7 @@ export default function CommunityFeed({ initialPosts, currentUserId }: Community
       })
       .subscribe();
 
+    // Retornar função de cleanup
     return () => {
       supabase.removeChannel(postsChannel);
       supabase.removeChannel(likesChannel);
@@ -344,7 +382,16 @@ export default function CommunityFeed({ initialPosts, currentUserId }: Community
             )}
 
             {/* Ações e Info */}
-            <div className="p-4 space-y-2">
+            <div className="p-4 space-y-3">
+              {/* Legenda/Caption - MOVIDA PARA CIMA E EM DESTAQUE */}
+              {post.caption && (
+                <div className="pt-1">
+                  <p className="text-base font-medium text-gray-900 dark:text-white leading-relaxed break-words overflow-wrap-anywhere whitespace-pre-wrap">
+                    {post.caption}
+                  </p>
+                </div>
+              )}
+
               {/* Botões de ação */}
               <div className="flex items-center gap-4">
                 <button
@@ -389,14 +436,6 @@ export default function CommunityFeed({ initialPosts, currentUserId }: Community
               {likesCount[post.id] > 0 && (
                 <p className="text-sm font-bold text-gray-900 dark:text-white">
                   {likesCount[post.id]} {likesCount[post.id] === 1 ? 'curtida' : 'curtidas'}
-                </p>
-              )}
-
-              {/* Legenda */}
-              {post.caption && (
-                <p className="text-sm text-gray-900 dark:text-white">
-                  <span className="font-bold mr-2">{post.profiles.full_name}</span>
-                  {post.caption}
                 </p>
               )}
 
