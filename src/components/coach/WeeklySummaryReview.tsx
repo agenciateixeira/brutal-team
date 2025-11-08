@@ -271,8 +271,8 @@ export default function WeeklySummaryReview({ summaries }: WeeklySummaryReviewPr
                           </div>
                         )}
 
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
                             {summary.aluno_name}
                           </h4>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -361,17 +361,17 @@ export default function WeeklySummaryReview({ summaries }: WeeklySummaryReviewPr
                           {summary.seguiu_dieta ? (
                             <>
                               {summary.problema_refeicao && (
-                                <p><strong>Problema em refeição:</strong> {summary.problema_refeicao}</p>
+                                <p className="break-words overflow-wrap-anywhere"><strong>Problema em refeição:</strong> {summary.problema_refeicao}</p>
                               )}
                               {summary.consumo_agua_sim && (
-                                <p className="flex items-center gap-2">
-                                  <Droplet size={14} className="text-blue-600" />
+                                <p className="flex items-center gap-2 break-words overflow-wrap-anywhere">
+                                  <Droplet size={14} className="text-blue-600 flex-shrink-0" />
                                   <strong>Água:</strong> {summary.consumo_agua_sim}
                                 </p>
                               )}
                               {summary.qualidade_sono_sim && (
-                                <p className="flex items-center gap-2">
-                                  <Moon size={14} className="text-purple-600" />
+                                <p className="flex items-center gap-2 break-words overflow-wrap-anywhere">
+                                  <Moon size={14} className="text-purple-600 flex-shrink-0" />
                                   <strong>Sono:</strong> {summary.qualidade_sono_sim}
                                 </p>
                               )}
@@ -379,20 +379,20 @@ export default function WeeklySummaryReview({ summaries }: WeeklySummaryReviewPr
                           ) : (
                             <>
                               {summary.dia_nao_seguiu && (
-                                <p><strong>Dias que não seguiu:</strong> {summary.dia_nao_seguiu}</p>
+                                <p className="break-words overflow-wrap-anywhere"><strong>Dias que não seguiu:</strong> {summary.dia_nao_seguiu}</p>
                               )}
                               {summary.refeicoes_fora_casa !== null && (
-                                <p><strong>Refeições fora:</strong> {summary.refeicoes_fora_casa}</p>
+                                <p className="break-words overflow-wrap-anywhere"><strong>Refeições fora:</strong> {summary.refeicoes_fora_casa}</p>
                               )}
                               {summary.consumo_agua_nao && (
-                                <p className="flex items-center gap-2">
-                                  <Droplet size={14} className="text-blue-600" />
+                                <p className="flex items-center gap-2 break-words overflow-wrap-anywhere">
+                                  <Droplet size={14} className="text-blue-600 flex-shrink-0" />
                                   <strong>Água:</strong> {summary.consumo_agua_nao}
                                 </p>
                               )}
                               {summary.qualidade_sono_nao && (
-                                <p className="flex items-center gap-2">
-                                  <Moon size={14} className="text-purple-600" />
+                                <p className="flex items-center gap-2 break-words overflow-wrap-anywhere">
+                                  <Moon size={14} className="text-purple-600 flex-shrink-0" />
                                   <strong>Sono:</strong> {summary.qualidade_sono_nao}
                                 </p>
                               )}
@@ -415,14 +415,14 @@ export default function WeeklySummaryReview({ summaries }: WeeklySummaryReviewPr
                             </span>
                           </p>
                           {summary.faltou_treino && summary.quantos_dias_faltou && (
-                            <p><strong>Dias que faltou:</strong> {summary.quantos_dias_faltou}</p>
+                            <p className="break-words overflow-wrap-anywhere"><strong>Dias que faltou:</strong> {summary.quantos_dias_faltou}</p>
                           )}
                           {summary.desempenho_treino && (
-                            <p><strong>Desempenho:</strong> {summary.desempenho_treino}</p>
+                            <p className="break-words overflow-wrap-anywhere"><strong>Desempenho:</strong> {summary.desempenho_treino}</p>
                           )}
                           {summary.horario_treino_proxima_semana && (
-                            <p className="flex items-center gap-2">
-                              <Clock size={14} className="text-gray-600" />
+                            <p className="flex items-center gap-2 break-words overflow-wrap-anywhere">
+                              <Clock size={14} className="text-gray-600 flex-shrink-0" />
                               <strong>Horário próxima semana:</strong> {summary.horario_treino_proxima_semana}
                             </p>
                           )}
