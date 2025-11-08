@@ -23,8 +23,8 @@ Mas **NÃO retornava**:
 
 Execute **3 arquivos SQL** no Supabase (nesta ordem):
 
-1. **`CORRIGIR-FUNCAO-REDE-V2.sql`** ← Função de rede + recria policies (VERSÃO ATUALIZADA!)
-2. **`CORRIGIR-POLICIES-REDE.sql`** ← Políticas adicionais + check-ins
+1. **`CORRIGIR-FUNCAO-REDE-V2.sql`** ← Função de rede + cria policies básicas
+2. **`CORRIGIR-POLICIES-REDE-V3.sql`** ← Atualiza policies para permitir próprios posts (NOVA VERSÃO!)
 3. **`CORRIGIR-POST-TEXTO.sql`** ← Permite posts sem foto
 
 ---
@@ -46,9 +46,9 @@ Execute **3 arquivos SQL** no Supabase (nesta ordem):
 - Clique em **"Run"** (ou pressione Ctrl+Enter)
 - Aguarde a mensagem de sucesso
 
-### 4. Execute o SEGUNDO SQL
+### 4. Execute o SEGUNDO SQL (V3!)
 - Clique em **"New query"** novamente
-- Abra o arquivo: **`CORRIGIR-POLICIES-REDE.sql`**
+- Abra o arquivo: **`CORRIGIR-POLICIES-REDE-V3.sql`**
 - Copie **TODO** o conteúdo
 - Cole no SQL Editor
 - Clique em **"Run"**
