@@ -124,6 +124,26 @@ WITH CHECK (
 );
 
 -- ============================================
+-- 6. VERIFICAR POLÍTICAS: CHECK-INS
+-- ============================================
+
+-- Policy já existe no RODAR_NO_SUPABASE_COMUNIDADE.sql:
+-- CREATE POLICY "Alunos podem criar check-ins" ON community_check_ins FOR INSERT
+-- WITH CHECK (auth.uid() = aluno_id);
+
+-- Caso não exista, criar:
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE tablename = 'community_check_ins'
+    AND policyname = 'Alunos podem criar check-ins'
+  ) THEN
+    EXECUTE 'CREATE POLICY "Alunos podem criar check-ins" ON community_check_ins FOR INSERT WITH CHECK (auth.uid() = aluno_id)';
+  END IF;
+END$$;
+
+-- ============================================
 -- ✅ PRONTO!
 -- ============================================
 -- Execute este SQL no Supabase SQL Editor
@@ -132,4 +152,5 @@ WITH CHECK (
 -- ✅ SEMPRE pode curtir/comentar nos PRÓPRIOS posts
 -- ✅ TEM rede → vê e interage com TODA a sua rede
 -- ✅ NÃO TEM rede → fica ISOLADO (só vê próprios posts)
+-- ✅ Pode criar check-ins automaticamente ao postar
 -- 🔒 COMUNIDADE EXCLUSIVA: só entra com link de convite!

@@ -12,7 +12,7 @@ import PostModal from './PostModal';
 interface Post {
   id: string;
   aluno_id: string;
-  photo_url: string;
+  photo_url: string | null;
   caption: string | null;
   created_at: string;
   profiles: {
@@ -329,17 +329,19 @@ export default function CommunityFeed({ initialPosts, currentUserId }: Community
               )}
             </div>
 
-            {/* Foto do Post */}
-            <div className="relative w-full aspect-square bg-gray-100 dark:bg-gray-900">
-              <Image
-                src={post.photo_url}
-                alt="Post"
-                fill
-                sizes="(max-width: 640px) 100vw, 640px"
-                className="object-cover"
-                priority={index < 2}
-              />
-            </div>
+            {/* Foto do Post (se houver) */}
+            {post.photo_url && (
+              <div className="relative w-full aspect-square bg-gray-100 dark:bg-gray-900">
+                <Image
+                  src={post.photo_url}
+                  alt="Post"
+                  fill
+                  sizes="(max-width: 640px) 100vw, 640px"
+                  className="object-cover"
+                  priority={index < 2}
+                />
+              </div>
+            )}
 
             {/* Ações e Info */}
             <div className="p-4 space-y-2">

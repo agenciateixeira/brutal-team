@@ -10,7 +10,7 @@ import { ptBR } from 'date-fns/locale';
 interface Post {
   id: string;
   aluno_id: string;
-  photo_url: string;
+  photo_url: string | null;
   caption: string | null;
   created_at: string;
   profiles: {
@@ -155,25 +155,27 @@ export default function PostModal({ post, currentUserId, isOpen, onClose }: Post
       />
 
       {/* Modal */}
-      <div className="relative w-full h-full md:h-auto md:w-full md:max-w-5xl md:max-h-[85vh] bg-white dark:bg-gray-900 md:rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
-        {/* Foto */}
-        <div className="relative w-full md:w-3/5 aspect-square md:aspect-auto bg-black flex items-center justify-center">
-          <Image
-            src={post.photo_url}
-            alt="Post"
-            fill
-            className="object-contain"
-            priority
-          />
+      <div className={`relative w-full h-full md:h-auto md:w-full ${post.photo_url ? 'md:max-w-5xl' : 'md:max-w-2xl'} md:max-h-[85vh] bg-white dark:bg-gray-900 md:rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row`}>
+        {/* Foto (se houver) */}
+        {post.photo_url && (
+          <div className="relative w-full md:w-3/5 aspect-square md:aspect-auto bg-black flex items-center justify-center">
+            <Image
+              src={post.photo_url}
+              alt="Post"
+              fill
+              className="object-contain"
+              priority
+            />
 
-          {/* Botão fechar desktop */}
-          <button
-            onClick={onClose}
-            className="hidden md:block absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full"
-          >
-            <X size={24} />
-          </button>
-        </div>
+            {/* Botão fechar desktop */}
+            <button
+              onClick={onClose}
+              className="hidden md:block absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full"
+            >
+              <X size={24} />
+            </button>
+          </div>
+        )}
 
         {/* Sidebar */}
         <div className="flex-1 flex flex-col bg-white dark:bg-gray-900 max-h-[50vh] md:max-h-none">
@@ -205,10 +207,10 @@ export default function PostModal({ post, currentUserId, isOpen, onClose }: Post
               </div>
             </div>
 
-            {/* Botão fechar mobile */}
+            {/* Botão fechar mobile + desktop (quando não tem foto) */}
             <button
               onClick={onClose}
-              className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
+              className={`${post.photo_url ? 'md:hidden' : ''} p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full`}
             >
               <X size={20} />
             </button>
