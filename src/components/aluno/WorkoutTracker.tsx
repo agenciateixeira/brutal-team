@@ -137,12 +137,16 @@ export default function WorkoutTracker({ alunoId, workoutTypes = ['musculacao'] 
         // Atualizar existente
         const { error } = await supabase
           .from('workout_tracking')
-          .update({ workout_types_completed: newCompleted })
+          .update({
+            workout_types_completed: newCompleted,
+            completed: newCompleted.length > 0, // Marcar como completed se tiver algum treino
+            updated_at: new Date().toISOString()
+          })
           .eq('id', todayTracking.id);
 
         if (error) throw error;
 
-        setTodayTracking({ ...todayTracking, workout_types_completed: newCompleted });
+        setTodayTracking({ ...todayTracking, workout_types_completed: newCompleted, completed: newCompleted.length > 0 });
       } else {
         // Criar novo
         const { data, error } = await supabase
@@ -151,6 +155,7 @@ export default function WorkoutTracker({ alunoId, workoutTypes = ['musculacao'] 
             aluno_id: alunoId,
             date: today,
             workout_types_completed: newCompleted,
+            completed: newCompleted.length > 0, // Marcar como completed se tiver algum treino
           })
           .select()
           .single();
