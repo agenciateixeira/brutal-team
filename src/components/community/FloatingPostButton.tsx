@@ -122,10 +122,16 @@ export default function FloatingPostButton({ alunoId, communityId, allStudents, 
         .maybeSingle();
 
       if (existingTracking) {
-        // Já existe, apenas garantir que está marcado como completed
+        // Já existe, adicionar 'comunidade' ao array se ainda não tiver
+        const currentTypes = existingTracking.workout_types_completed || [];
+        const updatedTypes = currentTypes.includes('comunidade')
+          ? currentTypes
+          : [...currentTypes, 'comunidade'];
+
         await supabase
           .from('workout_tracking')
           .update({
+            workout_types_completed: updatedTypes,
             completed: true,
             updated_at: new Date().toISOString()
           })
@@ -215,10 +221,16 @@ export default function FloatingPostButton({ alunoId, communityId, allStudents, 
         .maybeSingle();
 
       if (existingTracking) {
-        // Já existe, apenas garantir que está marcado como completed
+        // Já existe, adicionar 'comunidade' ao array se ainda não tiver
+        const currentTypes = existingTracking.workout_types_completed || [];
+        const updatedTypes = currentTypes.includes('comunidade')
+          ? currentTypes
+          : [...currentTypes, 'comunidade'];
+
         await supabase
           .from('workout_tracking')
           .update({
+            workout_types_completed: updatedTypes,
             completed: true,
             updated_at: new Date().toISOString()
           })
