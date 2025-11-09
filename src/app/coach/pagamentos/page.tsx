@@ -41,7 +41,7 @@ export default async function CoachPagamentosPage() {
         email
       )
     `)
-    .order('created_at', { ascending: false });
+    .order('payment_date', { ascending: false });
 
   // Buscar TODOS os alunos (ativos e inativos) para calcular churn
   const { data: allStudents } = await supabase
@@ -68,7 +68,7 @@ export default async function CoachPagamentosPage() {
         email
       )
     `)
-    .order('created_at', { ascending: false })
+    .order('payment_date', { ascending: false })
     .limit(20);
 
   // Buscar alunos ativos para a lista

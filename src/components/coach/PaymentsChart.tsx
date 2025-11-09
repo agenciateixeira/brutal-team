@@ -21,6 +21,12 @@ export default function PaymentsChart({ paymentHistory = [], students = [] }: Pa
   const safePaymentHistory = Array.isArray(paymentHistory) ? paymentHistory : [];
   const safeStudents = Array.isArray(students) ? students : [];
 
+  // DEBUG: Ver dados recebidos
+  console.log('💰 [PaymentsChart] paymentHistory recebido:', paymentHistory);
+  console.log('💰 [PaymentsChart] Total de pagamentos:', safePaymentHistory.length);
+  console.log('💰 [PaymentsChart] students recebido:', students);
+  console.log('💰 [PaymentsChart] Total de students:', safeStudents.length);
+
   // Calcular datas baseado no período
   const { startDate, endDate } = useMemo(() => {
     const today = new Date();
@@ -62,7 +68,8 @@ export default function PaymentsChart({ paymentHistory = [], students = [] }: Pa
   // Filtrar pagamentos pelo período
   const filteredPayments = useMemo(() => {
     return safePaymentHistory.filter(payment => {
-      const paymentDate = new Date(payment.payment_date || payment.created_at);
+      if (!payment.payment_date) return false;
+      const paymentDate = new Date(payment.payment_date);
       paymentDate.setHours(0, 0, 0, 0); // Normalizar para meia-noite
       return paymentDate >= startDate && paymentDate <= endDate;
     });
@@ -99,9 +106,10 @@ export default function PaymentsChart({ paymentHistory = [], students = [] }: Pa
     const days = eachDayOfInterval({ start: startDate, end: endDate });
 
     return days.map(day => {
-      const dayPayments = filteredPayments.filter(p =>
-        isSameDay(new Date(p.payment_date || p.created_at), day)
-      );
+      const dayPayments = filteredPayments.filter(p => {
+        if (!p.payment_date) return false;
+        return isSameDay(new Date(p.payment_date), day);
+      });
 
       const revenue = dayPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
