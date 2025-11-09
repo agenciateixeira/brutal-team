@@ -34,21 +34,21 @@ export default async function ComunidadePage({
     redirect('/coach/dashboard');
   }
 
-  const { data: userCommunities } = await supabase
+  // Buscar IDs das comunidades do usuário
+  const { data: userCommunityIds } = await supabase
     .from('community_members')
-    .select(`
-      community_id,
-      communities (
-        id,
-        name,
-        description,
-        type
-      )
-    `)
+    .select('community_id')
     .eq('aluno_id', session.user.id);
 
-  const communities = userCommunities?.map((uc: any) => uc.communities).filter(Boolean) || [];
-  const isEmpty = communities.length === 0;
+  const communityIds = userCommunityIds?.map((uc) => uc.community_id) || [];
+
+  // Buscar detalhes das comunidades separadamente (evita problema de RLS no JOIN)
+  const { data: communities } = await supabase
+    .from('communities')
+    .select('id, name, description, type')
+    .in('id', communityIds.length > 0 ? communityIds : ['00000000-0000-0000-0000-000000000001']);
+
+  const isEmpty = !communities || communities.length === 0;
 
   if (isEmpty) {
     return (
