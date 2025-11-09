@@ -113,6 +113,35 @@ export default function FloatingPostButton({ alunoId, communityId, allStudents, 
         console.log('ℹ️ Check-in já existe hoje ou erro ao criar:', checkInError);
       }
 
+      // 5. Marcar treino em workout_tracking para aparecer na dashboard
+      const { data: existingTracking } = await supabase
+        .from('workout_tracking')
+        .select('*')
+        .eq('aluno_id', alunoId)
+        .eq('date', today)
+        .maybeSingle();
+
+      if (existingTracking) {
+        // Já existe, apenas garantir que está marcado como completed
+        await supabase
+          .from('workout_tracking')
+          .update({
+            completed: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingTracking.id);
+      } else {
+        // Criar novo registro de treino
+        await supabase
+          .from('workout_tracking')
+          .insert({
+            aluno_id: alunoId,
+            date: today,
+            completed: true,
+            workout_types_completed: ['comunidade'], // Indica que foi postado na comunidade
+          });
+      }
+
       // Sucesso!
       setToast({ type: 'success', message: '🔥 Treino postado! Check-in marcado!' });
 
@@ -175,6 +204,35 @@ export default function FloatingPostButton({ alunoId, communityId, allStudents, 
       if (checkInError) {
         // Se já tem check-in hoje, ignora o erro (é esperado)
         console.log('ℹ️ Check-in já existe hoje ou erro ao criar:', checkInError);
+      }
+
+      // Marcar treino em workout_tracking para aparecer na dashboard
+      const { data: existingTracking } = await supabase
+        .from('workout_tracking')
+        .select('*')
+        .eq('aluno_id', alunoId)
+        .eq('date', today)
+        .maybeSingle();
+
+      if (existingTracking) {
+        // Já existe, apenas garantir que está marcado como completed
+        await supabase
+          .from('workout_tracking')
+          .update({
+            completed: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingTracking.id);
+      } else {
+        // Criar novo registro de treino
+        await supabase
+          .from('workout_tracking')
+          .insert({
+            aluno_id: alunoId,
+            date: today,
+            completed: true,
+            workout_types_completed: ['comunidade'], // Indica que foi postado na comunidade
+          });
       }
 
       // Sucesso!
