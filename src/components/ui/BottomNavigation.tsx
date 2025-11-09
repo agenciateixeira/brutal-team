@@ -121,7 +121,7 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
 
   const menuItems = isAluno
     ? [
-        { href: '/aluno/perfil', icon: User, label: 'Perfil' },
+        { href: '/aluno/configuracoes', icon: Settings, label: 'Configurações' },
         { href: '/aluno/mensagens', icon: MessageCircle, label: 'Mensagens' },
         { href: '/aluno/progresso', icon: Calendar, label: 'Progresso' },
         { href: '/aluno/guia-nutricional', icon: BookOpen, label: 'Guia Nutricional' },
@@ -129,7 +129,7 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
         { href: '/aluno/indicacao', icon: Gift, label: 'Indicação' },
       ]
     : [
-        { href: '/coach/perfil', icon: User, label: 'Perfil' },
+        { href: '/coach/perfil', icon: Settings, label: 'Configurações' },
         { href: '/coach/anamnese', icon: BookOpen, label: 'Anamnese' },
       ];
 

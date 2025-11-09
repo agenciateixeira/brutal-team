@@ -20,7 +20,8 @@ import {
   DollarSign,
   FileText,
   BookOpen,
-  Gift
+  Gift,
+  Settings
 } from 'lucide-react';
 import { Profile } from '@/types';
 import ThemeToggle from './ThemeToggle';
@@ -60,7 +61,7 @@ export default function Sidebar({ profile }: SidebarProps) {
   useEffect(() => {
     const pagesToPrefetch = isCoach
       ? ['/coach/dashboard', '/coach/alunos', '/coach/templates', '/coach/anamnese', '/coach/pagamentos', '/coach/perfil']
-      : ['/aluno/dashboard', '/aluno/dieta', '/aluno/treino', '/aluno/protocolo', '/aluno/mensagens', '/aluno/progresso', '/aluno/indicacao', '/aluno/perfil'];
+      : ['/aluno/dashboard', '/aluno/dieta', '/aluno/treino', '/aluno/protocolo', '/aluno/mensagens', '/aluno/progresso', '/aluno/indicacao', '/aluno/configuracoes'];
 
     pagesToPrefetch.forEach((path) => {
       router.prefetch(path);
@@ -134,7 +135,7 @@ export default function Sidebar({ profile }: SidebarProps) {
     { icon: FileText, label: 'Templates', href: '/coach/templates' },
     { icon: BookOpen, label: 'Anamnese', href: '/coach/anamnese' },
     { icon: DollarSign, label: 'Pagamentos', href: '/coach/pagamentos' },
-    { icon: User, label: 'Perfil', href: '/coach/perfil' },
+    { icon: Settings, label: 'Configurações', href: '/coach/perfil' },
   ] : [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/aluno/dashboard' },
     { icon: ImageIcon, label: 'Atualização Semanal', href: '/aluno/progresso' },
@@ -145,7 +146,7 @@ export default function Sidebar({ profile }: SidebarProps) {
     { icon: BookOpen, label: 'Guia Nutricional', href: '/aluno/guia-nutricional' },
     { icon: Users2, label: 'Comunidade', href: '/aluno/comunidade' },
     { icon: Gift, label: 'Indicação', href: '/aluno/indicacao' },
-    { icon: User, label: 'Perfil', href: '/aluno/perfil' },
+    { icon: Settings, label: 'Configurações', href: '/aluno/configuracoes' },
   ];
 
   const handleLogout = async () => {
