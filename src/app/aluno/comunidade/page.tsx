@@ -43,12 +43,29 @@ export default async function ComunidadePage({
   const communityIds = userCommunityIds?.map((uc) => uc.community_id) || [];
 
   // Buscar detalhes das comunidades separadamente (evita problema de RLS no JOIN)
+  const searchIds = communityIds.length > 0 ? communityIds : [PUBLIC_COMMUNITY_ID];
+
   const { data: communities } = await supabase
     .from('communities')
     .select('id, name, description, type')
-    .in('id', communityIds.length > 0 ? communityIds : ['00000000-0000-0000-0000-000000000001']);
+    .in('id', searchIds);
 
-  const isEmpty = !communities || communities.length === 0;
+  // Se não encontrou comunidades, forçar a comunidade pública
+  let finalCommunities = communities;
+  if (!communities || communities.length === 0) {
+    // Tentar buscar a comunidade pública diretamente
+    const { data: publicCommunity } = await supabase
+      .from('communities')
+      .select('id, name, description, type')
+      .eq('id', PUBLIC_COMMUNITY_ID)
+      .single();
+
+    if (publicCommunity) {
+      finalCommunities = [publicCommunity];
+    }
+  }
+
+  const isEmpty = !finalCommunities || finalCommunities.length === 0;
 
   if (isEmpty) {
     return (
@@ -59,7 +76,7 @@ export default async function ComunidadePage({
   }
 
   const currentCommunityId = searchParams.community || PUBLIC_COMMUNITY_ID;
-  const currentCommunity = communities.find((c: any) => c.id === currentCommunityId) || communities[0];
+  const currentCommunity = finalCommunities.find((c: any) => c.id === currentCommunityId) || finalCommunities[0];
 
   const { data: communityMembers } = await supabase
     .from('community_members')
@@ -115,7 +132,7 @@ export default async function ComunidadePage({
     .order('full_name');
 
   const communitiesWithCounts = await Promise.all(
-    communities.map(async (community: any) => {
+    finalCommunities.map(async (community: any) => {
       const { count } = await supabase
         .from('community_members')
         .select('*', { count: 'exact', head: true })

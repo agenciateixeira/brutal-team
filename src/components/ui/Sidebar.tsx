@@ -143,7 +143,7 @@ export default function Sidebar({ profile }: SidebarProps) {
     { icon: Dumbbell, label: 'Treino', href: '/aluno/treino' },
     { icon: Syringe, label: 'Protocolo', href: '/aluno/protocolo' },
     { icon: BookOpen, label: 'Guia Nutricional', href: '/aluno/guia-nutricional' },
-    ...(hasReferrals ? [{ icon: Users2, label: 'Comunidade', href: '/aluno/comunidade' }] : []),
+    { icon: Users2, label: 'Comunidade', href: '/aluno/comunidade' },
     { icon: Gift, label: 'Indicação', href: '/aluno/indicacao' },
     { icon: User, label: 'Perfil', href: '/aluno/perfil' },
   ];
