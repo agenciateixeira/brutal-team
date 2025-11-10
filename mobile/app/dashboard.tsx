@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, TouchableOpacity, StatusBar } from 'react-nativ
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { colors, spacing, borderRadius, fontSize } from '../lib/theme';
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -67,59 +68,59 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: colors.background, // #011936
   },
   content: {
     flex: 1,
-    padding: 20,
+    padding: spacing.lg,
     justifyContent: 'center',
   },
   welcome: {
-    fontSize: 24,
+    fontSize: fontSize.xxl,
     fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
+    color: colors.text.primary,
+    marginBottom: spacing.sm,
   },
   userName: {
-    fontSize: 18,
-    color: '#999',
-    marginBottom: 40,
+    fontSize: fontSize.lg,
+    color: colors.text.secondary, // #93B7BE
+    marginBottom: spacing.xxl,
   },
   card: {
-    backgroundColor: '#111',
+    backgroundColor: colors.surface, // #001a21
     borderWidth: 1,
-    borderColor: '#333',
-    borderRadius: 12,
-    padding: 24,
-    marginBottom: 32,
+    borderColor: colors.primary[700], // #004d64
+    borderRadius: borderRadius.lg,
+    padding: spacing.xl,
+    marginBottom: spacing.xxl,
   },
   cardTitle: {
-    fontSize: 20,
+    fontSize: fontSize.xl,
     fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 16,
+    color: colors.text.primary,
+    marginBottom: spacing.md,
   },
   cardText: {
-    fontSize: 14,
-    color: '#999',
+    fontSize: fontSize.sm,
+    color: colors.text.secondary,
     lineHeight: 24,
   },
   logoutButton: {
-    backgroundColor: '#333',
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: colors.surfaceLight, // #003443
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
     alignItems: 'center',
   },
   logoutText: {
-    color: '#fff',
-    fontSize: 14,
+    color: colors.text.primary,
+    fontSize: fontSize.sm,
     fontWeight: 'bold',
     letterSpacing: 1,
   },
   version: {
     textAlign: 'center',
-    color: '#666',
-    fontSize: 12,
-    marginTop: 20,
+    color: colors.text.tertiary, // #465362
+    fontSize: fontSize.xs,
+    marginTop: spacing.lg,
   },
 });

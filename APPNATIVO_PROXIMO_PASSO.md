@@ -45,14 +45,25 @@ Transformar o app web Next.js em apps nativos iOS e Android usando Expo (React N
   - Botão de logout funcional
   - Redirecionamento automático se não estiver logado
 
+**Branding e Design:**
+- ✅ **lib/theme.ts** criado com cores de produção
+  - Primary: #0081A7 (azul principal)
+  - Secondary: #011936 (azul escuro)
+  - Background: #011936
+  - Text: #FFFFFF, #93B7BE, #465362
+- ✅ **Login screen** aplicado com cores de produção
+- ✅ **Dashboard screen** aplicado com cores de produção
+- ✅ Consistência visual mantida com app web
+
 **Testado:**
 - ✅ Login funcional na web (localhost:8081)
 - ✅ Dashboard carrega corretamente
 - ✅ Logout funciona
 - ✅ Persistência de sessão (AsyncStorage)
+- ✅ Visual consistente com produção
 
 **Próximos passos:**
-1. Testar em device real (Android/iOS)
+1. ⏳ Testar em device real (Android/iOS) com Expo Go
 2. Criar navegação com tabs (aluno) / drawer (coach)
 3. Migrar telas de treino e dieta
 4. Implementar push notifications

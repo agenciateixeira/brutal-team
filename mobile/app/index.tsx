@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, StatusBar } from '
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
+import { colors, spacing, borderRadius, fontSize } from '../lib/theme';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -89,60 +90,60 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: colors.background, // #011936
   },
   content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: spacing.lg,
   },
   title: {
-    fontSize: 32,
+    fontSize: fontSize.xxxl,
     fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
+    color: colors.text.primary,
+    marginBottom: spacing.sm,
     letterSpacing: 2,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#999',
-    marginBottom: 48,
+    fontSize: fontSize.sm,
+    color: colors.text.secondary, // #93B7BE
+    marginBottom: spacing.xxl,
   },
   form: {
     width: '100%',
     maxWidth: 400,
   },
   input: {
-    backgroundColor: '#111',
+    backgroundColor: colors.surface, // #001a21
     borderWidth: 1,
-    borderColor: '#333',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    color: '#fff',
-    fontSize: 16,
+    borderColor: colors.primary[700], // #004d64
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    color: colors.text.primary,
+    fontSize: fontSize.md,
   },
   button: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: colors.primary[500], // #0081A7
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: spacing.sm,
   },
   buttonDisabled: {
     opacity: 0.5,
   },
   buttonText: {
-    color: '#000',
-    fontSize: 16,
+    color: colors.text.primary,
+    fontSize: fontSize.md,
     fontWeight: 'bold',
     letterSpacing: 1,
   },
   version: {
     position: 'absolute',
     bottom: 20,
-    color: '#666',
-    fontSize: 12,
+    color: colors.text.tertiary, // #465362
+    fontSize: fontSize.xs,
   },
 });
