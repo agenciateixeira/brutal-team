@@ -5,6 +5,61 @@ Transformar o app web Next.js em apps nativos iOS e Android usando Expo (React N
 
 ---
 
+## 📝 LOG DE PROGRESSO
+
+### 2025-11-10 - Setup Inicial + Autenticação ✅
+
+**Contas criadas:**
+- ✅ Google Play Developer ($25 pago)
+- ⏳ Apple Developer (aguardando MacBook chegar)
+
+**Projeto Expo:**
+- ✅ Projeto criado com `create-expo-app` (template blank-typescript)
+- ✅ Expo Router instalado e configurado
+- ✅ Supabase instalado (@supabase/supabase-js)
+- ✅ AsyncStorage configurado para persistência
+- ✅ React Native Web instalado (para testar no navegador)
+- ✅ Estrutura de pastas criada (app/, lib/, components/, assets/)
+
+**Configurações:**
+- ✅ app.json configurado com:
+  - Nome: "Brutal Team"
+  - Bundle IDs: com.brutalteam.app (iOS e Android)
+  - Permissões de câmera e galeria
+  - Tema: dark mode
+- ✅ Arquivo .env criado com credenciais Supabase
+- ✅ lib/supabase.ts configurado com AsyncStorage
+- ✅ package.json com entry point: "expo-router/entry"
+
+**Telas criadas e funcionando:**
+- ✅ **Tela de login** (app/index.tsx)
+  - Input de email e senha
+  - Integração completa com Supabase Auth
+  - Redirecionamento automático após login
+  - Verifica sessão ativa ao carregar
+  - Design minimalista dark theme
+
+- ✅ **Tela de dashboard** (app/dashboard.tsx)
+  - Mostra nome do usuário
+  - Card com preview de features
+  - Botão de logout funcional
+  - Redirecionamento automático se não estiver logado
+
+**Testado:**
+- ✅ Login funcional na web (localhost:8081)
+- ✅ Dashboard carrega corretamente
+- ✅ Logout funciona
+- ✅ Persistência de sessão (AsyncStorage)
+
+**Próximos passos:**
+1. Testar em device real (Android/iOS)
+2. Criar navegação com tabs (aluno) / drawer (coach)
+3. Migrar telas de treino e dieta
+4. Implementar push notifications
+5. Build para Google Play
+
+---
+
 ## 📋 CONTAS DE DESENVOLVEDOR
 
 ### Google Play Console (Android)
