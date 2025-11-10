@@ -10,15 +10,18 @@ export default function AlunoLayout() {
         tabBarInactiveTintColor: colors.text.tertiary,
         tabBarStyle: {
           backgroundColor: colors.surface,
-          borderTopColor: colors.primary[700],
+          borderTopColor: colors.border,
           borderTopWidth: 1,
           paddingBottom: 8,
           paddingTop: 8,
-          height: 65,
+          height: 70,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 10,
           fontWeight: '600',
+        },
+        tabBarIconStyle: {
+          marginTop: 4,
         },
         headerStyle: {
           backgroundColor: colors.background,
@@ -30,18 +33,10 @@ export default function AlunoLayout() {
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: 'Início',
+          title: 'Dashboard',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="treino"
-        options={{
-          title: 'Treino',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="barbell" size={size} color={color} />
+            <Ionicons name="grid" size={24} color={color} />
           ),
         }}
       />
@@ -49,8 +44,19 @@ export default function AlunoLayout() {
         name="dieta"
         options={{
           title: 'Dieta',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="nutrition" size={size} color={color} />
+            <Ionicons name="nutrition" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="treino"
+        options={{
+          title: 'Treino',
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="barbell" size={24} color={color} />
           ),
         }}
       />
@@ -58,17 +64,19 @@ export default function AlunoLayout() {
         name="comunidade"
         options={{
           title: 'Comunidade',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people" size={size} color={color} />
+            <Ionicons name="people" size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="perfil"
+        name="menu"
         options={{
-          title: 'Perfil',
+          title: 'Menu',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
+            <Ionicons name="menu" size={24} color={color} />
           ),
         }}
       />
