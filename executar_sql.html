@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executar SQLs - Brutal Team</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        h1 { color: #667eea; margin-bottom: 10px; }
+        .subtitle { color: #666; font-size: 16px; }
+        .steps {
+            display: grid;
+            gap: 25px;
+        }
+        .step {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            font-size: 20px;
+            margin-right: 15px;
+        }
+        .step-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .step-content {
+            margin-left: 55px;
+        }
+        .link-box {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            word-break: break-all;
+        }
+        .link-box a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .link-box a:hover {
+            text-decoration: underline;
+        }
+        .sql-box {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .copy-btn:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+        .copy-btn.copied {
+            background: #10b981;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            color: #856404;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            color: #155724;
+        }
+        pre { margin: 0; white-space: pre-wrap; word-break: break-word; }
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Executar Correções SQL - Brutal Team</h1>
+            <p class="subtitle">Siga os passos abaixo para corrigir a Comunidade e Dashboard</p>
+        </div>
+
+        <div class="steps">
+            <!-- PASSO 1 -->
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">1</span>
+                    Abra o SQL Editor do Supabase
+                </div>
+                <div class="step-content">
+                    <p>Clique no link abaixo para abrir o editor SQL do Supabase:</p>
+                    <div class="link-box">
+                        <a href="https://supabase.com/dashboard/project/kelmdelbrqsznzckznfb/sql/new" target="_blank">
+                            https://supabase.com/dashboard/project/kelmdelbrqsznzckznfb/sql/new
+                        </a>
+                    </div>
+                    <div class="warning">
+                        ⚠️ Certifique-se de estar logado no Supabase antes!
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASSO 2 -->
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">2</span>
+                    Execute: fix_comunidade_outros_alunos.sql
+                </div>
+                <div class="step-content">
+                    <p><strong>Clique em "Copiar SQL" abaixo</strong>, depois cole no editor do Supabase e clique em <strong>"RUN"</strong>:</p>
+                    <div class="sql-box" id="sql1">
+                        <button class="copy-btn" onclick="copiarSQL('sql1', this)">📋 Copiar SQL</button>
+                        <pre id="sql1-content"></pre>
+                    </div>
+                    <div class="success">
+                        ✅ Depois de executar, você verá um diagnóstico completo. <strong>COPIE TODA A SAÍDA</strong> e me mande!
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASSO 3 -->
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">3</span>
+                    Execute: fix_desmarcar_treino_v2.sql
+                </div>
+                <div class="step-content">
+                    <p><strong>Clique em "Copiar SQL" abaixo</strong>, cole no editor do Supabase e clique em <strong>"RUN"</strong>:</p>
+                    <div class="sql-box" id="sql2">
+                        <button class="copy-btn" onclick="copiarSQL('sql2', this)">📋 Copiar SQL</button>
+                        <pre id="sql2-content"></pre>
+                    </div>
+                    <div class="success">
+                        ✅ Este SQL vai mostrar resultados de teste. <strong>COPIE TODA A SAÍDA</strong> também!
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASSO 4 -->
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">4</span>
+                    Limpar Cache e Reiniciar
+                </div>
+                <div class="step-content">
+                    <p>Depois de executar os 2 SQLs acima:</p>
+                    <ol style="margin-left: 20px; line-height: 2;">
+                        <li>Dê duplo clique em <code>limpar_cache.bat</code></li>
+                        <li>Execute <code>npm run dev</code> no terminal</li>
+                        <li>Peça para os alunos fazerem logout e login novamente</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Brutal Team © 2025 - Sistema de Gamificação
+        </div>
+    </div>
+
+    <script>
+        // Carregar SQLs
+        const sql1 = `-- ============================================
+-- FIX DEFINITIVO: Comunidade para TODOS os alunos
+-- ============================================
+
+-- PASSO 1: Ver situação atual de TODOS os alunos
+SELECT
+  p.id,
+  p.full_name,
+  p.email,
+  p.role,
+  CASE WHEN cm.aluno_id IS NOT NULL THEN '✅ NA COMUNIDADE' ELSE '❌ FORA' END as status_comunidade,
+  cm.joined_at
+FROM profiles p
+LEFT JOIN community_members cm ON p.id = cm.aluno_id
+  AND cm.community_id = '00000000-0000-0000-0000-000000000001'
+WHERE p.role = 'aluno'
+ORDER BY p.full_name;
+
+-- PASSO 2: Adicionar TODOS os alunos que estão fora
+INSERT INTO community_members (community_id, aluno_id, role)
+SELECT
+  '00000000-0000-0000-0000-000000000001',
+  p.id,
+  'member'
+FROM profiles p
+LEFT JOIN community_members cm ON p.id = cm.aluno_id
+  AND cm.community_id = '00000000-0000-0000-0000-000000000001'
+WHERE p.role = 'aluno'
+  AND cm.aluno_id IS NULL
+ON CONFLICT (community_id, aluno_id) DO NOTHING;
+
+-- PASSO 3: Verificar RLS policies em COMMUNITIES (não só community_members)
+SELECT
+  tablename,
+  policyname,
+  cmd,
+  SUBSTRING(qual::text, 1, 200) as condicao
+FROM pg_policies
+WHERE tablename = 'communities'
+  AND cmd = 'SELECT'
+ORDER BY policyname;
+
+-- PASSO 4: REMOVER policies restritivas em communities e criar ultra-permissiva
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    -- Drop TODAS as policies de SELECT em communities
+    FOR r IN (
+        SELECT policyname
+        FROM pg_policies
+        WHERE tablename = 'communities'
+        AND cmd = 'SELECT'
+    ) LOOP
+        EXECUTE 'DROP POLICY IF EXISTS "' || r.policyname || '" ON communities';
+        RAISE NOTICE 'Removida policy: %', r.policyname;
+    END LOOP;
+END$$;
+
+-- Criar policy ULTRA-PERMISSIVA para communities
+CREATE POLICY "communities_select_all"
+ON communities FOR SELECT
+TO authenticated
+USING (true);
+
+-- PASSO 5: Verificar que policies estão ativas AGORA
+SELECT
+  'COMMUNITIES' as tabela,
+  policyname,
+  cmd,
+  CASE WHEN qual::text = 'true' THEN '✅ PERMISSIVA (true)' ELSE '⚠️ TEM FILTRO' END as tipo
+FROM pg_policies
+WHERE tablename = 'communities'
+  AND cmd = 'SELECT'
+UNION ALL
+SELECT
+  'COMMUNITY_MEMBERS' as tabela,
+  policyname,
+  cmd,
+  CASE WHEN qual::text = 'true' THEN '✅ PERMISSIVA (true)' ELSE '⚠️ TEM FILTRO' END as tipo
+FROM pg_policies
+WHERE tablename = 'community_members'
+  AND cmd = 'SELECT'
+ORDER BY tabela, policyname;
+
+-- PASSO 6: Testar EXATAMENTE como outro aluno (simulação)
+DO $$
+DECLARE
+  test_aluno_id UUID;
+  test_aluno_name TEXT;
+  community_ids_count INT;
+  communities_count INT;
+BEGIN
+  -- Pegar UM aluno que não é o Guilherme
+  SELECT id, full_name INTO test_aluno_id, test_aluno_name
+  FROM profiles
+  WHERE role = 'aluno'
+    AND id != '501a3efe-84a6-4c71-b135-4c59b41a4e0e'
+  LIMIT 1;
+
+  IF test_aluno_id IS NULL THEN
+    RAISE NOTICE '❌ Não encontrou outro aluno para testar';
+    RETURN;
+  END IF;
+
+  RAISE NOTICE '🧪 Testando com aluno: % (ID: %)', test_aluno_name, test_aluno_id;
+
+  -- Simular QUERY 1: buscar community_ids (igual ao app)
+  SELECT COUNT(*) INTO community_ids_count
+  FROM community_members
+  WHERE aluno_id = test_aluno_id;
+
+  RAISE NOTICE '  ├─ community_members: % registros', community_ids_count;
+
+  -- Simular QUERY 2: buscar communities
+  SELECT COUNT(*) INTO communities_count
+  FROM communities
+  WHERE id = '00000000-0000-0000-0000-000000000001';
+
+  RAISE NOTICE '  ├─ communities: % registros', communities_count;
+
+  IF community_ids_count > 0 AND communities_count > 0 THEN
+    RAISE NOTICE '  └─ ✅ ALUNO DEVERIA VER A COMUNIDADE';
+  ELSE
+    RAISE NOTICE '  └─ ❌ PROBLEMA: aluno NÃO vai ver comunidade';
+    IF community_ids_count = 0 THEN
+      RAISE NOTICE '      Motivo: não está em community_members';
+    END IF;
+    IF communities_count = 0 THEN
+      RAISE NOTICE '      Motivo: RLS bloqueando communities';
+    END IF;
+  END IF;
+END$$;
+
+-- PASSO 7: Contar TOTAL de alunos vs TOTAL na comunidade
+SELECT
+  (SELECT COUNT(*) FROM profiles WHERE role = 'aluno') as total_alunos,
+  (SELECT COUNT(*) FROM community_members WHERE community_id = '00000000-0000-0000-0000-000000000001') as total_na_comunidade;
+
+-- PASSO 8: Mostrar a comunidade pública
+SELECT
+  id,
+  name,
+  type,
+  description,
+  created_at
+FROM communities
+WHERE id = '00000000-0000-0000-0000-000000000001';`;
+
+        const sql2 = `-- ============================================
+-- FIX v2: Desmarcar treino (versão simplificada)
+-- ============================================
+
+DROP FUNCTION IF EXISTS sync_workout_tracking_to_daily_stats() CASCADE;
+
+CREATE OR REPLACE FUNCTION sync_workout_tracking_to_daily_stats()
+RETURNS TRIGGER AS $$
+DECLARE
+  track_date DATE;
+  total_workouts INT;
+  completed_workouts INT;
+  current_aluno_id UUID;
+  streak_count INT := 0;
+  longest INT := 0;
+  check_date DATE;
+  has_activity BOOLEAN;
+BEGIN
+  track_date := COALESCE(NEW.date, OLD.date);
+  current_aluno_id := COALESCE(NEW.aluno_id, OLD.aluno_id);
+
+  -- Contar workouts
+  SELECT COUNT(*), COUNT(*) FILTER (WHERE completed = true)
+  INTO total_workouts, completed_workouts
+  FROM workout_tracking
+  WHERE aluno_id = current_aluno_id AND date = track_date;
+
+  -- Atualizar daily_stats
+  INSERT INTO daily_stats (aluno_id, date, workouts_planned, workouts_completed, is_active_day, updated_at)
+  VALUES (current_aluno_id, track_date, total_workouts, completed_workouts, completed_workouts > 0, NOW())
+  ON CONFLICT (aluno_id, date)
+  DO UPDATE SET
+    workouts_planned = EXCLUDED.workouts_planned,
+    workouts_completed = EXCLUDED.workouts_completed,
+    is_active_day = EXCLUDED.is_active_day,
+    updated_at = NOW();
+
+  -- CALCULAR STREAK: contar dias consecutivos de trás pra frente
+  check_date := CURRENT_DATE;
+  LOOP
+    SELECT is_active_day INTO has_activity
+    FROM daily_stats
+    WHERE aluno_id = current_aluno_id AND date = check_date;
+
+    -- Se não tem registro OU não está ativo, para o loop
+    IF has_activity IS NULL OR has_activity = false THEN
+      -- Só quebra o streak se não for o próprio dia de hoje
+      -- (se hoje não tem atividade mas ontem tinha, streak = 0)
+      EXIT;
+    END IF;
+
+    -- Tem atividade, incrementa streak
+    streak_count := streak_count + 1;
+    check_date := check_date - INTERVAL '1 day';
+
+    -- Proteção: não calcular mais de 365 dias
+    EXIT WHEN streak_count > 365;
+  END LOOP;
+
+  -- Pegar longest_streak atual
+  SELECT COALESCE(longest_streak, 0) INTO longest
+  FROM user_stats
+  WHERE aluno_id = current_aluno_id;
+
+  -- Atualizar user_stats
+  INSERT INTO user_stats (
+    aluno_id,
+    total_workouts,
+    current_streak,
+    longest_streak,
+    total_active_days,
+    last_active_date,
+    updated_at
+  )
+  SELECT
+    current_aluno_id,
+    (SELECT COUNT(*) FROM workout_tracking WHERE aluno_id = current_aluno_id AND completed = true),
+    streak_count,
+    GREATEST(longest, streak_count),
+    (SELECT COUNT(*) FROM daily_stats WHERE aluno_id = current_aluno_id AND is_active_day = true),
+    (SELECT MAX(date) FROM daily_stats WHERE aluno_id = current_aluno_id AND is_active_day = true),
+    NOW()
+  ON CONFLICT (aluno_id)
+  DO UPDATE SET
+    total_workouts = EXCLUDED.total_workouts,
+    current_streak = EXCLUDED.current_streak,
+    longest_streak = EXCLUDED.longest_streak,
+    total_active_days = EXCLUDED.total_active_days,
+    last_active_date = EXCLUDED.last_active_date,
+    updated_at = NOW();
+
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql;
+
+-- Recriar trigger
+DROP TRIGGER IF EXISTS trigger_sync_workout_tracking ON workout_tracking;
+CREATE TRIGGER trigger_sync_workout_tracking
+  AFTER INSERT OR UPDATE OR DELETE ON workout_tracking
+  FOR EACH ROW
+  EXECUTE FUNCTION sync_workout_tracking_to_daily_stats();
+
+-- TAMBÉM ATUALIZAR a função de meal_tracking (mesmo problema)
+DROP FUNCTION IF EXISTS sync_meal_tracking_to_daily_stats() CASCADE;
+
+CREATE OR REPLACE FUNCTION sync_meal_tracking_to_daily_stats()
+RETURNS TRIGGER AS $$
+DECLARE
+  track_date DATE;
+  meals_count INT;
+  current_aluno_id UUID;
+BEGIN
+  track_date := COALESCE(NEW.date, OLD.date);
+  current_aluno_id := COALESCE(NEW.aluno_id, OLD.aluno_id);
+
+  -- Contar refeições completadas
+  SELECT
+    (CASE WHEN cafe_da_manha THEN 1 ELSE 0 END +
+     CASE WHEN lanche_manha THEN 1 ELSE 0 END +
+     CASE WHEN almoco THEN 1 ELSE 0 END +
+     CASE WHEN lanche_tarde THEN 1 ELSE 0 END +
+     CASE WHEN janta THEN 1 ELSE 0 END +
+     CASE WHEN ceia THEN 1 ELSE 0 END)
+  INTO meals_count
+  FROM meal_tracking
+  WHERE aluno_id = current_aluno_id AND date = track_date;
+
+  -- Se não existe registro, meals_count = 0
+  meals_count := COALESCE(meals_count, 0);
+
+  -- Atualizar daily_stats
+  INSERT INTO daily_stats (aluno_id, date, meals_planned, meals_completed, updated_at)
+  VALUES (current_aluno_id, track_date, 6, meals_count, NOW())
+  ON CONFLICT (aluno_id, date)
+  DO UPDATE SET
+    meals_planned = 6,
+    meals_completed = EXCLUDED.meals_completed,
+    updated_at = NOW();
+
+  -- Atualizar user_stats
+  UPDATE user_stats SET
+    total_meals_completed = (
+      SELECT SUM(meals_completed) FROM daily_stats WHERE aluno_id = current_aluno_id
+    ),
+    updated_at = NOW()
+  WHERE aluno_id = current_aluno_id;
+
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql;
+
+-- Recriar trigger
+DROP TRIGGER IF EXISTS trigger_sync_meal_tracking ON meal_tracking;
+CREATE TRIGGER trigger_sync_meal_tracking
+  AFTER INSERT OR UPDATE OR DELETE ON meal_tracking
+  FOR EACH ROW
+  EXECUTE FUNCTION sync_meal_tracking_to_daily_stats();
+
+-- ============================================
+-- TESTE: Marcar e Desmarcar
+-- ============================================
+
+-- 1. MARCAR treino
+UPDATE workout_tracking
+SET completed = true, updated_at = NOW()
+WHERE aluno_id = '501a3efe-84a6-4c71-b135-4c59b41a4e0e'
+  AND date = CURRENT_DATE;
+
+SELECT 'DEPOIS DE MARCAR' as momento,
+  workouts_completed,
+  is_active_day
+FROM daily_stats
+WHERE aluno_id = '501a3efe-84a6-4c71-b135-4c59b41a4e0e' AND date = CURRENT_DATE;
+
+SELECT 'DEPOIS DE MARCAR' as momento,
+  total_workouts,
+  current_streak,
+  longest_streak
+FROM user_stats
+WHERE aluno_id = '501a3efe-84a6-4c71-b135-4c59b41a4e0e';
+
+-- 2. DESMARCAR treino
+UPDATE workout_tracking
+SET completed = false, updated_at = NOW()
+WHERE aluno_id = '501a3efe-84a6-4c71-b135-4c59b41a4e0e'
+  AND date = CURRENT_DATE;
+
+SELECT 'DEPOIS DE DESMARCAR' as momento,
+  workouts_completed,
+  is_active_day
+FROM daily_stats
+WHERE aluno_id = '501a3efe-84a6-4c71-b135-4c59b41a4e0e' AND date = CURRENT_DATE;
+
+SELECT 'DEPOIS DE DESMARCAR' as momento,
+  total_workouts,
+  current_streak,
+  longest_streak
+FROM user_stats
+WHERE aluno_id = '501a3efe-84a6-4c71-b135-4c59b41a4e0e';
+
+-- Deve mostrar:
+-- DEPOIS DE MARCAR: workouts_completed=1, is_active_day=true, current_streak≥1
+-- DEPOIS DE DESMARCAR: workouts_completed=0, is_active_day=false, current_streak=0 (se só tinha hoje)`;
+
+        document.getElementById('sql1-content').textContent = sql1;
+        document.getElementById('sql2-content').textContent = sql2;
+
+        function copiarSQL(id, btn) {
+            const content = document.getElementById(id + '-content').textContent;
+            navigator.clipboard.writeText(content).then(() => {
+                btn.textContent = '✅ Copiado!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = '📋 Copiar SQL';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

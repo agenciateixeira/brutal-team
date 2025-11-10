@@ -247,7 +247,7 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.backgroundGray, // bg-gray-50 igual ao web
   },
   content: {
     padding: spacing.lg,
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: colors.backgroundGray,
   },
   header: {
     marginBottom: spacing.lg,
@@ -279,12 +279,17 @@ const styles = StyleSheet.create({
     textTransform: 'capitalize',
   },
   statsCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surface, // branco
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.primary[700],
+    borderColor: colors.border, // cinza claro
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   statsHeader: {
     flexDirection: 'row',
@@ -307,7 +312,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: fontSize.xxl,
     fontWeight: 'bold',
-    color: colors.primary[500],
+    color: colors.primaryColor, // azul
     marginBottom: spacing.xs,
   },
   statLabel: {
@@ -370,7 +375,12 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.primary[700],
+    borderColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   quickAccessTitle: {
     fontSize: fontSize.md,
@@ -390,7 +400,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     textAlign: 'center',
     borderWidth: 1,
-    borderColor: colors.primary[500],
+    borderColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   welcomeTitle: {
     fontSize: fontSize.lg,

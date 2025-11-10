@@ -48,16 +48,20 @@ export const colors = {
     800: '#3b494c',
     900: '#1d2526',
   },
-  // Cores de UI
-  background: '#011936', // Secondary 500
-  surface: '#001a21', // Primary 900
-  surfaceLight: '#003443', // Primary 800
+  // Cores de UI (IGUAL AO WEB - FUNDO BRANCO)
+  background: '#FFFFFF', // bg-white
+  backgroundGray: '#F9FAFB', // bg-gray-50
+  surface: '#FFFFFF', // bg-white
+  surfaceGray: '#F3F4F6', // bg-gray-100
+  border: '#E5E7EB', // border-gray-200
+  borderDark: '#D1D5DB', // border-gray-300
   text: {
-    primary: '#FFFFFF',
-    secondary: '#93B7BE', // Light 500
-    tertiary: '#465362', // Accent 500
+    primary: '#111827', // text-gray-900
+    secondary: '#374151', // text-gray-700
+    tertiary: '#6B7280', // text-gray-500
   },
-  border: '#0081A7', // Primary 500
+  // Cores de ação
+  primaryColor: '#0081A7', // Azul principal
   error: '#ef4444',
   success: '#10b981',
   warning: '#f59e0b',
