@@ -32,3 +32,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Scripts com credenciais
+scripts/*supabase*.js
+scripts/*notification*.js
+executar*.js
+executar*.bat
+limpar_cache.bat
+
+# Supabase temp files
+supabase/.temp/
+
+# Push notifications
+supabasefunctionssend-push-notification*
