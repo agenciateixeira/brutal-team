@@ -14,14 +14,14 @@ export default function LoginScreen() {
     // Verificar se já está logado
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        router.replace('/dashboard');
+        router.replace('/(aluno)/dashboard');
       }
     });
 
     // Escutar mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        router.replace('/dashboard');
+        router.replace('/(aluno)/dashboard');
       }
     });
 

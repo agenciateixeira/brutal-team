@@ -1,13 +1,14 @@
 import { Stack } from 'expo-router';
+import { colors } from '../lib/theme';
 
 export default function RootLayout() {
   return (
     <Stack
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#000',
+          backgroundColor: colors.background,
         },
-        headerTintColor: '#fff',
+        headerTintColor: colors.text.primary,
         headerTitleStyle: {
           fontWeight: 'bold',
         },
@@ -17,6 +18,19 @@ export default function RootLayout() {
         name="index"
         options={{
           title: 'Brutal Team',
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="dashboard"
+        options={{
+          title: 'Dashboard',
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="(aluno)"
+        options={{
           headerShown: false,
         }}
       />
