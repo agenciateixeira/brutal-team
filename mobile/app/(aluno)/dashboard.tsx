@@ -1,9 +1,18 @@
-import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useRouter } from 'expo-router';
 import { colors, spacing, borderRadius, fontSize } from '../../lib/theme';
 import { Ionicons } from '@expo/vector-icons';
+import GamificationDashboard from '../../components/gamification/GamificationDashboard';
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -11,6 +20,9 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [userStats, setUserStats] = useState<any>(null);
+  const [achievements, setAchievements] = useState<any[]>([]);
+  const [userAchievements, setUserAchievements] = useState<any[]>([]);
+  const [todayStats, setTodayStats] = useState<any>(null);
   const [dietaAtiva, setDietaAtiva] = useState<any>(null);
   const [treinoAtivo, setTreinoAtivo] = useState<any>(null);
   const [updatesCount, setUpdatesCount] = useState(0);
@@ -21,7 +33,9 @@ export default function DashboardScreen() {
 
   async function loadDashboard() {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         router.replace('/');
         return;
@@ -35,13 +49,14 @@ export default function DashboardScreen() {
         .single();
 
       if (profileData?.role !== 'aluno') {
-        // Redirecionar para coach se necessário
         return;
       }
 
       setProfile(profileData);
 
-      // Buscar stats de gamificação
+      // ===== GAMIFICAÇÃO: Buscar dados =====
+
+      // Buscar stats do aluno
       const { data: stats } = await supabase
         .from('user_stats')
         .select('*')
@@ -49,6 +64,48 @@ export default function DashboardScreen() {
         .single();
 
       setUserStats(stats);
+
+      // Buscar todos os achievements disponíveis
+      const { data: allAchievements } = await supabase
+        .from('achievements')
+        .select('*')
+        .order('tier', { ascending: true });
+
+      setAchievements(allAchievements || []);
+
+      // Buscar achievements desbloqueados pelo aluno
+      const { data: userAchievementsData } = await supabase
+        .from('user_achievements')
+        .select(
+          `
+          *,
+          achievements (*)
+        `
+        )
+        .eq('aluno_id', user.id);
+
+      // Extrair apenas os achievements
+      const userAchievs =
+        userAchievementsData?.map((ua) => ua.achievements).filter(Boolean) || [];
+      setUserAchievements(userAchievs);
+
+      // Buscar stats do dia atual
+      const today = new Date().toISOString().split('T')[0];
+      const { data: todayStatsData } = await supabase
+        .from('daily_stats')
+        .select('*')
+        .eq('aluno_id', user.id)
+        .eq('date', today)
+        .maybeSingle();
+
+      setTodayStats(todayStatsData);
+
+      // Criar stats default se não existir
+      if (!stats) {
+        await supabase.from('user_stats').insert({ aluno_id: user.id });
+      }
+
+      // ===== FIM GAMIFICAÇÃO =====
 
       // Buscar dieta ativa
       const { data: dieta } = await supabase
@@ -73,7 +130,7 @@ export default function DashboardScreen() {
       // Contar atualizações
       const updates = [
         dieta && dieta.viewed_by_aluno === false,
-        treino && treino.viewed_by_aluno === false
+        treino && treino.viewed_by_aluno === false,
       ].filter(Boolean).length;
 
       setUpdatesCount(updates);
@@ -102,8 +159,12 @@ export default function DashboardScreen() {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
-    year: 'numeric'
+    year: 'numeric',
   });
+
+  const hasDietaUpdate = dietaAtiva && dietaAtiva.viewed_by_aluno === false;
+  const hasTreinoUpdate = treinoAtivo && treinoAtivo.viewed_by_aluno === false;
+  const showWelcomeMessage = !dietaAtiva || !treinoAtivo;
 
   return (
     <ScrollView
@@ -126,59 +187,63 @@ export default function DashboardScreen() {
         <Text style={styles.date}>{today}</Text>
       </View>
 
-      {/* Gamificação - Stats Card */}
-      {userStats && (
-        <View style={styles.statsCard}>
-          <View style={styles.statsHeader}>
-            <Ionicons name="trophy" size={24} color={colors.primary[500]} />
-            <Text style={styles.statsTitle}>Seu Progresso</Text>
-          </View>
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{userStats.current_level || 1}</Text>
-              <Text style={styles.statLabel}>Nível</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{userStats.total_points || 0}</Text>
-              <Text style={styles.statLabel}>Pontos</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{userStats.current_streak || 0}</Text>
-              <Text style={styles.statLabel}>Sequência</Text>
-            </View>
-          </View>
-        </View>
+      {/* Gamification Dashboard */}
+      {userStats && achievements.length > 0 && (
+        <GamificationDashboard
+          userStats={userStats}
+          achievements={achievements}
+          userAchievements={userAchievements}
+          todayStats={todayStats}
+          userName={profile?.full_name}
+        />
       )}
 
       {/* Notificação de Atualizações */}
       {updatesCount > 0 && (
         <View style={styles.updateCard}>
           <View style={styles.updateHeader}>
-            <Ionicons name="notifications" size={24} color="#f97316" />
-            <Text style={styles.updateTitle}>Nova Atualização!</Text>
-          </View>
-          <Text style={styles.updateText}>
-            Seu coach fez atualizações. Confira agora!
-          </Text>
-          <View style={styles.updateButtons}>
-            {dietaAtiva && dietaAtiva.viewed_by_aluno === false && (
-              <TouchableOpacity
-                style={styles.updateButton}
-                onPress={() => router.push('/aluno/dieta' as any)}
-              >
-                <Ionicons name="nutrition" size={16} color="#fff" />
-                <Text style={styles.updateButtonText}>Ver Dieta</Text>
-              </TouchableOpacity>
-            )}
-            {treinoAtivo && treinoAtivo.viewed_by_aluno === false && (
-              <TouchableOpacity
-                style={styles.updateButton}
-                onPress={() => router.push('/aluno/treino' as any)}
-              >
-                <Ionicons name="barbell" size={16} color="#fff" />
-                <Text style={styles.updateButtonText}>Ver Treino</Text>
-              </TouchableOpacity>
-            )}
+            <View style={styles.updateIconContainer}>
+              <Ionicons name="notifications" size={24} color="#fff" />
+            </View>
+            <View style={styles.updateContent}>
+              <View style={styles.updateTitleRow}>
+                <Ionicons name="sparkles" size={20} color="#f97316" />
+                <Text style={styles.updateTitle}>Nova Atualização Disponível!</Text>
+              </View>
+              <Text style={styles.updateText}>
+                {updatesCount === 2
+                  ? `${
+                      profile?.full_name || 'Atleta'
+                    }, seu coach fez atualização nos seus treinos e dieta. Acesse-os para verificar já e manter a sua evolução em dia!`
+                  : hasDietaUpdate
+                  ? `${
+                      profile?.full_name || 'Atleta'
+                    }, sua dieta foi atualizada, acesse a página da dieta e verifique.`
+                  : `${
+                      profile?.full_name || 'Atleta'
+                    }, seu treino foi atualizado, acesse a página do treino e verifique.`}
+              </Text>
+              <View style={styles.updateButtons}>
+                {hasDietaUpdate && (
+                  <TouchableOpacity
+                    style={styles.updateButton}
+                    onPress={() => router.push('/(aluno)/dieta' as any)}
+                  >
+                    <Ionicons name="nutrition" size={16} color="#fff" />
+                    <Text style={styles.updateButtonText}>Ver Dieta</Text>
+                  </TouchableOpacity>
+                )}
+                {hasTreinoUpdate && (
+                  <TouchableOpacity
+                    style={styles.updateButton}
+                    onPress={() => router.push('/(aluno)/treino' as any)}
+                  >
+                    <Ionicons name="barbell" size={16} color="#fff" />
+                    <Text style={styles.updateButtonText}>Ver Treino</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
           </View>
         </View>
       )}
@@ -187,7 +252,7 @@ export default function DashboardScreen() {
       <View style={styles.quickAccessGrid}>
         <TouchableOpacity
           style={styles.quickAccessCard}
-          onPress={() => router.push('/aluno/treino' as any)}
+          onPress={() => router.push('/(aluno)/treino' as any)}
         >
           <Ionicons name="barbell" size={32} color={colors.primary[500]} />
           <Text style={styles.quickAccessTitle}>Treino</Text>
@@ -198,7 +263,7 @@ export default function DashboardScreen() {
 
         <TouchableOpacity
           style={styles.quickAccessCard}
-          onPress={() => router.push('/aluno/dieta' as any)}
+          onPress={() => router.push('/(aluno)/dieta' as any)}
         >
           <Ionicons name="nutrition" size={32} color={colors.primary[500]} />
           <Text style={styles.quickAccessTitle}>Dieta</Text>
@@ -209,7 +274,7 @@ export default function DashboardScreen() {
 
         <TouchableOpacity
           style={styles.quickAccessCard}
-          onPress={() => router.push('/aluno/progresso' as any)}
+          onPress={() => router.push('/(aluno)/progresso' as any)}
         >
           <Ionicons name="trending-up" size={32} color={colors.primary[500]} />
           <Text style={styles.quickAccessTitle}>Progresso</Text>
@@ -218,7 +283,7 @@ export default function DashboardScreen() {
 
         <TouchableOpacity
           style={styles.quickAccessCard}
-          onPress={() => router.push('/aluno/comunidade' as any)}
+          onPress={() => router.push('/(aluno)/comunidade' as any)}
         >
           <Ionicons name="people" size={32} color={colors.primary[500]} />
           <Text style={styles.quickAccessTitle}>Comunidade</Text>
@@ -227,7 +292,7 @@ export default function DashboardScreen() {
       </View>
 
       {/* Mensagem de Boas-vindas se não tiver treino ou dieta */}
-      {(!dietaAtiva || !treinoAtivo) && (
+      {showWelcomeMessage && (
         <View style={styles.welcomeCard}>
           <Ionicons name="information-circle" size={24} color={colors.primary[500]} />
           <Text style={styles.welcomeTitle}>Bem-vindo ao Brutal Team!</Text>
@@ -247,7 +312,7 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.backgroundGray, // bg-gray-50 igual ao web
+    backgroundColor: colors.backgroundGray,
   },
   content: {
     padding: spacing.lg,
@@ -278,73 +343,54 @@ const styles = StyleSheet.create({
     color: colors.text.tertiary,
     textTransform: 'capitalize',
   },
-  statsCard: {
-    backgroundColor: colors.surface, // branco
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border, // cinza claro
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  statsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  statsTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: 'bold',
-    color: colors.text.primary,
-    marginLeft: spacing.sm,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: fontSize.xxl,
-    fontWeight: 'bold',
-    color: colors.primaryColor, // azul
-    marginBottom: spacing.xs,
-  },
-  statLabel: {
-    fontSize: fontSize.sm,
-    color: colors.text.secondary,
-  },
   updateCard: {
     backgroundColor: '#fed7aa',
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
-    marginBottom: spacing.md,
+    marginTop: spacing.md,
     borderWidth: 2,
     borderColor: '#f97316',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   updateHeader: {
     flexDirection: 'row',
+    gap: spacing.md,
+  },
+  updateIconContainer: {
+    width: 48,
+    height: 48,
+    backgroundColor: '#f97316',
+    borderRadius: 24,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+  },
+  updateContent: {
+    flex: 1,
+  },
+  updateTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
   },
   updateTitle: {
     fontSize: fontSize.lg,
     fontWeight: 'bold',
     color: '#7c2d12',
-    marginLeft: spacing.sm,
   },
   updateText: {
     fontSize: fontSize.md,
     color: '#7c2d12',
     marginBottom: spacing.md,
+    lineHeight: fontSize.md * 1.5,
   },
   updateButtons: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   updateButton: {
@@ -365,7 +411,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.md,
-    marginBottom: spacing.lg,
+    marginTop: spacing.lg,
   },
   quickAccessCard: {
     flex: 1,
@@ -401,6 +447,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     borderWidth: 1,
     borderColor: colors.border,
+    marginTop: spacing.lg,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
