@@ -160,15 +160,25 @@ export default function CadastroCoachPage() {
     }
   };
 
-  const handleOnboardingExit = () => {
-    console.log('[Cadastro Coach] Onboarding concluído');
-    setStep('completo');
-    setSuccess(true);
-    showLoading('Cadastro completo! Redirecionando...', 3000);
-    setTimeout(() => {
-      hideLoading();
-      router.push('/login');
-    }, 2000);
+  const handleOnboardingExit = (exitEvent: any) => {
+    console.log('[Cadastro Coach] Onboarding exit event:', exitEvent);
+
+    // Só considerar completo se o Stripe confirmar que foi completo
+    // O evento pode ser: {completed: true} ou similar
+    if (exitEvent?.completed || exitEvent?.details_submitted) {
+      console.log('[Cadastro Coach] KYC completo, redirecionando para login');
+      setStep('completo');
+      setSuccess(true);
+      showLoading('Cadastro completo! Redirecionando...', 3000);
+      setTimeout(() => {
+        hideLoading();
+        router.push('/login');
+      }, 2000);
+    } else {
+      console.log('[Cadastro Coach] Onboarding não completo, mantendo na página');
+      // Não fazer nada - mantém o usuário na página para completar
+      setOnboardingError('Por favor, complete todas as etapas obrigatórias do cadastro bancário.');
+    }
   };
 
   return (
@@ -411,12 +421,15 @@ export default function CadastroCoachPage() {
             {/* Erro ao carregar */}
             {onboardingError && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-sm text-red-700">{onboardingError}</p>
+                <p className="text-sm text-red-700 mb-3">{onboardingError}</p>
+                <p className="text-xs text-red-600 mb-4">
+                  O cadastro de dados bancários é obrigatório para coaches. Por favor, tente novamente ou entre em contato com o suporte.
+                </p>
                 <button
-                  onClick={() => router.push('/login')}
-                  className="mt-4 text-sm text-primary-600 hover:text-primary-700 font-medium"
+                  onClick={() => window.location.reload()}
+                  className="mt-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
                 >
-                  Ir para o login e completar depois
+                  Tentar Novamente
                 </button>
               </div>
             )}
@@ -437,16 +450,20 @@ export default function CadastroCoachPage() {
                   />
                 </div>
 
-                <div className="text-center">
-                  <button
-                    onClick={() => {
-                      setSuccess(true);
-                      router.push('/login');
-                    }}
-                    className="text-sm text-gray-600 hover:text-gray-800"
-                  >
-                    Pular e completar depois
-                  </button>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-yellow-900 mb-1">
+                        Cadastro de Dados Bancários Obrigatório
+                      </p>
+                      <p className="text-xs text-yellow-800">
+                        Complete todas as etapas acima para poder receber pagamentos dos seus alunos. Este processo é obrigatório e segue as normas de conformidade do Stripe.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
