@@ -11,6 +11,8 @@ export default function DadosBancarios() {
   const supabase = createClient()
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<any>(null)
+  const [bankAccount, setBankAccount] = useState<any>(null)
+  const [accountStatus, setAccountStatus] = useState<any>(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [kycLoading, setKycLoading] = useState(false)
@@ -18,6 +20,12 @@ export default function DadosBancarios() {
   useEffect(() => {
     loadProfile()
   }, [])
+
+  useEffect(() => {
+    if (profile && profile.stripe_account_id) {
+      loadBankAccount()
+    }
+  }, [profile])
 
   const loadProfile = async () => {
     try {
@@ -44,16 +52,33 @@ export default function DadosBancarios() {
       })
 
       setProfile(profileData)
-
-      // Se já tem KYC completo, mostrar sucesso
-      if (profileData?.stripe_charges_enabled && profileData?.stripe_payouts_enabled) {
-        setSuccess(true)
-      }
     } catch (err) {
       console.error('Erro ao carregar perfil:', err)
       setError('Erro ao carregar dados do perfil')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadBankAccount = async () => {
+    try {
+      const response = await fetch('/api/stripe/get-bank-account')
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Erro ao carregar conta bancária:', errorData)
+        return
+      }
+
+      const data = await response.json()
+
+      if (data.hasAccount) {
+        setBankAccount(data.bankAccount)
+        setAccountStatus(data.accountStatus)
+        setSuccess(true) // Mostrar como sucesso se já tem conta cadastrada
+      }
+    } catch (err: any) {
+      console.error('Erro ao carregar conta bancária:', err)
     }
   }
 
@@ -119,8 +144,8 @@ export default function DadosBancarios() {
           </p>
         </div>
 
-        {/* Mensagem de Sucesso */}
-        {success && (
+        {/* Dados Bancários Cadastrados */}
+        {success && bankAccount && (
           <div className="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
             <div className="flex items-start gap-3">
               <svg className="w-6 h-6 text-green-600 dark:text-green-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -128,34 +153,71 @@ export default function DadosBancarios() {
               </svg>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-green-900 dark:text-green-100 mb-2">
-                  ✅ Verificação Concluída!
+                  ✅ Dados Bancários Cadastrados
                 </h3>
-                <p className="text-sm text-green-700 dark:text-green-300 mb-3">
-                  Seus dados bancários foram verificados com sucesso pela Stripe. Você já pode receber pagamentos dos seus alunos!
+                <p className="text-sm text-green-700 dark:text-green-300 mb-4">
+                  Seus dados bancários foram enviados para verificação pela Stripe.
                 </p>
-                <div className="bg-green-100 dark:bg-green-900/40 rounded-lg p-4 text-sm text-green-800 dark:text-green-200">
-                  <p className="font-medium mb-2">Status da Conta:</p>
-                  <ul className="space-y-1">
-                    <li className="flex items-center gap-2">
-                      <span className="w-2 h-2 bg-green-600 rounded-full"></span>
-                      <span>Pagamentos habilitados: <strong>Sim</strong></span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="w-2 h-2 bg-green-600 rounded-full"></span>
-                      <span>Transferências habilitadas: <strong>Sim</strong></span>
-                    </li>
-                  </ul>
+
+                {/* Informações da Conta Bancária */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-4 border border-green-200 dark:border-green-700">
+                  <p className="font-medium text-gray-900 dark:text-white mb-3">Instituição Cadastrada:</p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Banco:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{bankAccount.bankName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Agência/Código:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{bankAccount.routingNumber}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Conta:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">****{bankAccount.last4}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Titular:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{bankAccount.accountHolderName}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="mt-4 flex gap-3">
+
+                {/* Status da Verificação */}
+                {accountStatus && (
+                  <div className={`rounded-lg p-4 text-sm mb-4 ${
+                    accountStatus.charges_enabled && accountStatus.payouts_enabled
+                      ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200'
+                      : 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200'
+                  }`}>
+                    <p className="font-medium mb-2">Status da Verificação:</p>
+                    <ul className="space-y-1">
+                      <li className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${accountStatus.charges_enabled ? 'bg-green-600' : 'bg-yellow-600'}`}></span>
+                        <span>Pagamentos: <strong>{accountStatus.charges_enabled ? 'Habilitados' : 'Em Verificação'}</strong></span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${accountStatus.payouts_enabled ? 'bg-green-600' : 'bg-yellow-600'}`}></span>
+                        <span>Transferências: <strong>{accountStatus.payouts_enabled ? 'Habilitadas' : 'Em Verificação'}</strong></span>
+                      </li>
+                    </ul>
+                    {accountStatus.requirements_pending && accountStatus.requirements_pending.length > 0 && (
+                      <p className="mt-3 text-xs">
+                        A Stripe está verificando suas informações. Você receberá um email quando a verificação for concluída.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex gap-3">
                   <button
                     onClick={() => router.push('/coach/dashboard')}
-                    className="bg-[#0081A7] text-white px-6 py-2 rounded-lg hover:bg-[#006685] transition-colors font-medium"
+                    className="flex-1 bg-[#0081A7] text-white px-6 py-2 rounded-lg hover:bg-[#006685] transition-colors font-medium"
                   >
                     Ir para Dashboard
                   </button>
                   <button
                     onClick={() => router.push('/coach/pagamentos-stripe')}
-                    className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 px-6 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors font-medium"
+                    className="flex-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 px-6 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors font-medium"
                   >
                     Ver Pagamentos
                   </button>
