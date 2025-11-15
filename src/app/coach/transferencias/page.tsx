@@ -4,29 +4,43 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import AppLayout from '@/components/layouts/AppLayout'
-import { loadConnectAndInitialize } from '@stripe/connect-js'
+
+interface Payout {
+  id: string
+  amount: number
+  currency: string
+  status: string
+  created: number
+  arrival_date: number
+  method: string
+  type: string
+  description: string
+  failure_message: string | null
+}
+
+interface Balance {
+  available: { amount: number; currency: string }[]
+  pending: { amount: number; currency: string }[]
+}
 
 export default function Transferencias() {
   const router = useRouter()
   const supabase = createClient()
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<any>(null)
-  const [stripeConnect, setStripeConnect] = useState<any>(null)
+  const [payouts, setPayouts] = useState<Payout[]>([])
+  const [balance, setBalance] = useState<Balance | null>(null)
   const [error, setError] = useState('')
-
-  // Verificar se está em localhost
-  const isLocalhost = typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
 
   useEffect(() => {
     loadProfile()
   }, [])
 
   useEffect(() => {
-    if (profile && profile.stripe_account_id && !isLocalhost) {
-      initializeStripeConnect()
+    if (profile && profile.stripe_account_id) {
+      loadPayouts()
     }
-  }, [profile, isLocalhost])
+  }, [profile])
 
   const loadProfile = async () => {
     try {
@@ -45,12 +59,6 @@ export default function Transferencias() {
         .eq('id', user.id)
         .single()
 
-      console.log('[Transferências] Profile carregado:', {
-        hasProfile: !!profileData,
-        hasStripeAccountId: !!profileData?.stripe_account_id,
-        stripeAccountId: profileData?.stripe_account_id
-      })
-
       setProfile(profileData)
     } catch (err) {
       console.error('Erro ao carregar perfil:', err)
@@ -60,42 +68,55 @@ export default function Transferencias() {
     }
   }
 
-  const initializeStripeConnect = async () => {
+  const loadPayouts = async () => {
     try {
-      console.log('[Transferências] Inicializando Stripe Connect Embedded...')
+      const response = await fetch('/api/stripe/list-payouts')
 
-      const stripeConnectInstance = loadConnectAndInitialize({
-        publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
-        fetchClientSecret: async () => {
-          const response = await fetch('/api/stripe/create-account-session', {
-            method: 'POST',
-          })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Erro ao carregar transferências')
+      }
 
-          if (!response.ok) {
-            const errorData = await response.json()
-            throw new Error(errorData.error || 'Erro ao criar sessão')
-          }
-
-          const { clientSecret } = await response.json()
-          return clientSecret
-        },
-        appearance: {
-          variables: {
-            colorPrimary: '#0081A7',
-            colorBackground: '#ffffff',
-            colorText: '#1f2937',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            borderRadius: '8px',
-          },
-        },
-      })
-
-      setStripeConnect(stripeConnectInstance)
-      console.log('[Transferências] Stripe Connect inicializado com sucesso')
+      const data = await response.json()
+      setPayouts(data.payouts)
+      setBalance(data.balance)
     } catch (err: any) {
-      console.error('[Transferências] Erro ao inicializar:', err)
-      setError(err.message || 'Erro ao inicializar componentes')
+      console.error('Erro ao carregar transferências:', err)
+      setError(err.message)
     }
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(amount / 100)
+  }
+
+  const formatDate = (timestamp: number) => {
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(new Date(timestamp * 1000))
+  }
+
+  const getStatusBadge = (status: string) => {
+    const statusMap: Record<string, { label: string; class: string }> = {
+      paid: { label: 'Pago', class: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200' },
+      pending: { label: 'Pendente', class: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200' },
+      in_transit: { label: 'Em Trânsito', class: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200' },
+      canceled: { label: 'Cancelado', class: 'bg-gray-100 text-gray-800 dark:bg-gray-900/40 dark:text-gray-200' },
+      failed: { label: 'Falhou', class: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200' },
+    }
+
+    const statusInfo = statusMap[status] || { label: status, class: 'bg-gray-100 text-gray-800' }
+
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.class}`}>
+        {statusInfo.label}
+      </span>
+    )
   }
 
   if (loading || !profile) {
@@ -145,30 +166,31 @@ export default function Transferencias() {
           </p>
         </div>
 
-        {/* Aviso de Localhost */}
-        {isLocalhost && (
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 mb-6">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100 mb-2">
-                  ⚠️ Funcionalidade Disponível Apenas em Produção (HTTPS)
-                </h3>
-                <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-3">
-                  O componente de transferências requer HTTPS. Em produção, você verá aqui:
-                </p>
-                <ul className="text-sm text-yellow-800 dark:text-yellow-200 space-y-1 ml-4">
-                  <li>• Histórico completo de transferências</li>
-                  <li>• Valores transferidos para sua conta</li>
-                  <li>• Status de cada transferência (pendente, pago, falhado)</li>
-                  <li>• Datas previstas de depósito</li>
-                  <li>• Detalhes de taxas descontadas</li>
-                </ul>
-              </div>
+        {/* Cards de Saldo */}
+        {balance && (
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
+              <h3 className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">
+                Saldo Disponível
+              </h3>
+              <p className="text-3xl font-bold text-green-900 dark:text-green-100">
+                {formatCurrency(balance.available[0]?.amount || 0)}
+              </p>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                Pronto para transferência
+              </p>
+            </div>
+
+            <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
+              <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                Saldo Pendente
+              </h3>
+              <p className="text-3xl font-bold text-yellow-900 dark:text-yellow-100">
+                {formatCurrency(balance.pending[0]?.amount || 0)}
+              </p>
+              <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                Aguardando liberação
+              </p>
             </div>
           </div>
         )}
@@ -180,22 +202,68 @@ export default function Transferencias() {
           </div>
         )}
 
-        {/* Componente Embedded de Transferências */}
-        {!isLocalhost && stripeConnect && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden" style={{ minHeight: '600px' }}>
-            <stripe-connect-payouts stripe-connect={stripeConnect} />
+        {/* Lista de Transferências */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Data Criação
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Data Chegada
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Valor
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Método
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {payouts.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                      Nenhuma transferência realizada ainda
+                    </td>
+                  </tr>
+                ) : (
+                  payouts.map((payout) => (
+                    <tr key={payout.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        {formatDate(payout.created)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        {formatDate(payout.arrival_date)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {formatCurrency(payout.amount)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(payout.status)}
+                        {payout.failure_message && (
+                          <div className="text-xs text-red-600 dark:text-red-400 mt-1">
+                            {payout.failure_message}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 capitalize">
+                        {payout.method === 'standard' ? 'Transferência bancária' : payout.method}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
+        </div>
 
-        {/* Loading */}
-        {!isLocalhost && !stripeConnect && !error && (
-          <div className="flex flex-col items-center justify-center py-12">
-            <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Carregando histórico de transferências...</p>
-          </div>
-        )}
-
-        {/* Informações */}
+        {/* Informações sobre o processo */}
         <div className="mt-8 grid md:grid-cols-2 gap-6">
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
             <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-3">

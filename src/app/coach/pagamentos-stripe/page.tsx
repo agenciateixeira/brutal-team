@@ -4,29 +4,37 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import AppLayout from '@/components/layouts/AppLayout'
-import { loadConnectAndInitialize } from '@stripe/connect-js'
+
+interface Payment {
+  id: string
+  amount: number
+  currency: string
+  status: string
+  created: number
+  description: string
+  customer_email: string
+  payment_method: string
+  refunded: boolean
+  net_amount: number
+}
 
 export default function PagamentosStripe() {
   const router = useRouter()
   const supabase = createClient()
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<any>(null)
-  const [stripeConnect, setStripeConnect] = useState<any>(null)
+  const [payments, setPayments] = useState<Payment[]>([])
   const [error, setError] = useState('')
-
-  // Verificar se está em localhost
-  const isLocalhost = typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
 
   useEffect(() => {
     loadProfile()
   }, [])
 
   useEffect(() => {
-    if (profile && profile.stripe_account_id && !isLocalhost) {
-      initializeStripeConnect()
+    if (profile && profile.stripe_account_id) {
+      loadPayments()
     }
-  }, [profile, isLocalhost])
+  }, [profile])
 
   const loadProfile = async () => {
     try {
@@ -45,12 +53,6 @@ export default function PagamentosStripe() {
         .eq('id', user.id)
         .single()
 
-      console.log('[Pagamentos Stripe] Profile carregado:', {
-        hasProfile: !!profileData,
-        hasStripeAccountId: !!profileData?.stripe_account_id,
-        stripeAccountId: profileData?.stripe_account_id
-      })
-
       setProfile(profileData)
     } catch (err) {
       console.error('Erro ao carregar perfil:', err)
@@ -60,42 +62,54 @@ export default function PagamentosStripe() {
     }
   }
 
-  const initializeStripeConnect = async () => {
+  const loadPayments = async () => {
     try {
-      console.log('[Pagamentos Stripe] Inicializando Stripe Connect Embedded...')
+      const response = await fetch('/api/stripe/list-payments')
 
-      const stripeConnectInstance = loadConnectAndInitialize({
-        publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
-        fetchClientSecret: async () => {
-          const response = await fetch('/api/stripe/create-account-session', {
-            method: 'POST',
-          })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Erro ao carregar pagamentos')
+      }
 
-          if (!response.ok) {
-            const errorData = await response.json()
-            throw new Error(errorData.error || 'Erro ao criar sessão')
-          }
-
-          const { clientSecret } = await response.json()
-          return clientSecret
-        },
-        appearance: {
-          variables: {
-            colorPrimary: '#0081A7',
-            colorBackground: '#ffffff',
-            colorText: '#1f2937',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            borderRadius: '8px',
-          },
-        },
-      })
-
-      setStripeConnect(stripeConnectInstance)
-      console.log('[Pagamentos Stripe] Stripe Connect inicializado com sucesso')
+      const data = await response.json()
+      setPayments(data.payments)
     } catch (err: any) {
-      console.error('[Pagamentos Stripe] Erro ao inicializar:', err)
-      setError(err.message || 'Erro ao inicializar componentes')
+      console.error('Erro ao carregar pagamentos:', err)
+      setError(err.message)
     }
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(amount / 100)
+  }
+
+  const formatDate = (timestamp: number) => {
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(timestamp * 1000))
+  }
+
+  const getStatusBadge = (status: string) => {
+    const statusMap: Record<string, { label: string; class: string }> = {
+      succeeded: { label: 'Pago', class: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200' },
+      pending: { label: 'Pendente', class: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200' },
+      failed: { label: 'Falhou', class: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200' },
+    }
+
+    const statusInfo = statusMap[status] || { label: status, class: 'bg-gray-100 text-gray-800' }
+
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.class}`}>
+        {statusInfo.label}
+      </span>
+    )
   }
 
   if (loading || !profile) {
@@ -145,34 +159,6 @@ export default function PagamentosStripe() {
           </p>
         </div>
 
-        {/* Aviso de Localhost */}
-        {isLocalhost && (
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 mb-6">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100 mb-2">
-                  ⚠️ Funcionalidade Disponível Apenas em Produção (HTTPS)
-                </h3>
-                <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-3">
-                  O componente de pagamentos requer HTTPS. Em produção, você verá aqui uma lista completa com:
-                </p>
-                <ul className="text-sm text-yellow-800 dark:text-yellow-200 space-y-1 ml-4">
-                  <li>• Todos os pagamentos recebidos</li>
-                  <li>• Filtros por data, valor e status</li>
-                  <li>• Paginação automática</li>
-                  <li>• Opção de reembolso</li>
-                  <li>• Cronograma de transferências</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Erro */}
         {error && (
           <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
@@ -180,20 +166,72 @@ export default function PagamentosStripe() {
           </div>
         )}
 
-        {/* Componente Embedded de Pagamentos */}
-        {!isLocalhost && stripeConnect && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden" style={{ minHeight: '600px' }}>
-            <stripe-connect-payment-details stripe-connect={stripeConnect} />
+        {/* Lista de Pagamentos */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Data
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Cliente
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Valor Bruto
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Valor Líquido
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Método
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {payments.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                      Nenhum pagamento recebido ainda
+                    </td>
+                  </tr>
+                ) : (
+                  payments.map((payment) => (
+                    <tr key={payment.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        {formatDate(payment.created)}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                        {payment.customer_email || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {formatCurrency(payment.amount)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600 dark:text-green-400">
+                        {formatCurrency(payment.net_amount)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(payment.status)}
+                        {payment.refunded && (
+                          <span className="ml-2 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200">
+                            Reembolsado
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 capitalize">
+                        {payment.payment_method}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
-
-        {/* Loading */}
-        {!isLocalhost && !stripeConnect && !error && (
-          <div className="flex flex-col items-center justify-center py-12">
-            <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Carregando histórico de pagamentos...</p>
-          </div>
-        )}
+        </div>
 
         {/* Informações */}
         <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
@@ -207,11 +245,7 @@ export default function PagamentosStripe() {
             </li>
             <li className="flex items-start gap-2">
               <span className="font-bold mt-0.5">•</span>
-              <span>Você pode filtrar por data, valor, status e método de pagamento</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="font-bold mt-0.5">•</span>
-              <span>Reembolsos podem ser feitos diretamente nesta interface</span>
+              <span>O valor líquido já desconta as taxas da plataforma e processamento</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="font-bold mt-0.5">•</span>
