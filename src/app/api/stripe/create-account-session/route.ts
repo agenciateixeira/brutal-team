@@ -78,8 +78,8 @@ export async function POST(req: NextRequest) {
         },
         payment_details: { enabled: true }, // ✅ Visualizar detalhes de pagamentos
         payouts: { enabled: true }, // ✅ Visualizar transferências
-        balance: { enabled: true }, // ✅ Visualizar saldo da conta
-        payout_settings: { enabled: true }, // ✅ Gerenciar configurações de repasse
+        balances: { enabled: true }, // ✅ Visualizar saldo da conta (plural!)
+        payout_details: { enabled: true }, // ✅ Detalhes de transferências
         account_management: { enabled: true }, // ✅ Gerenciar conta
       },
     })
