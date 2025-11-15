@@ -13,8 +13,17 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { email, password, fullName, phone } = body
 
+    console.log('[Cadastro Coach] Dados recebidos:', {
+      hasEmail: !!email,
+      hasPassword: !!password,
+      hasFullName: !!fullName,
+      hasPhone: !!phone,
+      passwordLength: password?.length
+    })
+
     // Validações
     if (!email || !password || !fullName) {
+      console.error('[Cadastro Coach] Validação falhou: campos obrigatórios faltando')
       return NextResponse.json(
         { error: 'Email, senha e nome completo são obrigatórios' },
         { status: 400 }
@@ -22,13 +31,14 @@ export async function POST(req: NextRequest) {
     }
 
     if (password.length < 6) {
+      console.error('[Cadastro Coach] Validação falhou: senha muito curta')
       return NextResponse.json(
         { error: 'A senha deve ter no mínimo 6 caracteres' },
         { status: 400 }
       )
     }
 
-    console.log('[Cadastro Coach] Iniciando cadastro:', email)
+    console.log('[Cadastro Coach] Validações OK. Iniciando cadastro:', email)
 
     // Criar usuário no Supabase
     const supabase = createRouteClient()
@@ -44,9 +54,16 @@ export async function POST(req: NextRequest) {
     })
 
     if (authError) {
-      console.error('[Cadastro Coach] Erro ao criar usuário:', authError)
+      console.error('[Cadastro Coach] Erro ao criar usuário:', {
+        message: authError.message,
+        status: authError.status,
+        name: authError.name,
+      })
       return NextResponse.json(
-        { error: authError.message },
+        {
+          error: authError.message,
+          details: `${authError.name}: ${authError.message}`
+        },
         { status: 400 }
       )
     }
