@@ -65,6 +65,13 @@ export default function CadastroCoachPage() {
     showLoading('Criando sua conta...', 5000);
 
     try {
+      console.log('[Cadastro Coach Frontend] Enviando dados:', {
+        email,
+        fullName,
+        hasPassword: !!password,
+        hasPhone: !!phone
+      });
+
       const response = await fetch('/api/auth/cadastro-coach', {
         method: 'POST',
         headers: {
@@ -78,10 +85,14 @@ export default function CadastroCoachPage() {
         }),
       });
 
+      console.log('[Cadastro Coach Frontend] Response status:', response.status);
+
       const data = await response.json();
+      console.log('[Cadastro Coach Frontend] Response data:', data);
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao criar conta');
+        console.error('[Cadastro Coach Frontend] Erro na resposta:', data);
+        throw new Error(data.error || data.details || 'Erro ao criar conta');
       }
 
       hideLoading();
@@ -101,7 +112,10 @@ export default function CadastroCoachPage() {
       }
 
     } catch (err: any) {
-      setError(err.message || 'Erro ao criar conta');
+      console.error('[Cadastro Coach Frontend] Erro capturado:', err);
+      const errorMessage = err.message || 'Erro ao criar conta';
+      console.error('[Cadastro Coach Frontend] Mensagem de erro:', errorMessage);
+      setError(errorMessage);
       hideLoading();
     } finally {
       setLoading(false);
