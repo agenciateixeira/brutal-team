@@ -42,6 +42,32 @@ export default function CadastroCoachPage() {
   const isLocalhost = typeof window !== 'undefined' &&
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
+  // Recuperar progresso do localStorage na inicialização
+  useEffect(() => {
+    const savedProgress = localStorage.getItem('brutal-team-cadastro-coach');
+    if (savedProgress) {
+      try {
+        const { userId: savedUserId, step: savedStep, timestamp } = JSON.parse(savedProgress);
+
+        // Verificar se não expirou (1 hora)
+        const now = Date.now();
+        const oneHour = 60 * 60 * 1000;
+
+        if (now - timestamp < oneHour) {
+          console.log('[Cadastro Coach] Recuperando progresso salvo:', { savedUserId, savedStep });
+          setUserId(savedUserId);
+          setStep(savedStep);
+        } else {
+          console.log('[Cadastro Coach] Progresso expirado, removendo...');
+          localStorage.removeItem('brutal-team-cadastro-coach');
+        }
+      } catch (err) {
+        console.error('[Cadastro Coach] Erro ao recuperar progresso:', err);
+        localStorage.removeItem('brutal-team-cadastro-coach');
+      }
+    }
+  }, []);
+
   // Verificar se voltou do Stripe Onboarding
   useEffect(() => {
     const kycComplete = searchParams.get('kyc');
@@ -157,12 +183,22 @@ export default function CadastroCoachPage() {
       // Salvar o userId para usar nas próximas etapas
       setUserId(data.userId);
 
+      // Salvar progresso no localStorage
+      const progress = {
+        userId: data.userId,
+        step: isLocalhost ? 'completo' : 'onboarding',
+        timestamp: Date.now(),
+      };
+      localStorage.setItem('brutal-team-cadastro-coach', JSON.stringify(progress));
+      console.log('[Cadastro Coach] Progresso salvo:', progress);
+
       // Se está em localhost, pular para sucesso direto
       if (isLocalhost) {
         setSuccess(true);
         showLoading('Conta criada! Redirecionando...', 3000);
         setTimeout(() => {
           hideLoading();
+          localStorage.removeItem('brutal-team-cadastro-coach');
           router.push('/login');
         }, 2000);
       } else {
@@ -244,6 +280,15 @@ export default function CadastroCoachPage() {
         console.log('[Cadastro Coach] ✅ KYC completo, avançando para etapa 3: Escolher Plano');
         setStep('plano');
         setOnboardingError('');
+
+        // Atualizar progresso no localStorage
+        const progress = {
+          userId: userId,
+          step: 'plano',
+          timestamp: Date.now(),
+        };
+        localStorage.setItem('brutal-team-cadastro-coach', JSON.stringify(progress));
+        console.log('[Cadastro Coach] Progresso atualizado:', progress);
       } else {
         console.log('[Cadastro Coach] ❌ KYC ainda não completo');
         setOnboardingError('Por favor, complete todas as etapas obrigatórias do cadastro bancário.');
@@ -283,6 +328,15 @@ export default function CadastroCoachPage() {
       console.log('[Cadastro Coach] Client secret recebido, avançando para etapa 4: Pagamento');
       setCheckoutClientSecret(clientSecret);
       setStep('pagamento');
+
+      // Atualizar progresso no localStorage
+      const progress = {
+        userId: userId,
+        step: 'pagamento',
+        timestamp: Date.now(),
+      };
+      localStorage.setItem('brutal-team-cadastro-coach', JSON.stringify(progress));
+      console.log('[Cadastro Coach] Progresso atualizado:', progress);
     } catch (err: any) {
       console.error('[Cadastro Coach] Erro ao selecionar plano:', err);
       setError(err.message);

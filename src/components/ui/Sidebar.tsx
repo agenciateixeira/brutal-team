@@ -65,7 +65,7 @@ export default function Sidebar({ profile }: SidebarProps) {
   // Prefetch das páginas principais para navegação instantânea
   useEffect(() => {
     const pagesToPrefetch = isCoach
-      ? ['/coach/dashboard', '/coach/alunos', '/coach/templates', '/coach/anamnese', '/coach/pagamentos', '/coach/perfil']
+      ? ['/coach/dashboard', '/coach/alunos', '/coach/templates', '/coach/anamnese', '/coach/pagamentos-stripe', '/coach/perfil']
       : ['/aluno/dashboard', '/aluno/dieta', '/aluno/treino', '/aluno/protocolo', '/aluno/mensagens', '/aluno/progresso', '/aluno/indicacao', '/aluno/configuracoes'];
 
     pagesToPrefetch.forEach((path) => {
@@ -140,8 +140,7 @@ export default function Sidebar({ profile }: SidebarProps) {
     { icon: UserPlus, label: 'Convidar Aluno', href: '/coach/convidar-aluno' },
     { icon: FileText, label: 'Templates', href: '/coach/templates' },
     { icon: BookOpen, label: 'Anamnese', href: '/coach/anamnese' },
-    { icon: DollarSign, label: 'Pagamentos', href: '/coach/pagamentos' },
-    { icon: Receipt, label: 'Pagamentos Stripe', href: '/coach/pagamentos-stripe' },
+    { icon: Receipt, label: 'Pagamentos', href: '/coach/pagamentos-stripe' },
     { icon: ArrowRightLeft, label: 'Transferências', href: '/coach/transferencias' },
     { icon: Landmark, label: 'Dados Bancários', href: '/coach/dados-bancarios' },
     { icon: CreditCard, label: 'Assinatura', href: '/coach/assinatura' },

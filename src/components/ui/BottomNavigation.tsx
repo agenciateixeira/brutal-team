@@ -47,7 +47,7 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
   useEffect(() => {
     const pagesToPrefetch = isAluno
       ? ['/aluno/dashboard', '/aluno/dieta', '/aluno/treino', '/aluno/protocolo', '/aluno/mensagens', '/aluno/progresso']
-      : ['/coach/dashboard', '/coach/alunos', '/coach/templates', '/coach/pagamentos'];
+      : ['/coach/dashboard', '/coach/alunos', '/coach/templates', '/coach/pagamentos-stripe'];
 
     pagesToPrefetch.forEach((path) => {
       router.prefetch(path);
@@ -121,7 +121,7 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
         { href: '/coach/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { href: '/coach/alunos', icon: User, label: 'Alunos' },
         { href: '/coach/templates', icon: FileText, label: 'Templates' },
-        { href: '/coach/pagamentos', icon: DollarSign, label: 'Pagamentos' },
+        { href: '/coach/pagamentos-stripe', icon: Receipt, label: 'Pagamentos' },
       ];
 
   const menuItems = isAluno

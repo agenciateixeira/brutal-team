@@ -70,14 +70,19 @@ export async function POST(req: NextRequest) {
     const accountSession = await stripe.accountSessions.create({
       account: accountId,
       components: {
-        account_onboarding: { enabled: true },
+        account_onboarding: {
+          enabled: true,
+          features: {
+            disable_stripe_user_authentication: true, // Desabilita autenticação externa do Stripe
+          },
+        },
         payments: { enabled: true },
         payouts: { enabled: true },
         account_management: { enabled: true },
       },
     })
 
-    console.log('[Account Session] Session criada com sucesso')
+    console.log('[Account Session] Session criada com sucesso (sem autenticação externa)')
 
     return NextResponse.json({
       clientSecret: accountSession.client_secret,

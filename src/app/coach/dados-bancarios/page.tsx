@@ -15,6 +15,7 @@ export default function DadosBancarios() {
   const [stripeConnect, setStripeConnect] = useState<any>(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [embedTimeout, setEmbedTimeout] = useState(false)
 
   // Verificar se está em localhost
   const isLocalhost = typeof window !== 'undefined' &&
@@ -27,6 +28,11 @@ export default function DadosBancarios() {
     if (searchParams.get('success') === 'true') {
       setSuccess(true)
     }
+
+    // Verificar se voltou do Stripe
+    if (searchParams.get('refresh') === 'true') {
+      setError('Processo cancelado. Por favor, tente novamente.')
+    }
   }, [searchParams])
 
   useEffect(() => {
@@ -34,6 +40,18 @@ export default function DadosBancarios() {
       initializeStripeConnect()
     }
   }, [profile, isLocalhost])
+
+  // Timeout para componentes embutidos (10 segundos)
+  useEffect(() => {
+    if (stripeConnect && !isLocalhost && !success) {
+      const timer = setTimeout(() => {
+        console.log('[Dados Bancários] Timeout - componente embutido não carregou')
+        setEmbedTimeout(true)
+      }, 10000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [stripeConnect, isLocalhost, success])
 
   const loadProfile = async () => {
     try {
@@ -109,6 +127,32 @@ export default function DadosBancarios() {
     } catch (err: any) {
       console.error('[Dados Bancários] Erro ao inicializar:', err)
       setError(err.message || 'Erro ao inicializar componentes')
+    }
+  }
+
+  const handleAccountLinkRedirect = async () => {
+    setLoading(true)
+
+    try {
+      const response = await fetch('/api/stripe/create-onboarding-link', {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Erro ao criar link de onboarding')
+      }
+
+      const { url } = await response.json()
+      console.log('[Dados Bancários] Redirecionando para Stripe:', url)
+
+      // Redirecionar para o Stripe
+      window.location.href = url
+    } catch (err: any) {
+      console.error('[Dados Bancários] Erro ao criar link:', err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -212,28 +256,59 @@ export default function DadosBancarios() {
 
         {/* Embedded Onboarding Component */}
         {!isLocalhost && stripeConnect && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-            <stripe-connect-account-onboarding
-              stripe-connect={stripeConnect}
-              on-exit={async () => {
-                console.log('[Dados Bancários] Onboarding concluído, atualizando status...')
+          <div className="space-y-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden" style={{ minHeight: '500px' }}>
+              <stripe-connect-account-onboarding
+                stripe-connect={stripeConnect}
+                on-exit={async () => {
+                  console.log('[Dados Bancários] Onboarding concluído, atualizando status...')
 
-                try {
-                  // Atualizar status da conta Stripe no perfil
-                  const response = await fetch('/api/stripe/connect-status')
-                  const data = await response.json()
+                  try {
+                    // Atualizar status da conta Stripe no perfil
+                    const response = await fetch('/api/stripe/connect-status')
+                    const data = await response.json()
 
-                  console.log('[Dados Bancários] Status atualizado:', data)
+                    console.log('[Dados Bancários] Status atualizado:', data)
 
-                  // Redirecionar para dashboard (middleware vai validar se KYC está completo)
-                  router.push('/coach/dashboard')
-                } catch (err) {
-                  console.error('[Dados Bancários] Erro ao atualizar status:', err)
-                  // Mesmo com erro, tentar redirecionar
-                  router.push('/coach/dashboard')
-                }
-              }}
-            />
+                    // Redirecionar para dashboard (middleware vai validar se KYC está completo)
+                    router.push('/coach/dashboard')
+                  } catch (err) {
+                    console.error('[Dados Bancários] Erro ao atualizar status:', err)
+                    // Mesmo com erro, tentar redirecionar
+                    router.push('/coach/dashboard')
+                  }
+                }}
+              />
+            </div>
+
+            {/* Botão fallback após timeout */}
+            {embedTimeout && (
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
+                <div className="flex items-start gap-3">
+                  <svg className="w-6 h-6 text-orange-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-orange-900 mb-2">
+                      ⚠️ Formulário Não Carregou?
+                    </p>
+                    <p className="text-xs text-orange-800 mb-3">
+                      Se você está vendo uma tela em branco acima, use o botão abaixo para acessar o formulário no site do Stripe.
+                    </p>
+                    <button
+                      onClick={handleAccountLinkRedirect}
+                      disabled={loading}
+                      className="w-full bg-[#0081A7] text-white py-3 px-4 rounded-lg hover:bg-[#006685] transition-colors font-medium disabled:opacity-50"
+                    >
+                      {loading ? 'Preparando...' : '🔗 Abrir Formulário do Stripe'}
+                    </button>
+                    <p className="text-xs text-orange-700 mt-2">
+                      Você será redirecionado para o Stripe e voltará automaticamente quando concluir.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
