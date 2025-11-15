@@ -45,6 +45,12 @@ export default function PagamentosStripe() {
         .eq('id', user.id)
         .single()
 
+      console.log('[Pagamentos Stripe] Profile carregado:', {
+        hasProfile: !!profileData,
+        hasStripeAccountId: !!profileData?.stripe_account_id,
+        stripeAccountId: profileData?.stripe_account_id
+      })
+
       setProfile(profileData)
     } catch (err) {
       console.error('Erro ao carregar perfil:', err)
