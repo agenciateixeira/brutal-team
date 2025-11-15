@@ -21,7 +21,12 @@ import {
   FileText,
   BookOpen,
   Gift,
-  Settings
+  Settings,
+  UserPlus,
+  CreditCard,
+  Landmark,
+  Receipt,
+  ArrowRightLeft
 } from 'lucide-react';
 import { Profile } from '@/types';
 import ThemeToggle from './ThemeToggle';
@@ -132,9 +137,14 @@ export default function Sidebar({ profile }: SidebarProps) {
   const menuItems = isCoach ? [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/coach/dashboard' },
     { icon: Users, label: 'Alunos', href: '/coach/alunos' },
+    { icon: UserPlus, label: 'Convidar Aluno', href: '/coach/convidar-aluno' },
     { icon: FileText, label: 'Templates', href: '/coach/templates' },
     { icon: BookOpen, label: 'Anamnese', href: '/coach/anamnese' },
     { icon: DollarSign, label: 'Pagamentos', href: '/coach/pagamentos' },
+    { icon: Receipt, label: 'Pagamentos Stripe', href: '/coach/pagamentos-stripe' },
+    { icon: ArrowRightLeft, label: 'Transferências', href: '/coach/transferencias' },
+    { icon: Landmark, label: 'Dados Bancários', href: '/coach/dados-bancarios' },
+    { icon: CreditCard, label: 'Assinatura', href: '/coach/assinatura' },
     { icon: Settings, label: 'Configurações', href: '/coach/perfil' },
   ] : [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/aluno/dashboard' },

@@ -194,6 +194,13 @@ export default function LoginPage() {
             </Link>
           </div>
 
+          {/* Link sutil para cadastro de coach */}
+          <div className="text-center pt-2">
+            <Link href="/cadastro-coach" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
+              Sou profissional
+            </Link>
+          </div>
+
           <div className="text-center pt-4 border-t border-gray-200">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs text-gray-500">
               <Link href="/termos-de-uso" className="hover:text-primary-600 transition-colors">

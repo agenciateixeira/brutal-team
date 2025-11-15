@@ -22,8 +22,12 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession();
 
   // Rotas públicas (não requerem autenticação)
-  const publicRoutes = ['/login', '/cadastro', '/aguardando-aprovacao', '/questionario'];
+  const publicRoutes = ['/login', '/cadastro', '/cadastro-profissional', '/aguardando-aprovacao', '/questionario'];
   const isPublicRoute = publicRoutes.some(route => req.nextUrl.pathname === route || req.nextUrl.pathname.startsWith(route + '/'));
+
+  // Rotas de pagamento que coaches podem acessar sem assinatura ativa
+  const paymentRoutes = ['/coach/escolher-plano', '/coach/pagamento-sucesso'];
+  const isPaymentRoute = paymentRoutes.some(route => req.nextUrl.pathname === route || req.nextUrl.pathname.startsWith(route + '/'));
 
   // Se não está logado e tenta acessar rota privada
   if (!session && !isPublicRoute) {
@@ -35,11 +39,25 @@ export async function middleware(req: NextRequest) {
     // Verificar o role do usuário para redirecionar corretamente
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, stripe_subscription_status, email')
       .eq('id', session.user.id)
       .single();
 
     if (profile?.role === 'coach') {
+      // ✅ Coach admin com acesso vitalício (nunca precisa pagar)
+      const isAdminCoach = profile?.email === 'coach@brutalteam.blog.br';
+
+      // Verificar se o coach tem assinatura ativa antes de redirecionar
+      const hasActiveSubscription =
+        isAdminCoach || // Admin sempre tem acesso
+        profile?.stripe_subscription_status === 'active' ||
+        profile?.stripe_subscription_status === 'trialing';
+
+      if (!hasActiveSubscription) {
+        console.log('[Middleware] Coach tentando acessar após login sem assinatura, redirecionando para planos');
+        return NextResponse.redirect(new URL('/coach/escolher-plano', req.url));
+      }
+
       return NextResponse.redirect(new URL('/coach/dashboard', req.url));
     } else {
       return NextResponse.redirect(new URL('/aluno/dashboard', req.url));
@@ -50,14 +68,41 @@ export async function middleware(req: NextRequest) {
   if (session) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, approved')
+      .select('role, approved, stripe_subscription_status, email')
       .eq('id', session.user.id)
       .single();
+
+    console.log('[Middleware] Verificando acesso:', {
+      path: req.nextUrl.pathname,
+      role: profile?.role,
+      subscriptionStatus: profile?.stripe_subscription_status,
+      email: profile?.email
+    });
 
     // Verificar se aluno está aprovado
     if (profile?.role === 'aluno' && profile?.approved === false) {
       if (req.nextUrl.pathname !== '/aguardando-aprovacao') {
         return NextResponse.redirect(new URL('/aguardando-aprovacao', req.url));
+      }
+    }
+
+    // Coach sem assinatura ativa - redirecionar para escolher plano (exceto se já estiver nas rotas de pagamento)
+    if (profile?.role === 'coach' && !isPaymentRoute && req.nextUrl.pathname.startsWith('/coach')) {
+      // ✅ Coach admin com acesso vitalício (nunca precisa pagar)
+      const isAdminCoach = profile?.email === 'coach@brutalteam.blog.br';
+
+      const hasActiveSubscription =
+        isAdminCoach || // Admin sempre tem acesso
+        profile?.stripe_subscription_status === 'active' ||
+        profile?.stripe_subscription_status === 'trialing';
+
+      // Se NÃO tem assinatura ativa, redirecionar para escolher plano
+      if (!hasActiveSubscription) {
+        console.log('[Middleware] Coach sem assinatura ativa, redirecionando...', {
+          subscriptionStatus: profile?.stripe_subscription_status,
+          path: req.nextUrl.pathname
+        });
+        return NextResponse.redirect(new URL('/coach/escolher-plano', req.url));
       }
     }
 

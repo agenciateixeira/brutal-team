@@ -25,14 +25,20 @@ export default async function AlunoDetailPage({ params }: { params: { id: string
     redirect('/aluno/dashboard');
   }
 
-  // Buscar dados do aluno
+  // Buscar dados do aluno APENAS se pertencer a este coach
   const { data: alunoProfile } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', params.id)
+    .eq('coach_id', session.user.id) // ✅ FILTRO CRÍTICO: apenas alunos deste coach
     .single();
 
+  // Se não encontrou ou não é aluno, redirecionar
   if (!alunoProfile || alunoProfile.role !== 'aluno') {
+    console.error('[Security] Coach tentou acessar aluno de outro coach:', {
+      coachId: session.user.id,
+      attemptedAlunoId: params.id
+    });
     redirect('/coach/dashboard');
   }
 

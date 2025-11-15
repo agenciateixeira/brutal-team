@@ -19,15 +19,28 @@ export default function CadastroPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // Estados para convite via token
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
+  const [inviteData, setInviteData] = useState<any>(null);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
   const { showLoading, hideLoading } = useLoading();
 
-  // Detectar código de indicação da URL
+  // Detectar código de indicação ou token de convite da URL
   useEffect(() => {
     const refParam = searchParams.get('ref');
-    if (refParam) {
+    const tokenParam = searchParams.get('token');
+
+    if (tokenParam) {
+      // Prioridade para token de convite
+      setInviteToken(tokenParam);
+      validateInviteToken(tokenParam);
+    } else if (refParam) {
+      // Código de indicação como fallback
       setReferralCode(refParam);
       validateReferralCode(refParam);
     }
@@ -60,6 +73,62 @@ export default function CadastroPage() {
       setReferralValid(false);
     } finally {
       setReferralChecking(false);
+    }
+  };
+
+  // Validar token de convite
+  const validateInviteToken = async (token: string) => {
+    if (!token || token.trim() === '') {
+      setInviteError('Token inválido');
+      return;
+    }
+
+    setInviteLoading(true);
+    setInviteError('');
+
+    try {
+      const { data, error } = await supabase
+        .from('invite_tokens')
+        .select(`
+          id,
+          coach_id,
+          payment_due_day,
+          expires_at,
+          used,
+          coach:profiles!invite_tokens_coach_id_fkey(
+            full_name,
+            email
+          )
+        `)
+        .eq('token', token.trim())
+        .single();
+
+      if (error || !data) {
+        setInviteError('Convite não encontrado');
+        return;
+      }
+
+      // Verificar se já foi usado
+      if (data.used) {
+        setInviteError('Este convite já foi utilizado');
+        return;
+      }
+
+      // Verificar se expirou
+      const now = new Date();
+      const expiresAt = new Date(data.expires_at);
+      if (now > expiresAt) {
+        setInviteError('Este convite expirou');
+        return;
+      }
+
+      // Token válido - armazenar dados
+      setInviteData(data);
+    } catch (err) {
+      console.error('Erro ao validar token:', err);
+      setInviteError('Erro ao validar convite');
+    } finally {
+      setInviteLoading(false);
     }
   };
 
@@ -129,6 +198,51 @@ export default function CadastroPage() {
           }
         }
 
+        // Se foi cadastro via token de convite, vincular ao coach
+        if (inviteData && inviteToken) {
+          try {
+            console.log('[Cadastro] Vinculando aluno ao coach:', {
+              alunoId: data.user.id,
+              coachId: inviteData.coach_id,
+              token: inviteToken
+            });
+
+            // Atualizar perfil com coach_id
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({
+                coach_id: inviteData.coach_id,
+                payment_due_day: inviteData.payment_due_day,
+              })
+              .eq('id', data.user.id);
+
+            if (updateError) {
+              console.error('[Cadastro] Erro ao vincular aluno:', updateError);
+              throw updateError;
+            }
+
+            // Marcar token como usado
+            const { error: tokenError } = await supabase
+              .from('invite_tokens')
+              .update({
+                used: true,
+                used_by: data.user.id,
+                used_at: new Date().toISOString(),
+              })
+              .eq('token', inviteToken);
+
+            if (tokenError) {
+              console.error('[Cadastro] Erro ao marcar token como usado:', tokenError);
+              // Não falhar o cadastro por causa disso
+            }
+
+            console.log('[Cadastro] Aluno vinculado ao coach com sucesso!');
+          } catch (inviteError) {
+            console.error('[Cadastro] Erro ao processar convite:', inviteError);
+            // Não falhar o cadastro por causa disso, mas logar o erro
+          }
+        }
+
         setSuccess(true);
         showLoading('Conta criada! Redirecionando...', 3000);
         setTimeout(() => {
@@ -174,6 +288,42 @@ export default function CadastroPage() {
             {error && (
               <div className="bg-primary-500/10 border border-primary-500 text-primary-700 px-4 py-3 rounded">
                 {error}
+              </div>
+            )}
+
+            {/* Card de convite */}
+            {inviteLoading && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-700 text-center">Validando convite...</p>
+              </div>
+            )}
+
+            {inviteError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red-700 text-center">{inviteError}</p>
+              </div>
+            )}
+
+            {inviteData && !inviteError && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-semibold text-green-900 mb-1">
+                      Convite Válido
+                    </h3>
+                    <p className="text-sm text-green-700 mb-2">
+                      Você foi convidado por <span className="font-semibold">{inviteData.coach?.full_name}</span>
+                    </p>
+                    <p className="text-xs text-green-600">
+                      Dia de pagamento: {inviteData.payment_due_day}
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 

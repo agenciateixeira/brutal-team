@@ -30,15 +30,16 @@ export default async function CoachAnamnesePage() {
     redirect('/aluno/dashboard');
   }
 
-  // Primeiro, buscar todos os alunos aprovados (role = aluno e approved = true)
+  // ✅ SEGURANÇA: Buscar APENAS alunos aprovados DESTE COACH
   const { data: alunos } = await supabase
     .from('profiles')
     .select('email, full_name, id')
     .eq('role', 'aluno')
-    .eq('approved', true);
+    .eq('approved', true)
+    .eq('coach_id', session.user.id); // ✅ FILTRO CRÍTICO DE SEGURANÇA
 
   console.log('=== DEBUG ANAMNESE PAGE ===');
-  console.log('Alunos aprovados:', alunos?.length || 0);
+  console.log('[Security] Alunos deste coach:', alunos?.length || 0);
 
   // Extrair emails dos alunos
   const alunosEmails = alunos?.map(a => a.email) || [];

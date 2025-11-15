@@ -19,7 +19,12 @@ import {
   DollarSign,
   BookOpen,
   Gift,
-  Users2
+  Users2,
+  UserPlus,
+  CreditCard,
+  Landmark,
+  Receipt,
+  ArrowRightLeft
 } from 'lucide-react';
 import { Profile } from '@/types';
 import { createClient } from '@/lib/supabase/client';
@@ -129,6 +134,11 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
         { href: '/aluno/indicacao', icon: Gift, label: 'Indicação' },
       ]
     : [
+        { href: '/coach/convidar-aluno', icon: UserPlus, label: 'Convidar Aluno' },
+        { href: '/coach/pagamentos-stripe', icon: Receipt, label: 'Pagamentos Stripe' },
+        { href: '/coach/transferencias', icon: ArrowRightLeft, label: 'Transferências' },
+        { href: '/coach/dados-bancarios', icon: Landmark, label: 'Dados Bancários' },
+        { href: '/coach/assinatura', icon: CreditCard, label: 'Assinatura' },
         { href: '/coach/perfil', icon: Settings, label: 'Configurações' },
         { href: '/coach/anamnese', icon: BookOpen, label: 'Anamnese' },
       ];

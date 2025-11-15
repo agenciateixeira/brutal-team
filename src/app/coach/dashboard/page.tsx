@@ -32,7 +32,7 @@ export default async function CoachDashboard() {
     redirect('/aluno/dashboard');
   }
 
-  // Buscar alunos aprovados
+  // Buscar alunos aprovados APENAS deste coach
   const { data: alunos } = await supabase
     .from('profiles')
     .select(`
@@ -42,14 +42,16 @@ export default async function CoachDashboard() {
     `)
     .eq('role', 'aluno')
     .eq('approved', true)
+    .eq('coach_id', session.user.id) // ✅ FILTRO CRÍTICO: apenas alunos deste coach
     .order('created_at', { ascending: false });
 
-  // Buscar alunos pendentes de aprovação
+  // Buscar alunos pendentes de aprovação APENAS deste coach
   const { data: pendingAlunos, error: pendingError } = await supabase
     .from('profiles')
     .select('*')
     .eq('role', 'aluno')
     .eq('approved', false)
+    .eq('coach_id', session.user.id) // ✅ FILTRO CRÍTICO: apenas alunos deste coach
     .order('created_at', { ascending: false });
 
   if (pendingError) {

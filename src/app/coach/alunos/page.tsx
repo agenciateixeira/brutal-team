@@ -29,7 +29,7 @@ export default async function CoachAlunosPage() {
     redirect('/aluno/dashboard');
   }
 
-  // Buscar todos os alunos com informações de indicação
+  // Buscar todos os alunos APENAS deste coach
   const { data: alunos } = await supabase
     .from('profiles')
     .select(`
@@ -38,6 +38,7 @@ export default async function CoachAlunosPage() {
       messages!messages_aluno_id_fkey(count)
     `)
     .eq('role', 'aluno')
+    .eq('coach_id', session.user.id) // ✅ FILTRO CRÍTICO: apenas alunos deste coach
     .order('created_at', { ascending: false });
 
   // Buscar mensagens não lidas por aluno

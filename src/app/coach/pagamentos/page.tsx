@@ -30,7 +30,16 @@ export default async function CoachPagamentosPage() {
     redirect('/aluno/dashboard');
   }
 
-  // Buscar TODOS os históricos de pagamentos (sem limit) para o gráfico
+  // Buscar primeiro os IDs dos alunos deste coach
+  const { data: myStudents } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('coach_id', session.user.id)
+    .eq('role', 'aluno');
+
+  const myStudentIds = myStudents?.map(s => s.id) || [];
+
+  // Buscar históricos de pagamentos APENAS dos alunos deste coach
   const { data: paymentHistory } = await supabase
     .from('payment_history')
     .select(`
@@ -41,9 +50,10 @@ export default async function CoachPagamentosPage() {
         email
       )
     `)
+    .in('aluno_id', myStudentIds.length > 0 ? myStudentIds : ['00000000-0000-0000-0000-000000000000'])
     .order('payment_date', { ascending: false });
 
-  // Buscar TODOS os alunos (ativos e inativos) para calcular churn
+  // Buscar APENAS os alunos deste coach (ativos e inativos) para calcular churn
   const { data: allStudents } = await supabase
     .from('student_plans')
     .select(`
@@ -55,9 +65,10 @@ export default async function CoachPagamentosPage() {
         payment_status
       )
     `)
+    .in('aluno_id', myStudentIds.length > 0 ? myStudentIds : ['00000000-0000-0000-0000-000000000000'])
     .order('created_at', { ascending: false });
 
-  // Buscar pagamentos recentes para a lista
+  // Buscar pagamentos recentes APENAS dos alunos deste coach
   const { data: recentPayments } = await supabase
     .from('payment_history')
     .select(`
@@ -68,10 +79,11 @@ export default async function CoachPagamentosPage() {
         email
       )
     `)
+    .in('aluno_id', myStudentIds.length > 0 ? myStudentIds : ['00000000-0000-0000-0000-000000000000'])
     .order('payment_date', { ascending: false })
     .limit(20);
 
-  // Buscar alunos ativos para a lista
+  // Buscar alunos ativos APENAS deste coach
   const { data: activeStudents } = await supabase
     .from('student_plans')
     .select(`
@@ -83,6 +95,7 @@ export default async function CoachPagamentosPage() {
         payment_status
       )
     `)
+    .in('aluno_id', myStudentIds.length > 0 ? myStudentIds : ['00000000-0000-0000-0000-000000000000'])
     .eq('is_active', true)
     .order('created_at', { ascending: false });
 
