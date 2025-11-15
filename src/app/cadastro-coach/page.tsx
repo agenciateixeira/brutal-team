@@ -6,10 +6,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useLoading } from '@/components/providers/LoadingProvider';
 import { Check } from 'lucide-react';
-import { loadConnectAndInitialize } from '@stripe/connect-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
 import { PLANS } from '@/config/plans';
+import KYCForm from '@/components/forms/KYCForm';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -26,13 +26,10 @@ export default function CadastroCoachPage() {
 
   // Estados para o fluxo de onboarding completo
   const [step, setStep] = useState<'cadastro' | 'onboarding' | 'plano' | 'pagamento' | 'completo'>('cadastro');
-  const [stripeConnect, setStripeConnect] = useState<any>(null);
-  const [onboardingError, setOnboardingError] = useState('');
+  const [kycError, setKycError] = useState('');
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [checkoutClientSecret, setCheckoutClientSecret] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [useAccountLinks, setUseAccountLinks] = useState(false);
-  const [embedTimeout, setEmbedTimeout] = useState(false);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -68,49 +65,53 @@ export default function CadastroCoachPage() {
     }
   }, []);
 
-  // Verificar se voltou do Stripe Onboarding
-  useEffect(() => {
-    const kycComplete = searchParams.get('kyc');
-    const refresh = searchParams.get('refresh');
+  // Handler para enviar dados KYC
+  const handleKycSubmit = async (kycData: any) => {
+    setLoading(true);
+    setKycError('');
+    showLoading('Enviando dados para verificação...', 10000);
 
-    if (kycComplete === 'complete') {
-      console.log('[Cadastro Coach] Retornou do Stripe Onboarding');
-      // Verificar status e avançar para próxima etapa
-      checkKycStatus();
-    }
-
-    if (refresh === 'true') {
-      console.log('[Cadastro Coach] Usuário cancelou ou houve erro no Stripe');
-      setOnboardingError('Processo cancelado. Por favor, tente novamente.');
-    }
-  }, [searchParams]);
-
-  // Timeout para componentes embutidos (10 segundos)
-  useEffect(() => {
-    if (step === 'onboarding' && stripeConnect && !isLocalhost) {
-      const timer = setTimeout(() => {
-        console.log('[Cadastro Coach] Timeout - componente embutido não carregou');
-        setEmbedTimeout(true);
-      }, 10000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [step, stripeConnect, isLocalhost]);
-
-  const checkKycStatus = async () => {
     try {
-      const response = await fetch('/api/stripe/connect-status');
+      console.log('[Cadastro Coach] Enviando dados KYC...');
+
+      const response = await fetch('/api/stripe/submit-kyc', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(kycData),
+      });
+
       const data = await response.json();
 
-      if (data.charges_enabled && data.payouts_enabled) {
-        console.log('[Cadastro Coach] KYC completo verificado');
-        setStep('plano');
-      } else {
-        setOnboardingError('KYC ainda não está completo. Por favor, complete todas as etapas.');
+      if (!response.ok) {
+        throw new Error(data.error || data.details || 'Erro ao enviar dados de verificação');
       }
-    } catch (err) {
-      console.error('Erro ao verificar KYC:', err);
-      setOnboardingError('Erro ao verificar status do KYC.');
+
+      console.log('[Cadastro Coach] KYC enviado com sucesso:', data);
+      hideLoading();
+
+      // Mostrar mensagem de sucesso e avançar para próximo passo
+      showLoading('Dados enviados com sucesso! Avançando...', 2000);
+      setTimeout(() => {
+        setStep('plano');
+        hideLoading();
+
+        // Atualizar progresso no localStorage
+        const progress = {
+          userId: userId,
+          step: 'plano',
+          timestamp: Date.now(),
+        };
+        localStorage.setItem('brutal-team-cadastro-coach', JSON.stringify(progress));
+      }, 2000);
+
+    } catch (err: any) {
+      console.error('[Cadastro Coach] Erro ao enviar KYC:', err);
+      setKycError(err.message || 'Erro ao enviar dados de verificação');
+      hideLoading();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -205,7 +206,6 @@ export default function CadastroCoachPage() {
         // Em produção, avançar para o onboarding (KYC)
         console.log('[Cadastro Coach] Avançando para etapa 2: KYC');
         setStep('onboarding');
-        initializeStripeConnect();
       }
 
     } catch (err: any) {
@@ -219,85 +219,6 @@ export default function CadastroCoachPage() {
     }
   };
 
-  const initializeStripeConnect = async () => {
-    try {
-      console.log('[Cadastro Coach] Inicializando Stripe Connect...');
-      console.log('[Cadastro Coach] Publishable Key:', process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-
-      const stripeConnectInstance = loadConnectAndInitialize({
-        publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
-        fetchClientSecret: async () => {
-          console.log('[Cadastro Coach] Buscando client secret...');
-          const response = await fetch('/api/stripe/create-account-session', {
-            method: 'POST',
-          });
-
-          console.log('[Cadastro Coach] Response status:', response.status);
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.error('[Cadastro Coach] Erro ao buscar client secret:', errorData);
-            throw new Error(errorData.error || 'Erro ao criar sessão');
-          }
-
-          const { clientSecret } = await response.json();
-          console.log('[Cadastro Coach] Client secret recebido:', clientSecret ? 'OK' : 'VAZIO');
-          return clientSecret;
-        },
-        appearance: {
-          variables: {
-            colorPrimary: '#0081A7',
-            colorBackground: '#ffffff',
-            colorText: '#1f2937',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            borderRadius: '8px',
-          },
-        },
-      });
-
-      console.log('[Cadastro Coach] Stripe Connect instance criada:', stripeConnectInstance);
-      setStripeConnect(stripeConnectInstance);
-      console.log('[Cadastro Coach] State atualizado com stripeConnect');
-    } catch (err: any) {
-      console.error('[Cadastro Coach] Erro ao inicializar:', err);
-      setOnboardingError(err.message || 'Erro ao carregar dados bancários');
-    }
-  };
-
-  const handleOnboardingExit = async (exitEvent: any) => {
-    console.log('[Cadastro Coach] Onboarding exit event:', exitEvent);
-
-    // Sempre verificar o status real no Stripe
-    try {
-      console.log('[Cadastro Coach] Verificando status da conta Stripe...');
-      const response = await fetch('/api/stripe/connect-status');
-      const data = await response.json();
-
-      console.log('[Cadastro Coach] Status da conta:', data);
-
-      // Verificar se KYC está realmente completo
-      if (data.charges_enabled && data.payouts_enabled) {
-        console.log('[Cadastro Coach] ✅ KYC completo, avançando para etapa 3: Escolher Plano');
-        setStep('plano');
-        setOnboardingError('');
-
-        // Atualizar progresso no localStorage
-        const progress = {
-          userId: userId,
-          step: 'plano',
-          timestamp: Date.now(),
-        };
-        localStorage.setItem('brutal-team-cadastro-coach', JSON.stringify(progress));
-        console.log('[Cadastro Coach] Progresso atualizado:', progress);
-      } else {
-        console.log('[Cadastro Coach] ❌ KYC ainda não completo');
-        setOnboardingError('Por favor, complete todas as etapas obrigatórias do cadastro bancário.');
-      }
-    } catch (err) {
-      console.error('[Cadastro Coach] Erro ao verificar status:', err);
-      setOnboardingError('Erro ao verificar status. Por favor, tente novamente.');
-    }
-  };
 
   const handleSelectPlan = async (planId: string) => {
     setLoading(true);
@@ -346,38 +267,11 @@ export default function CadastroCoachPage() {
     }
   };
 
-  const handleAccountLinkRedirect = async () => {
-    setLoading(true);
-    showLoading('Preparando formulário do Stripe...', 5000);
-
-    try {
-      const response = await fetch('/api/stripe/create-onboarding-link', {
-        method: 'POST',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao criar link de onboarding');
-      }
-
-      const { url } = await response.json();
-      console.log('[Cadastro Coach] Redirecionando para Stripe:', url);
-
-      // Redirecionar para o Stripe
-      window.location.href = url;
-    } catch (err: any) {
-      console.error('[Cadastro Coach] Erro ao criar link:', err);
-      setOnboardingError(err.message);
-      hideLoading();
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Funções de navegação entre etapas
   const handleVoltarParaCadastro = () => {
     setStep('cadastro');
-    setOnboardingError('');
+    setKycError('');
   };
 
   const handleVoltarParaOnboarding = () => {
@@ -625,116 +519,28 @@ export default function CadastroCoachPage() {
           </form>
         )}
 
-        {/* Step: Onboarding KYC */}
+        {/* Step: Onboarding KYC - Formulário Manual */}
         {step === 'onboarding' && !success && (
           <div className="space-y-6">
-            {/* Botão Voltar */}
-            <button
-              onClick={handleVoltarParaCadastro}
-              className="flex items-center gap-2 text-gray-600 hover:text-primary-600 transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              <span className="font-medium">Voltar para Cadastro</span>
-            </button>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>Passo 2 de 4:</strong> Complete seus dados de verificação para poder receber pagamentos dos seus alunos. Estes dados são exigidos pela Stripe para conformidade regulatória.
+              </p>
+            </div>
 
-            {console.log('[Cadastro Coach] Rendering onboarding step. stripeConnect:', !!stripeConnect, 'onboardingError:', onboardingError)}
-            {/* Aviso de que está carregando */}
-            {!stripeConnect && !onboardingError && (
-              <div className="flex flex-col items-center justify-center py-12">
-                <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p className="text-gray-600">Carregando formulário de dados bancários...</p>
-              </div>
-            )}
-
-            {/* Erro ao carregar */}
-            {onboardingError && (
+            {/* Erro */}
+            {kycError && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-sm text-red-700 mb-3">{onboardingError}</p>
-                <p className="text-xs text-red-600 mb-4">
-                  O cadastro de dados bancários é obrigatório para coaches. Por favor, tente novamente ou entre em contato com o suporte.
-                </p>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="mt-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
-                >
-                  Tentar Novamente
-                </button>
+                <p className="text-sm text-red-700">{kycError}</p>
               </div>
             )}
 
-            {/* Componente Embedded do Stripe */}
-            {stripeConnect && !onboardingError && (
-              <div className="space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-blue-800">
-                    <strong>Passo 2 de 4:</strong> Complete seus dados bancários para poder receber pagamentos dos seus alunos. Após completar, você escolherá seu plano e finalizará o cadastro.
-                  </p>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-lg overflow-hidden" style={{ minHeight: '500px' }}>
-                  {(() => {
-                    console.log('[Cadastro Coach] Renderizando stripe-connect-account-onboarding');
-                    console.log('[Cadastro Coach] stripeConnect value:', stripeConnect);
-                    return (
-                      <stripe-connect-account-onboarding
-                        stripe-connect={stripeConnect}
-                        on-exit={handleOnboardingExit}
-                      />
-                    );
-                  })()}
-                </div>
-
-                {/* Aviso sobre tela branca / botão alternativo */}
-                {embedTimeout ? (
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 mt-4">
-                    <div className="flex items-start gap-3 mb-4">
-                      <svg className="w-6 h-6 text-orange-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-orange-900 mb-2">
-                          ⚠️ Formulário Não Carregou?
-                        </p>
-                        <p className="text-xs text-orange-800 mb-3">
-                          Se você está vendo uma tela em branco acima, pode haver um problema de compatibilidade. Use o botão abaixo para acessar o formulário em uma página do Stripe.
-                        </p>
-                        <button
-                          onClick={handleAccountLinkRedirect}
-                          disabled={loading}
-                          className="w-full bg-[#0081A7] text-white py-3 px-4 rounded-lg hover:bg-[#006685] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {loading ? 'Preparando...' : '🔗 Abrir Formulário do Stripe'}
-                        </button>
-                        <p className="text-xs text-orange-700 mt-2">
-                          Você será redirecionado para o site do Stripe e voltará automaticamente quando concluir.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
-                    <div className="flex items-start gap-3">
-                      <svg className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-yellow-900 mb-1">
-                          Cadastro de Dados Bancários Obrigatório
-                        </p>
-                        <p className="text-xs text-yellow-800 mb-2">
-                          Complete todas as etapas acima para poder receber pagamentos dos seus alunos. Este processo é obrigatório e segue as normas de conformidade do Stripe.
-                        </p>
-                        <p className="text-xs text-yellow-700">
-                          💡 Se o formulário não carregar em alguns segundos, aparecerá um botão alternativo.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Formulário KYC Manual */}
+            <KYCForm
+              onSubmit={handleKycSubmit}
+              onBack={handleVoltarParaCadastro}
+              loading={loading}
+            />
           </div>
         )}
 
