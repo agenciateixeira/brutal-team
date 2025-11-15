@@ -202,6 +202,9 @@ export default function DadosBancarios() {
             <KYCForm
               onSubmit={handleKycSubmit}
               loading={kycLoading}
+              userEmail={profile?.email}
+              userPhone={profile?.phone}
+              userName={profile?.full_name}
             />
           </div>
         )}

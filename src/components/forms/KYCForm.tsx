@@ -37,9 +37,12 @@ interface KYCFormProps {
   onSubmit: (data: KYCSubmitData) => Promise<void>
   onBack?: () => void
   loading?: boolean
+  userEmail?: string
+  userPhone?: string
+  userName?: string
 }
 
-export default function KYCForm({ onSubmit, onBack, loading }: KYCFormProps) {
+export default function KYCForm({ onSubmit, onBack, loading, userEmail, userPhone, userName }: KYCFormProps) {
   const { stripe } = useStripe()
 
   const [formData, setFormData] = useState<KYCFormData>({
@@ -185,11 +188,18 @@ export default function KYCForm({ onSubmit, onBack, loading }: KYCFormProps) {
 
       console.log('[KYCForm] Criando Account Token no cliente...')
 
+      // Separar primeiro e último nome
+      const nameParts = (userName || 'Nome Sobrenome').split(' ')
+      const firstName = nameParts[0]
+      const lastName = nameParts.slice(1).join(' ') || nameParts[0]
+
       const { token, error } = await stripe.createToken('account', {
         business_type: 'individual',
         individual: {
-          first_name: 'Nome', // Será sobrescrito no servidor com o nome real do perfil
-          last_name: 'Sobrenome',
+          first_name: firstName,
+          last_name: lastName,
+          email: userEmail,
+          phone: userPhone,
           id_number: cleanCpf,
           dob: {
             day: parseInt(day),
@@ -204,6 +214,7 @@ export default function KYCForm({ onSubmit, onBack, loading }: KYCFormProps) {
             postal_code: cleanPostalCode,
             country: 'BR',
           },
+          political_exposure: 'none', // Assumindo que não é pessoa politicamente exposta
         },
         tos_shown_and_accepted: true,
       })
