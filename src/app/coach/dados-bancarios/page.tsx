@@ -24,8 +24,34 @@ export default function DadosBancarios() {
   useEffect(() => {
     if (profile && profile.stripe_account_id) {
       loadBankAccount()
+    } else if (profile && !profile.stripe_account_id) {
+      // Criar conta Stripe se não existir
+      createStripeAccount()
     }
   }, [profile])
+
+  const createStripeAccount = async () => {
+    try {
+      console.log('[Dados Bancários] Criando conta Stripe...')
+      const response = await fetch('/api/stripe/create-connect-account', {
+        method: 'POST',
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        console.error('[Dados Bancários] Erro ao criar conta:', data)
+        return
+      }
+
+      console.log('[Dados Bancários] Conta Stripe criada:', data.accountId)
+
+      // Recarregar perfil para obter o stripe_account_id
+      await loadProfile()
+    } catch (err) {
+      console.error('[Dados Bancários] Erro ao criar conta Stripe:', err)
+    }
+  }
 
   const loadProfile = async () => {
     try {
