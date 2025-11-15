@@ -76,9 +76,24 @@ export async function POST(req: NextRequest) {
             disable_stripe_user_authentication: true, // Desabilita autenticação externa do Stripe
           },
         },
-        payments: { enabled: true },
-        payouts: { enabled: true },
-        account_management: { enabled: true },
+        payments: {
+          enabled: true,
+          features: {
+            disable_stripe_user_authentication: true,
+          },
+        },
+        payouts: {
+          enabled: true,
+          features: {
+            disable_stripe_user_authentication: true,
+          },
+        },
+        account_management: {
+          enabled: true,
+          features: {
+            disable_stripe_user_authentication: true,
+          },
+        },
       },
     })
 
