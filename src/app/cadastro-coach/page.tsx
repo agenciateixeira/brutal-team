@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLoading } from '@/components/providers/LoadingProvider';
@@ -31,13 +31,62 @@ export default function CadastroCoachPage() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [checkoutClientSecret, setCheckoutClientSecret] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [useAccountLinks, setUseAccountLinks] = useState(false);
+  const [embedTimeout, setEmbedTimeout] = useState(false);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { showLoading, hideLoading } = useLoading();
 
   // Verificar se está em localhost
   const isLocalhost = typeof window !== 'undefined' &&
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+  // Verificar se voltou do Stripe Onboarding
+  useEffect(() => {
+    const kycComplete = searchParams.get('kyc');
+    const refresh = searchParams.get('refresh');
+
+    if (kycComplete === 'complete') {
+      console.log('[Cadastro Coach] Retornou do Stripe Onboarding');
+      // Verificar status e avançar para próxima etapa
+      checkKycStatus();
+    }
+
+    if (refresh === 'true') {
+      console.log('[Cadastro Coach] Usuário cancelou ou houve erro no Stripe');
+      setOnboardingError('Processo cancelado. Por favor, tente novamente.');
+    }
+  }, [searchParams]);
+
+  // Timeout para componentes embutidos (10 segundos)
+  useEffect(() => {
+    if (step === 'onboarding' && stripeConnect && !isLocalhost) {
+      const timer = setTimeout(() => {
+        console.log('[Cadastro Coach] Timeout - componente embutido não carregou');
+        setEmbedTimeout(true);
+      }, 10000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [step, stripeConnect, isLocalhost]);
+
+  const checkKycStatus = async () => {
+    try {
+      const response = await fetch('/api/stripe/connect-status');
+      const data = await response.json();
+
+      if (data.charges_enabled && data.payouts_enabled) {
+        console.log('[Cadastro Coach] KYC completo verificado');
+        setStep('plano');
+      } else {
+        setOnboardingError('KYC ainda não está completo. Por favor, complete todas as etapas.');
+      }
+    } catch (err) {
+      console.error('Erro ao verificar KYC:', err);
+      setOnboardingError('Erro ao verificar status do KYC.');
+    }
+  };
 
   const formatPhone = (value: string) => {
     // Remove tudo que não é número
@@ -238,6 +287,34 @@ export default function CadastroCoachPage() {
       console.error('[Cadastro Coach] Erro ao selecionar plano:', err);
       setError(err.message);
       setSelectedPlan(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAccountLinkRedirect = async () => {
+    setLoading(true);
+    showLoading('Preparando formulário do Stripe...', 5000);
+
+    try {
+      const response = await fetch('/api/stripe/create-onboarding-link', {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao criar link de onboarding');
+      }
+
+      const { url } = await response.json();
+      console.log('[Cadastro Coach] Redirecionando para Stripe:', url);
+
+      // Redirecionar para o Stripe
+      window.location.href = url;
+    } catch (err: any) {
+      console.error('[Cadastro Coach] Erro ao criar link:', err);
+      setOnboardingError(err.message);
+      hideLoading();
     } finally {
       setLoading(false);
     }
@@ -525,21 +602,53 @@ export default function CadastroCoachPage() {
                   })()}
                 </div>
 
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
-                  <div className="flex items-start gap-3">
-                    <svg className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-yellow-900 mb-1">
-                        Cadastro de Dados Bancários Obrigatório
-                      </p>
-                      <p className="text-xs text-yellow-800">
-                        Complete todas as etapas acima para poder receber pagamentos dos seus alunos. Este processo é obrigatório e segue as normas de conformidade do Stripe.
-                      </p>
+                {/* Aviso sobre tela branca / botão alternativo */}
+                {embedTimeout ? (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 mt-4">
+                    <div className="flex items-start gap-3 mb-4">
+                      <svg className="w-6 h-6 text-orange-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-orange-900 mb-2">
+                          ⚠️ Formulário Não Carregou?
+                        </p>
+                        <p className="text-xs text-orange-800 mb-3">
+                          Se você está vendo uma tela em branco acima, pode haver um problema de compatibilidade. Use o botão abaixo para acessar o formulário em uma página do Stripe.
+                        </p>
+                        <button
+                          onClick={handleAccountLinkRedirect}
+                          disabled={loading}
+                          className="w-full bg-[#0081A7] text-white py-3 px-4 rounded-lg hover:bg-[#006685] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {loading ? 'Preparando...' : '🔗 Abrir Formulário do Stripe'}
+                        </button>
+                        <p className="text-xs text-orange-700 mt-2">
+                          Você será redirecionado para o site do Stripe e voltará automaticamente quando concluir.
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-yellow-900 mb-1">
+                          Cadastro de Dados Bancários Obrigatório
+                        </p>
+                        <p className="text-xs text-yellow-800 mb-2">
+                          Complete todas as etapas acima para poder receber pagamentos dos seus alunos. Este processo é obrigatório e segue as normas de conformidade do Stripe.
+                        </p>
+                        <p className="text-xs text-yellow-700">
+                          💡 Se o formulário não carregar em alguns segundos, aparecerá um botão alternativo.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
