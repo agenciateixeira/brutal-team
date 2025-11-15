@@ -51,6 +51,9 @@ export async function POST(req: NextRequest) {
     // 1. Atualizar conta com o token recebido do cliente
     await stripe.accounts.update(profile.stripe_account_id, {
       account_token: accountToken,
+      individual: {
+        political_exposure: 'none', // Não é pessoa politicamente exposta
+      },
       business_profile: {
         mcc: '8299', // Educational Services
         product_description: 'Serviços de coaching e treinamento esportivo',

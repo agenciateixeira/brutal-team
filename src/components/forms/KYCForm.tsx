@@ -249,7 +249,6 @@ export default function KYCForm({ onSubmit, onBack, loading, userEmail, userPhon
             postal_code: cleanPostalCode,
             country: 'BR',
           },
-          political_exposure: 'none', // Assumindo que não é pessoa politicamente exposta
         },
         tos_shown_and_accepted: true,
       })
