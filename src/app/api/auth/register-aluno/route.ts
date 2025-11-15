@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
+import { createRouteClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createRouteClient()
 
     // Verificar se email já existe
     const { data: existingUser } = await supabase

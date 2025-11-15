@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
+import { createRouteClient } from '@/lib/supabase/server'
 import { nanoid } from 'nanoid'
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createServerClient()
+    const supabase = createRouteClient()
     const {
       data: { user },
     } = await supabase.auth.getUser()

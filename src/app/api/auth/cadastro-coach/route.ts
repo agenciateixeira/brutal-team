@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
+import { createRouteClient } from '@/lib/supabase/server'
 import Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     console.log('[Cadastro Coach] Iniciando cadastro:', email)
 
     // Criar usuário no Supabase
-    const supabase = createServerClient()
+    const supabase = createRouteClient()
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
