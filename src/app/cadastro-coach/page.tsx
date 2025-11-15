@@ -7,6 +7,11 @@ import Image from 'next/image';
 import { useLoading } from '@/components/providers/LoadingProvider';
 import { Check } from 'lucide-react';
 import { loadConnectAndInitialize } from '@stripe/connect-js';
+import { loadStripe } from '@stripe/stripe-js';
+import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
+import { PLANS } from '@/config/plans';
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 export default function CadastroCoachPage() {
   const [email, setEmail] = useState('');
@@ -19,10 +24,13 @@ export default function CadastroCoachPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Estados para o fluxo de onboarding
-  const [step, setStep] = useState<'cadastro' | 'onboarding' | 'completo'>('cadastro');
+  // Estados para o fluxo de onboarding completo
+  const [step, setStep] = useState<'cadastro' | 'onboarding' | 'plano' | 'pagamento' | 'completo'>('cadastro');
   const [stripeConnect, setStripeConnect] = useState<any>(null);
   const [onboardingError, setOnboardingError] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [checkoutClientSecret, setCheckoutClientSecret] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const router = useRouter();
   const { showLoading, hideLoading } = useLoading();
@@ -97,6 +105,9 @@ export default function CadastroCoachPage() {
 
       hideLoading();
 
+      // Salvar o userId para usar nas próximas etapas
+      setUserId(data.userId);
+
       // Se está em localhost, pular para sucesso direto
       if (isLocalhost) {
         setSuccess(true);
@@ -106,7 +117,8 @@ export default function CadastroCoachPage() {
           router.push('/login');
         }, 2000);
       } else {
-        // Em produção, avançar para o onboarding
+        // Em produção, avançar para o onboarding (KYC)
+        console.log('[Cadastro Coach] Avançando para etapa 2: KYC');
         setStep('onboarding');
         initializeStripeConnect();
       }
@@ -180,21 +192,54 @@ export default function CadastroCoachPage() {
 
       // Verificar se KYC está realmente completo
       if (data.charges_enabled && data.payouts_enabled) {
-        console.log('[Cadastro Coach] KYC completo, redirecionando para login');
-        setStep('completo');
-        setSuccess(true);
-        showLoading('Cadastro completo! Redirecionando...', 3000);
-        setTimeout(() => {
-          hideLoading();
-          router.push('/login');
-        }, 2000);
+        console.log('[Cadastro Coach] ✅ KYC completo, avançando para etapa 3: Escolher Plano');
+        setStep('plano');
+        setOnboardingError('');
       } else {
-        console.log('[Cadastro Coach] KYC ainda não completo');
+        console.log('[Cadastro Coach] ❌ KYC ainda não completo');
         setOnboardingError('Por favor, complete todas as etapas obrigatórias do cadastro bancário.');
       }
     } catch (err) {
       console.error('[Cadastro Coach] Erro ao verificar status:', err);
       setOnboardingError('Erro ao verificar status. Por favor, tente novamente.');
+    }
+  };
+
+  const handleSelectPlan = async (planId: string) => {
+    setLoading(true);
+    setError('');
+    setSelectedPlan(planId);
+
+    try {
+      console.log('[Cadastro Coach] Criando sessão de checkout para plano:', planId);
+
+      // Criar checkout session
+      const response = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          planId,
+          userId, // Passar o userId que salvamos
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao criar sessão de pagamento');
+      }
+
+      const { clientSecret } = await response.json();
+      console.log('[Cadastro Coach] Client secret recebido, avançando para etapa 4: Pagamento');
+      setCheckoutClientSecret(clientSecret);
+      setStep('pagamento');
+    } catch (err: any) {
+      console.error('[Cadastro Coach] Erro ao selecionar plano:', err);
+      setError(err.message);
+      setSelectedPlan(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -213,17 +258,23 @@ export default function CadastroCoachPage() {
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Cadastro Profissional</h1>
           <p className="text-center text-gray-600">
-            {step === 'cadastro' && 'Crie sua conta e comece a gerenciar seus alunos'}
-            {step === 'onboarding' && 'Complete seus dados bancários para receber pagamentos'}
+            {step === 'cadastro' && 'Passo 1: Crie sua conta'}
+            {step === 'onboarding' && 'Passo 2: Complete seus dados bancários'}
+            {step === 'plano' && 'Passo 3: Escolha seu plano'}
+            {step === 'pagamento' && 'Passo 4: Finalize o pagamento'}
             {step === 'completo' && 'Cadastro completo!'}
           </p>
 
-          {/* Indicador de progresso */}
-          {!isLocalhost && (
+          {/* Indicador de progresso - 4 passos */}
+          {!isLocalhost && step !== 'completo' && (
             <div className="flex items-center gap-2 mt-4">
-              <div className={`w-3 h-3 rounded-full ${step === 'cadastro' ? 'bg-primary-500' : 'bg-green-500'}`}></div>
+              <div className={`w-3 h-3 rounded-full ${step === 'cadastro' ? 'bg-[#0081A7]' : 'bg-green-500'}`}></div>
               <div className="w-8 h-0.5 bg-gray-300"></div>
-              <div className={`w-3 h-3 rounded-full ${step === 'onboarding' ? 'bg-primary-500' : step === 'completo' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+              <div className={`w-3 h-3 rounded-full ${step === 'onboarding' ? 'bg-[#0081A7]' : ['plano', 'pagamento'].includes(step) ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+              <div className="w-8 h-0.5 bg-gray-300"></div>
+              <div className={`w-3 h-3 rounded-full ${step === 'plano' ? 'bg-[#0081A7]' : step === 'pagamento' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+              <div className="w-8 h-0.5 bg-gray-300"></div>
+              <div className={`w-3 h-3 rounded-full ${step === 'pagamento' ? 'bg-[#0081A7]' : 'bg-gray-300'}`}></div>
             </div>
           )}
         </div>
@@ -457,7 +508,7 @@ export default function CadastroCoachPage() {
               <div className="space-y-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-sm text-blue-800">
-                    <strong>Passo 2 de 2:</strong> Complete seus dados bancários para poder receber pagamentos dos seus alunos.
+                    <strong>Passo 2 de 4:</strong> Complete seus dados bancários para poder receber pagamentos dos seus alunos. Após completar, você escolherá seu plano e finalizará o cadastro.
                   </p>
                 </div>
 
@@ -491,6 +542,91 @@ export default function CadastroCoachPage() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Step: Escolher Plano */}
+        {step === 'plano' && !success && (
+          <div className="space-y-6">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-sm text-green-800">
+                <strong>✅ Dados bancários configurados!</strong> Agora escolha o plano que melhor se adequa ao seu negócio.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {PLANS.map((plan) => (
+                <div
+                  key={plan.id}
+                  className={`border-2 rounded-lg p-6 relative transition-all cursor-pointer hover:shadow-lg ${
+                    plan.popular
+                      ? 'border-[#0081A7] bg-[#0081A7]/5'
+                      : 'border-gray-300 hover:border-[#0081A7]'
+                  }`}
+                  onClick={() => handleSelectPlan(plan.id)}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#0081A7] text-white px-4 py-1 rounded-full text-xs font-semibold">
+                      MAIS POPULAR
+                    </div>
+                  )}
+
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                  <div className="mb-4">
+                    <span className="text-3xl font-bold text-gray-900">R$ {plan.price}</span>
+                    <span className="text-gray-600">/{plan.interval === 'month' ? 'mês' : 'ano'}</span>
+                  </div>
+
+                  <ul className="space-y-2 mb-6">
+                    {plan.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+                        <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSelectPlan(plan.id)}
+                    disabled={loading && selectedPlan === plan.id}
+                    className={`w-full py-3 rounded-lg font-semibold transition-colors ${
+                      plan.popular
+                        ? 'bg-[#0081A7] text-white hover:bg-[#006685]'
+                        : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    {loading && selectedPlan === plan.id ? 'Processando...' : 'Escolher Plano'}
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step: Pagamento */}
+        {step === 'pagamento' && checkoutClientSecret && (
+          <div className="space-y-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>Passo 4: Finalize o pagamento</strong> para ativar sua conta.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <EmbeddedCheckoutProvider
+                stripe={stripePromise}
+                options={{ clientSecret: checkoutClientSecret }}
+              >
+                <EmbeddedCheckout />
+              </EmbeddedCheckoutProvider>
+            </div>
           </div>
         )}
       </div>

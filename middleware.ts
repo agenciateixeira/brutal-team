@@ -101,42 +101,40 @@ export async function middleware(req: NextRequest) {
       }
     }
 
-    // Coach sem assinatura ativa - redirecionar para escolher plano (exceto se já estiver nas rotas de pagamento)
-    if (profile?.role === 'coach' && !isPaymentRoute && req.nextUrl.pathname.startsWith('/coach')) {
-      // ✅ Coach admin com acesso vitalício (nunca precisa pagar)
+    // ✅ FLUXO OBRIGATÓRIO PARA COACHES (na ordem correta):
+    // 1º KYC → 2º Assinatura → 3º Dashboard
+    if (profile?.role === 'coach' && req.nextUrl.pathname.startsWith('/coach')) {
       const isAdminCoach = profile?.email === 'coach@brutalteam.blog.br';
 
-      const hasActiveSubscription =
-        isAdminCoach || // Admin sempre tem acesso
-        profile?.stripe_subscription_status === 'active' ||
-        profile?.stripe_subscription_status === 'trialing';
+      // PASSO 1: Verificar KYC (PRIMEIRO) - exceto nas rotas permitidas
+      if (!isKycRoute && !isPaymentRoute) {
+        const hasCompletedKyc = profile?.stripe_charges_enabled && profile?.stripe_payouts_enabled;
 
-      // Se NÃO tem assinatura ativa, redirecionar para escolher plano
-      if (!hasActiveSubscription) {
-        console.log('[Middleware] Coach sem assinatura ativa, redirecionando...', {
-          subscriptionStatus: profile?.stripe_subscription_status,
-          path: req.nextUrl.pathname
-        });
-        return NextResponse.redirect(new URL('/coach/escolher-plano', req.url));
+        if (!isAdminCoach && !hasCompletedKyc) {
+          console.log('[Middleware] ❌ Coach sem KYC completo, redirecionando para dados bancários...', {
+            stripeChargesEnabled: profile?.stripe_charges_enabled,
+            stripePayoutsEnabled: profile?.stripe_payouts_enabled,
+            hasStripeAccountId: !!profile?.stripe_account_id,
+            path: req.nextUrl.pathname
+          });
+          return NextResponse.redirect(new URL('/coach/dados-bancarios', req.url));
+        }
       }
-    }
 
-    // ✅ VERIFICAÇÃO DE KYC OBRIGATÓRIO - Coach precisa completar dados bancários
-    if (profile?.role === 'coach' && !isKycRoute && !isPaymentRoute && req.nextUrl.pathname.startsWith('/coach')) {
-      const isAdminCoach = profile?.email === 'coach@brutalteam.blog.br';
+      // PASSO 2: Verificar assinatura (DEPOIS DO KYC) - exceto nas rotas permitidas
+      if (!isPaymentRoute && !isKycRoute) {
+        const hasActiveSubscription =
+          isAdminCoach || // Admin sempre tem acesso
+          profile?.stripe_subscription_status === 'active' ||
+          profile?.stripe_subscription_status === 'trialing';
 
-      // Verificar se KYC está completo (charges_enabled E payouts_enabled)
-      const hasCompletedKyc = profile?.stripe_charges_enabled && profile?.stripe_payouts_enabled;
-
-      // Admin coach não precisa de KYC, mas outros coaches SIM
-      if (!isAdminCoach && !hasCompletedKyc) {
-        console.log('[Middleware] Coach sem KYC completo, redirecionando para dados bancários...', {
-          stripeChargesEnabled: profile?.stripe_charges_enabled,
-          stripePayoutsEnabled: profile?.stripe_payouts_enabled,
-          hasStripeAccountId: !!profile?.stripe_account_id,
-          path: req.nextUrl.pathname
-        });
-        return NextResponse.redirect(new URL('/coach/dados-bancarios', req.url));
+        if (!hasActiveSubscription) {
+          console.log('[Middleware] ❌ Coach sem assinatura ativa, redirecionando para escolher plano...', {
+            subscriptionStatus: profile?.stripe_subscription_status,
+            path: req.nextUrl.pathname
+          });
+          return NextResponse.redirect(new URL('/coach/escolher-plano', req.url));
+        }
       }
     }
 

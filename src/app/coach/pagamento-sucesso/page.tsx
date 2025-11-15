@@ -8,6 +8,7 @@ export default function PagamentoSucesso() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const sessionId = searchParams.get('session_id')
+  const fromCadastro = searchParams.get('from') === 'cadastro'
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -37,9 +38,14 @@ export default function PagamentoSucesso() {
       const data = await response.json()
 
       if (data.success) {
-        // Aguardar 2 segundos e redirecionar para o dashboard
+        // Se veio do cadastro, redirecionar para login
+        // Caso contrário, redirecionar para o dashboard
         setTimeout(() => {
-          router.push('/coach/dashboard')
+          if (fromCadastro) {
+            router.push('/login')
+          } else {
+            router.push('/coach/dashboard')
+          }
         }, 3000)
       } else {
         setError('Pagamento não confirmado')
@@ -125,15 +131,19 @@ export default function PagamentoSucesso() {
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Pagamento Confirmado!
+            {fromCadastro ? 'Cadastro Completo!' : 'Pagamento Confirmado!'}
           </h2>
 
           <p className="text-gray-600 dark:text-gray-400 mb-2">
-            Sua assinatura foi ativada com sucesso.
+            {fromCadastro
+              ? 'Sua conta foi criada e sua assinatura foi ativada com sucesso!'
+              : 'Sua assinatura foi ativada com sucesso.'}
           </p>
 
           <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
-            Redirecionando para o dashboard...
+            {fromCadastro
+              ? 'Redirecionando para o login...'
+              : 'Redirecionando para o dashboard...'}
           </p>
 
           <div className="animate-pulse">

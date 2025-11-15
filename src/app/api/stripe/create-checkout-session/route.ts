@@ -15,11 +15,14 @@ export async function POST(req: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser()
 
-    if (!user) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
-    }
+    const { planId, userId: providedUserId } = await req.json()
 
-    const { planId } = await req.json()
+    // Permitir passar userId para checkout durante cadastro (sem estar logado)
+    const userId = user?.id || providedUserId
+
+    if (!userId) {
+      return NextResponse.json({ error: 'userId ou autenticação necessária' }, { status: 401 })
+    }
 
     const plan = getPlanById(planId)
     if (!plan) {
@@ -36,8 +39,8 @@ export async function POST(req: NextRequest) {
     // Buscar ou criar customer
     let { data: profile } = await supabase
       .from('profiles')
-      .select('stripe_customer_id, email, name')
-      .eq('id', user.id)
+      .select('stripe_customer_id, email, full_name')
+      .eq('id', userId)
       .single()
 
     let customerId = profile?.stripe_customer_id
@@ -45,10 +48,10 @@ export async function POST(req: NextRequest) {
     if (!customerId) {
       // Criar customer no Stripe
       const customer = await stripe.customers.create({
-        email: profile?.email || user.email!,
-        name: profile?.name || '',
+        email: profile?.email || user?.email || '',
+        name: profile?.full_name || '',
         metadata: {
-          user_id: user.id,
+          user_id: userId,
           platform: 'brutal_team',
         },
       })
@@ -59,7 +62,7 @@ export async function POST(req: NextRequest) {
       await supabase
         .from('profiles')
         .update({ stripe_customer_id: customerId })
-        .eq('id', user.id)
+        .eq('id', userId)
     }
 
     // Criar sessão de checkout embedded usando o Price ID existente
@@ -77,13 +80,13 @@ export async function POST(req: NextRequest) {
       subscription_data: {
         trial_period_days: 3, // 3 dias grátis
         metadata: {
-          user_id: user.id,
+          user_id: userId,
           plan: planId,
         },
       },
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/coach/pagamento-sucesso?session_id={CHECKOUT_SESSION_ID}`,
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/coach/pagamento-sucesso?session_id={CHECKOUT_SESSION_ID}&from=cadastro`,
       metadata: {
-        user_id: user.id,
+        user_id: userId,
         plan: planId,
       },
     })
