@@ -51,9 +51,6 @@ export async function POST(req: NextRequest) {
     // 1. Atualizar conta com o token recebido do cliente
     await stripe.accounts.update(profile.stripe_account_id, {
       account_token: accountToken,
-      individual: {
-        political_exposure: 'none', // Não é pessoa politicamente exposta
-      },
       business_profile: {
         mcc: '8299', // Educational Services
         product_description: 'Serviços de coaching e treinamento esportivo',
@@ -62,7 +59,16 @@ export async function POST(req: NextRequest) {
 
     console.log('[Submit KYC] Informações pessoais atualizadas via Account Token do cliente')
 
-    // 2. Adicionar conta bancária externa
+    // 2. Atualizar political_exposure separadamente (não pode ser incluído junto com account_token)
+    await stripe.accounts.update(profile.stripe_account_id, {
+      individual: {
+        political_exposure: 'none',
+      },
+    })
+
+    console.log('[Submit KYC] Political exposure atualizado')
+
+    // 3. Adicionar conta bancária externa
     const externalAccount = await stripe.accounts.createExternalAccount(
       profile.stripe_account_id,
       {
@@ -81,7 +87,7 @@ export async function POST(req: NextRequest) {
 
     console.log('[Submit KYC] Conta bancária adicionada:', externalAccount.id)
 
-    // 3. Atualizar status no banco de dados
+    // 4. Atualizar status no banco de dados
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
@@ -94,7 +100,7 @@ export async function POST(req: NextRequest) {
       console.error('[Submit KYC] Erro ao atualizar status no banco:', updateError)
     }
 
-    // 4. Verificar status da conta após atualização
+    // 5. Verificar status da conta após atualização
     const account = await stripe.accounts.retrieve(profile.stripe_account_id)
 
     console.log('[Submit KYC] Status da conta:', {
