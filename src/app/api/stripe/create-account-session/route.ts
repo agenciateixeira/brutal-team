@@ -76,9 +76,11 @@ export async function POST(req: NextRequest) {
             disable_stripe_user_authentication: true, // Desabilita autenticação externa do Stripe
           },
         },
-        payments: { enabled: true },
-        payouts: { enabled: true },
-        account_management: { enabled: true },
+        payment_details: { enabled: true }, // ✅ Visualizar detalhes de pagamentos
+        payouts: { enabled: true }, // ✅ Visualizar transferências
+        balance: { enabled: true }, // ✅ Visualizar saldo da conta
+        payout_settings: { enabled: true }, // ✅ Gerenciar configurações de repasse
+        account_management: { enabled: true }, // ✅ Gerenciar conta
       },
     })
 

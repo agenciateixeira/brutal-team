@@ -183,7 +183,7 @@ export default function PagamentosStripe() {
         {/* Componente Embedded de Pagamentos */}
         {!isLocalhost && stripeConnect && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden" style={{ minHeight: '600px' }}>
-            <stripe-connect-payments stripe-connect={stripeConnect} />
+            <stripe-connect-payment-details stripe-connect={stripeConnect} />
           </div>
         )}
 
