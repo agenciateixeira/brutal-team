@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import Stripe from 'stripe'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: NextRequest) {
   // Inicializar Stripe dentro da função para evitar erro no build
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {

@@ -3,6 +3,8 @@ import Stripe from 'stripe'
 import { createServerClient } from '@/lib/supabase/server'
 import { getPlanById } from '@/config/plans'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: NextRequest) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2024-11-20.acacia',
