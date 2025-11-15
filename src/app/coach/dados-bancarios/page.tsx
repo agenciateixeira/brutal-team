@@ -64,20 +64,27 @@ export default function DadosBancarios() {
   const initializeStripeConnect = async () => {
     try {
       console.log('[Dados Bancários] Inicializando Stripe Connect Embedded...')
+      console.log('[Dados Bancários] Hostname:', window.location.hostname)
+      console.log('[Dados Bancários] isLocalhost:', isLocalhost)
 
       const stripeConnectInstance = loadConnectAndInitialize({
         publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
         fetchClientSecret: async () => {
+          console.log('[Dados Bancários] Buscando Account Session...')
           const response = await fetch('/api/stripe/create-account-session', {
             method: 'POST',
           })
 
+          console.log('[Dados Bancários] Response status:', response.status)
+
           if (!response.ok) {
             const errorData = await response.json()
+            console.error('[Dados Bancários] Erro na resposta:', errorData)
             throw new Error(errorData.error || 'Erro ao criar sessão')
           }
 
           const { clientSecret } = await response.json()
+          console.log('[Dados Bancários] Client secret recebido')
           return clientSecret
         },
         appearance: {
@@ -149,18 +156,41 @@ export default function DadosBancarios() {
               </div>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100 mb-2">
-                  ⚠️ Funcionalidade Disponível Apenas em Produção (HTTPS)
+                  ⚠️ Desenvolvimento Local Detectado
                 </h3>
                 <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-3">
-                  O cadastro de dados bancários requer HTTPS e por isso não funciona em localhost (desenvolvimento).
+                  Você está usando chaves LIVE do Stripe, que requerem HTTPS. Em localhost, o formulário de dados bancários não pode ser exibido.
                 </p>
-                <div className="bg-yellow-100 dark:bg-yellow-900/40 rounded p-3 text-sm text-yellow-900 dark:text-yellow-100">
-                  <p className="font-semibold mb-1">Para usar esta funcionalidade:</p>
-                  <ul className="list-disc list-inside space-y-1 ml-2">
-                    <li>Faça deploy da aplicação com HTTPS (Vercel, Netlify, etc.)</li>
-                    <li>A integração já está pronta e funcionará automaticamente</li>
-                    <li>O componente aparecerá incorporado nesta página</li>
-                  </ul>
+                <div className="bg-yellow-100 dark:bg-yellow-900/40 rounded p-4 text-sm text-yellow-900 dark:text-yellow-100 space-y-3">
+                  <div>
+                    <p className="font-semibold mb-2">💡 Opção 1: Testar em Produção (Recomendado)</p>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li>Acesse a aplicação em produção (Vercel com HTTPS)</li>
+                      <li>Tudo funcionará automaticamente</li>
+                      <li>O formulário de dados bancários aparecerá aqui</li>
+                    </ul>
+                  </div>
+
+                  <div className="pt-3 border-t border-yellow-200 dark:border-yellow-700">
+                    <p className="font-semibold mb-2">🔧 Opção 2: Usar Chaves de Teste</p>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li>Obtenha as chaves de teste no <a href="https://dashboard.stripe.com/test/apikeys" target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-700">Dashboard do Stripe</a></li>
+                      <li>Substitua no arquivo <code className="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">.env.local</code>:</li>
+                    </ul>
+                    <div className="mt-2 bg-gray-900 text-green-400 p-3 rounded font-mono text-xs overflow-x-auto">
+                      <div>STRIPE_SECRET_KEY=sk_test_...</div>
+                      <div>NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...</div>
+                    </div>
+                    <p className="mt-2 text-xs text-yellow-700 dark:text-yellow-300">
+                      ⚠️ Lembre-se de voltar para as chaves LIVE antes de fazer deploy em produção!
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t border-yellow-200 dark:border-yellow-700">
+                    <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                      <strong>Nota:</strong> As chaves de teste permitem testar toda a funcionalidade sem processar pagamentos reais.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
