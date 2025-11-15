@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import AppLayout from '@/components/layouts/AppLayout'
-import KYCForm from '@/components/forms/KYCForm'
+import KYCForm, { KYCSubmitData } from '@/components/forms/KYCForm'
 
 export default function DadosBancarios() {
   const router = useRouter()
@@ -57,7 +57,7 @@ export default function DadosBancarios() {
     }
   }
 
-  const handleKycSubmit = async (kycData: any) => {
+  const handleKycSubmit = async (kycData: KYCSubmitData) => {
     setKycLoading(true)
     setError('')
 

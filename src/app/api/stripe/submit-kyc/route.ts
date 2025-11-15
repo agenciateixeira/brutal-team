@@ -21,22 +21,14 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     const {
-      cpf,
-      dateOfBirth,
-      postalCode,
-      street,
-      number,
-      complement,
-      neighborhood,
-      city,
-      state,
+      accountToken, // Token criado no cliente
       bankCode,
       branchCode,
       accountNumber,
       accountType,
     } = body
 
-    console.log('[Submit KYC] Recebendo dados KYC para usuário:', user.id)
+    console.log('[Submit KYC] Recebendo Account Token para usuário:', user.id)
 
     // Buscar perfil do coach para obter stripe_account_id
     const { data: profile } = await supabase
@@ -54,63 +46,20 @@ export async function POST(req: NextRequest) {
     }
 
     console.log('[Submit KYC] Atualizando conta Stripe:', profile.stripe_account_id)
+    console.log('[Submit KYC] Account Token recebido do cliente:', accountToken)
 
-    // Limpar CPF (remover pontuação)
-    const cleanCpf = cpf.replace(/\D/g, '')
-
-    // Formatar data de nascimento (YYYY-MM-DD -> { day, month, year })
-    const [year, month, day] = dateOfBirth.split('-')
-
-    // Limpar CEP
-    const cleanPostalCode = postalCode.replace(/\D/g, '')
-
-    // Obter IP do usuário
-    const userIp = req.headers.get('x-forwarded-for')?.split(',')[0] ||
-                   req.headers.get('x-real-ip') ||
-                   '127.0.0.1'
-
-    // 1. Criar Account Token com os dados KYC
-    // Para Custom Accounts, precisamos usar Account Tokens para atualizar dados sensíveis
-    const accountToken = await stripe.tokens.create({
-      account: {
-        individual: {
-          first_name: profile.full_name.split(' ')[0],
-          last_name: profile.full_name.split(' ').slice(1).join(' ') || profile.full_name.split(' ')[0],
-          email: profile.email,
-          id_number: cleanCpf, // CPF
-          dob: {
-            day: parseInt(day),
-            month: parseInt(month),
-            year: parseInt(year),
-          },
-          address: {
-            line1: `${street}, ${number}`,
-            line2: complement || undefined,
-            city: city,
-            state: state,
-            postal_code: cleanPostalCode,
-            country: 'BR',
-          },
-        },
-        business_type: 'individual',
-        tos_shown_and_accepted: true,
-      },
-    })
-
-    console.log('[Submit KYC] Account token criado:', accountToken.id)
-
-    // 2. Atualizar conta com o token e informações adicionais
+    // 1. Atualizar conta com o token recebido do cliente
     await stripe.accounts.update(profile.stripe_account_id, {
-      account_token: accountToken.id,
+      account_token: accountToken,
       business_profile: {
         mcc: '8299', // Educational Services
         product_description: 'Serviços de coaching e treinamento esportivo',
       },
     })
 
-    console.log('[Submit KYC] Informações pessoais atualizadas via Account Token')
+    console.log('[Submit KYC] Informações pessoais atualizadas via Account Token do cliente')
 
-    // 3. Adicionar conta bancária externa
+    // 2. Adicionar conta bancária externa
     const externalAccount = await stripe.accounts.createExternalAccount(
       profile.stripe_account_id,
       {
@@ -129,7 +78,7 @@ export async function POST(req: NextRequest) {
 
     console.log('[Submit KYC] Conta bancária adicionada:', externalAccount.id)
 
-    // 4. Atualizar status no banco de dados
+    // 3. Atualizar status no banco de dados
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
@@ -142,7 +91,7 @@ export async function POST(req: NextRequest) {
       console.error('[Submit KYC] Erro ao atualizar status no banco:', updateError)
     }
 
-    // 5. Verificar status da conta após atualização
+    // 4. Verificar status da conta após atualização
     const account = await stripe.accounts.retrieve(profile.stripe_account_id)
 
     console.log('[Submit KYC] Status da conta:', {

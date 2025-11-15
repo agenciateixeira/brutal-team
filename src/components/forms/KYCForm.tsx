@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useStripe } from '@/hooks/useStripe'
 
 interface KYCFormData {
   // Dados Pessoais
@@ -23,13 +24,24 @@ interface KYCFormData {
   accountType: 'checking' | 'savings'
 }
 
+export interface KYCSubmitData {
+  accountToken: string // Token criado no cliente
+  // Dados bancários ainda precisam ir separados
+  bankCode: string
+  branchCode: string
+  accountNumber: string
+  accountType: 'checking' | 'savings'
+}
+
 interface KYCFormProps {
-  onSubmit: (data: KYCFormData) => Promise<void>
+  onSubmit: (data: KYCSubmitData) => Promise<void>
   onBack?: () => void
   loading?: boolean
 }
 
 export default function KYCForm({ onSubmit, onBack, loading }: KYCFormProps) {
+  const { stripe } = useStripe()
+
   const [formData, setFormData] = useState<KYCFormData>({
     cpf: '',
     dateOfBirth: '',
@@ -155,8 +167,71 @@ export default function KYCForm({ onSubmit, onBack, loading }: KYCFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (validateForm()) {
-      await onSubmit(formData)
+
+    if (!validateForm()) {
+      return
+    }
+
+    if (!stripe) {
+      setErrors({ general: 'Stripe não está carregado. Tente novamente.' })
+      return
+    }
+
+    try {
+      // Criar Account Token no cliente com Stripe.js
+      const cleanCpf = formData.cpf.replace(/\D/g, '')
+      const [year, month, day] = formData.dateOfBirth.split('-')
+      const cleanPostalCode = formData.postalCode.replace(/\D/g, '')
+
+      console.log('[KYCForm] Criando Account Token no cliente...')
+
+      const { token, error } = await stripe.createToken('account', {
+        business_type: 'individual',
+        individual: {
+          first_name: 'Nome', // Será sobrescrito no servidor com o nome real do perfil
+          last_name: 'Sobrenome',
+          id_number: cleanCpf,
+          dob: {
+            day: parseInt(day),
+            month: parseInt(month),
+            year: parseInt(year),
+          },
+          address: {
+            line1: `${formData.street}, ${formData.number}`,
+            line2: formData.complement || undefined,
+            city: formData.city,
+            state: formData.state,
+            postal_code: cleanPostalCode,
+            country: 'BR',
+          },
+        },
+        tos_shown_and_accepted: true,
+      })
+
+      if (error) {
+        console.error('[KYCForm] Erro ao criar Account Token:', error)
+        setErrors({ general: error.message || 'Erro ao criar token de verificação' })
+        return
+      }
+
+      if (!token) {
+        setErrors({ general: 'Erro ao criar token de verificação' })
+        return
+      }
+
+      console.log('[KYCForm] Account Token criado:', token.id)
+
+      // Enviar token ID para o servidor
+      await onSubmit({
+        accountToken: token.id,
+        bankCode: formData.bankCode,
+        branchCode: formData.branchCode,
+        accountNumber: formData.accountNumber,
+        accountType: formData.accountType,
+      })
+    } catch (err: any) {
+      console.error('[KYCForm] Erro no handleSubmit:', err)
+      setErrors({ general: err.message || 'Erro ao processar formulário' })
     }
   }
 
@@ -435,6 +510,13 @@ export default function KYCForm({ onSubmit, onBack, loading }: KYCFormProps) {
           </div>
         </div>
       </div>
+
+      {/* Erro Geral */}
+      {errors.general && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <p className="text-sm text-red-700 dark:text-red-300">{errors.general}</p>
+        </div>
+      )}
 
       {/* Botões */}
       <div className="flex gap-4">
