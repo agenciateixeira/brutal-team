@@ -167,24 +167,34 @@ export default function CadastroCoachPage() {
     }
   };
 
-  const handleOnboardingExit = (exitEvent: any) => {
+  const handleOnboardingExit = async (exitEvent: any) => {
     console.log('[Cadastro Coach] Onboarding exit event:', exitEvent);
 
-    // Só considerar completo se o Stripe confirmar que foi completo
-    // O evento pode ser: {completed: true} ou similar
-    if (exitEvent?.completed || exitEvent?.details_submitted) {
-      console.log('[Cadastro Coach] KYC completo, redirecionando para login');
-      setStep('completo');
-      setSuccess(true);
-      showLoading('Cadastro completo! Redirecionando...', 3000);
-      setTimeout(() => {
-        hideLoading();
-        router.push('/login');
-      }, 2000);
-    } else {
-      console.log('[Cadastro Coach] Onboarding não completo, mantendo na página');
-      // Não fazer nada - mantém o usuário na página para completar
-      setOnboardingError('Por favor, complete todas as etapas obrigatórias do cadastro bancário.');
+    // Sempre verificar o status real no Stripe
+    try {
+      console.log('[Cadastro Coach] Verificando status da conta Stripe...');
+      const response = await fetch('/api/stripe/connect-status');
+      const data = await response.json();
+
+      console.log('[Cadastro Coach] Status da conta:', data);
+
+      // Verificar se KYC está realmente completo
+      if (data.charges_enabled && data.payouts_enabled) {
+        console.log('[Cadastro Coach] KYC completo, redirecionando para login');
+        setStep('completo');
+        setSuccess(true);
+        showLoading('Cadastro completo! Redirecionando...', 3000);
+        setTimeout(() => {
+          hideLoading();
+          router.push('/login');
+        }, 2000);
+      } else {
+        console.log('[Cadastro Coach] KYC ainda não completo');
+        setOnboardingError('Por favor, complete todas as etapas obrigatórias do cadastro bancário.');
+      }
+    } catch (err) {
+      console.error('[Cadastro Coach] Erro ao verificar status:', err);
+      setOnboardingError('Erro ao verificar status. Por favor, tente novamente.');
     }
   };
 

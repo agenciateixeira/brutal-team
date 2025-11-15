@@ -215,9 +215,23 @@ export default function DadosBancarios() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
             <stripe-connect-account-onboarding
               stripe-connect={stripeConnect}
-              on-exit={() => {
-                console.log('[Dados Bancários] Onboarding concluído')
-                router.push('/coach/dados-bancarios?success=true')
+              on-exit={async () => {
+                console.log('[Dados Bancários] Onboarding concluído, atualizando status...')
+
+                try {
+                  // Atualizar status da conta Stripe no perfil
+                  const response = await fetch('/api/stripe/connect-status')
+                  const data = await response.json()
+
+                  console.log('[Dados Bancários] Status atualizado:', data)
+
+                  // Redirecionar para dashboard (middleware vai validar se KYC está completo)
+                  router.push('/coach/dashboard')
+                } catch (err) {
+                  console.error('[Dados Bancários] Erro ao atualizar status:', err)
+                  // Mesmo com erro, tentar redirecionar
+                  router.push('/coach/dashboard')
+                }
               }}
             />
           </div>

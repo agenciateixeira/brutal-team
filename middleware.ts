@@ -22,12 +22,16 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession();
 
   // Rotas públicas (não requerem autenticação)
-  const publicRoutes = ['/login', '/cadastro', '/cadastro-profissional', '/aguardando-aprovacao', '/questionario'];
+  const publicRoutes = ['/login', '/cadastro', '/cadastro-profissional', '/cadastro-coach', '/aguardando-aprovacao', '/questionario'];
   const isPublicRoute = publicRoutes.some(route => req.nextUrl.pathname === route || req.nextUrl.pathname.startsWith(route + '/'));
 
   // Rotas de pagamento que coaches podem acessar sem assinatura ativa
   const paymentRoutes = ['/coach/escolher-plano', '/coach/pagamento-sucesso'];
   const isPaymentRoute = paymentRoutes.some(route => req.nextUrl.pathname === route || req.nextUrl.pathname.startsWith(route + '/'));
+
+  // Rotas de onboarding Stripe que coaches podem acessar sem KYC completo
+  const kycRoutes = ['/coach/dados-bancarios', '/coach/perfil'];
+  const isKycRoute = kycRoutes.some(route => req.nextUrl.pathname === route || req.nextUrl.pathname.startsWith(route + '/'));
 
   // Se não está logado e tenta acessar rota privada
   if (!session && !isPublicRoute) {
@@ -39,7 +43,7 @@ export async function middleware(req: NextRequest) {
     // Verificar o role do usuário para redirecionar corretamente
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, stripe_subscription_status, email')
+      .select('role, stripe_subscription_status, stripe_charges_enabled, stripe_payouts_enabled, email')
       .eq('id', session.user.id)
       .single();
 
@@ -58,6 +62,14 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL('/coach/escolher-plano', req.url));
       }
 
+      // ✅ Verificar se completou KYC antes de redirecionar para dashboard
+      const hasCompletedKyc = profile?.stripe_charges_enabled && profile?.stripe_payouts_enabled;
+
+      if (!isAdminCoach && !hasCompletedKyc) {
+        console.log('[Middleware] Coach após login sem KYC completo, redirecionando para dados bancários');
+        return NextResponse.redirect(new URL('/coach/dados-bancarios', req.url));
+      }
+
       return NextResponse.redirect(new URL('/coach/dashboard', req.url));
     } else {
       return NextResponse.redirect(new URL('/aluno/dashboard', req.url));
@@ -68,7 +80,7 @@ export async function middleware(req: NextRequest) {
   if (session) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, approved, stripe_subscription_status, email')
+      .select('role, approved, stripe_subscription_status, stripe_charges_enabled, stripe_payouts_enabled, stripe_account_id, email')
       .eq('id', session.user.id)
       .single();
 
@@ -76,6 +88,9 @@ export async function middleware(req: NextRequest) {
       path: req.nextUrl.pathname,
       role: profile?.role,
       subscriptionStatus: profile?.stripe_subscription_status,
+      stripeChargesEnabled: profile?.stripe_charges_enabled,
+      stripePayoutsEnabled: profile?.stripe_payouts_enabled,
+      hasStripeAccountId: !!profile?.stripe_account_id,
       email: profile?.email
     });
 
@@ -103,6 +118,25 @@ export async function middleware(req: NextRequest) {
           path: req.nextUrl.pathname
         });
         return NextResponse.redirect(new URL('/coach/escolher-plano', req.url));
+      }
+    }
+
+    // ✅ VERIFICAÇÃO DE KYC OBRIGATÓRIO - Coach precisa completar dados bancários
+    if (profile?.role === 'coach' && !isKycRoute && !isPaymentRoute && req.nextUrl.pathname.startsWith('/coach')) {
+      const isAdminCoach = profile?.email === 'coach@brutalteam.blog.br';
+
+      // Verificar se KYC está completo (charges_enabled E payouts_enabled)
+      const hasCompletedKyc = profile?.stripe_charges_enabled && profile?.stripe_payouts_enabled;
+
+      // Admin coach não precisa de KYC, mas outros coaches SIM
+      if (!isAdminCoach && !hasCompletedKyc) {
+        console.log('[Middleware] Coach sem KYC completo, redirecionando para dados bancários...', {
+          stripeChargesEnabled: profile?.stripe_charges_enabled,
+          stripePayoutsEnabled: profile?.stripe_payouts_enabled,
+          hasStripeAccountId: !!profile?.stripe_account_id,
+          path: req.nextUrl.pathname
+        });
+        return NextResponse.redirect(new URL('/coach/dados-bancarios', req.url));
       }
     }
 
