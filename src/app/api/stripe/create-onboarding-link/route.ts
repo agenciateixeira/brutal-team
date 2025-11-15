@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       console.log('[Onboarding Link] Criando nova conta Stripe Connect para:', user.id)
 
       const account = await stripe.accounts.create({
-        type: 'express',
+        type: 'custom', // ✅ Mudou de 'express' para 'custom'
         country: 'BR',
         email: profile.email,
         capabilities: {
@@ -45,6 +45,10 @@ export async function POST(req: NextRequest) {
           transfers: { requested: true },
         },
         business_type: 'individual',
+        // Para Custom Accounts, precisamos aceitar os Termos de Serviço em nome do usuário
+        tos_acceptance: {
+          service_agreement: 'recipient',
+        },
         metadata: {
           user_id: user.id,
           platform: 'brutal_team',

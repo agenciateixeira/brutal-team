@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       console.log('[Cadastro Coach] Criando conta Stripe Connect...')
 
       const account = await stripe.accounts.create({
-        type: 'express',
+        type: 'custom', // ✅ Mudou de 'express' para 'custom'
         country: 'BR',
         email: email,
         capabilities: {
@@ -90,6 +90,10 @@ export async function POST(req: NextRequest) {
           transfers: { requested: true },
         },
         business_type: 'individual',
+        // Para Custom Accounts, precisamos aceitar os Termos de Serviço em nome do usuário
+        tos_acceptance: {
+          service_agreement: 'recipient',
+        },
         metadata: {
           coach_id: authData.user.id,
           coach_name: fullName,
