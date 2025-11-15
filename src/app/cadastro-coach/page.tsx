@@ -125,20 +125,26 @@ export default function CadastroCoachPage() {
   const initializeStripeConnect = async () => {
     try {
       console.log('[Cadastro Coach] Inicializando Stripe Connect...');
+      console.log('[Cadastro Coach] Publishable Key:', process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
       const stripeConnectInstance = loadConnectAndInitialize({
         publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
         fetchClientSecret: async () => {
+          console.log('[Cadastro Coach] Buscando client secret...');
           const response = await fetch('/api/stripe/create-account-session', {
             method: 'POST',
           });
 
+          console.log('[Cadastro Coach] Response status:', response.status);
+
           if (!response.ok) {
             const errorData = await response.json();
+            console.error('[Cadastro Coach] Erro ao buscar client secret:', errorData);
             throw new Error(errorData.error || 'Erro ao criar sessão');
           }
 
           const { clientSecret } = await response.json();
+          console.log('[Cadastro Coach] Client secret recebido:', clientSecret ? 'OK' : 'VAZIO');
           return clientSecret;
         },
         appearance: {
@@ -152,8 +158,9 @@ export default function CadastroCoachPage() {
         },
       });
 
+      console.log('[Cadastro Coach] Stripe Connect instance criada:', stripeConnectInstance);
       setStripeConnect(stripeConnectInstance);
-      console.log('[Cadastro Coach] Stripe Connect inicializado');
+      console.log('[Cadastro Coach] State atualizado com stripeConnect');
     } catch (err: any) {
       console.error('[Cadastro Coach] Erro ao inicializar:', err);
       setOnboardingError(err.message || 'Erro ao carregar dados bancários');
@@ -410,6 +417,7 @@ export default function CadastroCoachPage() {
         {/* Step: Onboarding KYC */}
         {step === 'onboarding' && !success && (
           <div className="space-y-6">
+            {console.log('[Cadastro Coach] Rendering onboarding step. stripeConnect:', !!stripeConnect, 'onboardingError:', onboardingError)}
             {/* Aviso de que está carregando */}
             {!stripeConnect && !onboardingError && (
               <div className="flex flex-col items-center justify-center py-12">
@@ -444,10 +452,16 @@ export default function CadastroCoachPage() {
                 </div>
 
                 <div className="bg-white rounded-lg shadow-lg overflow-hidden" style={{ minHeight: '500px' }}>
-                  <stripe-connect-account-onboarding
-                    stripe-connect={stripeConnect}
-                    on-exit={handleOnboardingExit}
-                  />
+                  {(() => {
+                    console.log('[Cadastro Coach] Renderizando stripe-connect-account-onboarding');
+                    console.log('[Cadastro Coach] stripeConnect value:', stripeConnect);
+                    return (
+                      <stripe-connect-account-onboarding
+                        stripe-connect={stripeConnect}
+                        on-exit={handleOnboardingExit}
+                      />
+                    );
+                  })()}
                 </div>
 
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
