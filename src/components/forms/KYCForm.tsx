@@ -5,6 +5,9 @@ import { useStripe } from '@/hooks/useStripe'
 
 interface KYCFormData {
   // Dados Pessoais
+  fullName: string
+  email: string
+  phone: string
   cpf: string
   dateOfBirth: string
 
@@ -46,6 +49,9 @@ export default function KYCForm({ onSubmit, onBack, loading, userEmail, userPhon
   const { stripe } = useStripe()
 
   const [formData, setFormData] = useState<KYCFormData>({
+    fullName: userName || '',
+    email: userEmail || '',
+    phone: userPhone || '',
     cpf: '',
     dateOfBirth: '',
     postalCode: '',
@@ -78,6 +84,14 @@ export default function KYCForm({ onSubmit, onBack, loading, userEmail, userPhon
     const numbers = value.replace(/\D/g, '').slice(0, 8)
     if (numbers.length <= 5) return numbers
     return `${numbers.slice(0, 5)}-${numbers.slice(5)}`
+  }
+
+  // Formatar Telefone: (00) 00000-0000
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, '').slice(0, 11)
+    if (numbers.length <= 2) return numbers
+    if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`
+    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7)}`
   }
 
   // Buscar endereço pelo CEP
@@ -121,6 +135,8 @@ export default function KYCForm({ onSubmit, onBack, loading, userEmail, userPhon
       if (cleanCep.length === 8) {
         fetchAddressByCEP(formattedValue)
       }
+    } else if (name === 'phone') {
+      formattedValue = formatPhone(value)
     }
 
     setFormData(prev => ({ ...prev, [name]: formattedValue }))
@@ -132,6 +148,22 @@ export default function KYCForm({ onSubmit, onBack, loading, userEmail, userPhon
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
+
+    // Validar nome
+    if (!formData.fullName || formData.fullName.trim().length < 3) {
+      newErrors.fullName = 'Nome completo é obrigatório'
+    }
+
+    // Validar email
+    if (!formData.email || !formData.email.includes('@')) {
+      newErrors.email = 'Email válido é obrigatório'
+    }
+
+    // Validar telefone
+    const phoneNumbers = formData.phone.replace(/\D/g, '')
+    if (phoneNumbers.length < 10 || phoneNumbers.length > 11) {
+      newErrors.phone = 'Telefone deve ter 10 ou 11 dígitos'
+    }
 
     // Validar CPF (apenas comprimento - validação completa no backend)
     const cpfNumbers = formData.cpf.replace(/\D/g, '')
@@ -189,17 +221,20 @@ export default function KYCForm({ onSubmit, onBack, loading, userEmail, userPhon
       console.log('[KYCForm] Criando Account Token no cliente...')
 
       // Separar primeiro e último nome
-      const nameParts = (userName || 'Nome Sobrenome').split(' ')
+      const nameParts = formData.fullName.trim().split(' ')
       const firstName = nameParts[0]
       const lastName = nameParts.slice(1).join(' ') || nameParts[0]
 
-      const { token, error } = await stripe.createToken('account', {
+      // Limpar telefone
+      const cleanPhone = formData.phone.replace(/\D/g, '')
+
+      const { token, error} = await stripe.createToken('account', {
         business_type: 'individual',
         individual: {
           first_name: firstName,
           last_name: lastName,
-          email: userEmail,
-          phone: userPhone,
+          email: formData.email,
+          phone: cleanPhone,
           id_number: cleanCpf,
           dob: {
             day: parseInt(day),
@@ -253,39 +288,99 @@ export default function KYCForm({ onSubmit, onBack, loading, userEmail, userPhon
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           Dados Pessoais
         </h3>
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-4">
+          {/* Nome Completo */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              CPF *
+              Nome Completo *
             </label>
             <input
               type="text"
-              name="cpf"
-              value={formData.cpf}
+              name="fullName"
+              value={formData.fullName}
               onChange={handleChange}
-              placeholder="000.000.000-00"
+              placeholder="Seu nome completo"
               className={`w-full px-4 py-2 rounded-lg border ${
-                errors.cpf ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                errors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
               } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0081A7]`}
             />
-            {errors.cpf && <p className="text-red-500 text-sm mt-1">{errors.cpf}</p>}
+            {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Data de Nascimento *
-            </label>
-            <input
-              type="date"
-              name="dateOfBirth"
-              value={formData.dateOfBirth}
-              onChange={handleChange}
-              max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
-              className={`w-full px-4 py-2 rounded-lg border ${
-                errors.dateOfBirth ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0081A7]`}
-            />
-            {errors.dateOfBirth && <p className="text-red-500 text-sm mt-1">{errors.dateOfBirth}</p>}
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Email * <span className="text-xs text-gray-500">(mesmo cadastrado na plataforma)</span>
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="seu@email.com"
+                className={`w-full px-4 py-2 rounded-lg border ${
+                  errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0081A7]`}
+              />
+              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+            </div>
+
+            {/* Telefone */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Telefone *
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="(00) 00000-0000"
+                className={`w-full px-4 py-2 rounded-lg border ${
+                  errors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0081A7]`}
+              />
+              {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* CPF */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                CPF *
+              </label>
+              <input
+                type="text"
+                name="cpf"
+                value={formData.cpf}
+                onChange={handleChange}
+                placeholder="000.000.000-00"
+                className={`w-full px-4 py-2 rounded-lg border ${
+                  errors.cpf ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0081A7]`}
+              />
+              {errors.cpf && <p className="text-red-500 text-sm mt-1">{errors.cpf}</p>}
+            </div>
+
+            {/* Data de Nascimento */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Data de Nascimento *
+              </label>
+              <input
+                type="date"
+                name="dateOfBirth"
+                value={formData.dateOfBirth}
+                onChange={handleChange}
+                max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+                className={`w-full px-4 py-2 rounded-lg border ${
+                  errors.dateOfBirth ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                } bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0081A7]`}
+              />
+              {errors.dateOfBirth && <p className="text-red-500 text-sm mt-1">{errors.dateOfBirth}</p>}
+            </div>
           </div>
         </div>
       </div>
