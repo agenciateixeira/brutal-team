@@ -44,10 +44,7 @@ export async function POST(req: NextRequest) {
           transfers: { requested: true },
         },
         business_type: 'individual',
-        // Para Custom Accounts, precisamos aceitar os Termos de Serviço em nome do usuário
-        tos_acceptance: {
-          service_agreement: 'recipient',
-        },
+        // Para Custom Accounts no Brasil, o tos_acceptance será preenchido depois com dados reais do usuário
         metadata: {
           user_id: user.id,
           platform: 'brutal_team',

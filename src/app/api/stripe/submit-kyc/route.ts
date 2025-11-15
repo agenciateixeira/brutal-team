@@ -64,7 +64,12 @@ export async function POST(req: NextRequest) {
     // Limpar CEP
     const cleanPostalCode = postalCode.replace(/\D/g, '')
 
-    // 1. Atualizar informações pessoais (individual)
+    // Obter IP do usuário
+    const userIp = req.headers.get('x-forwarded-for')?.split(',')[0] ||
+                   req.headers.get('x-real-ip') ||
+                   '127.0.0.1'
+
+    // 1. Atualizar informações pessoais (individual) e ToS
     await stripe.accounts.update(profile.stripe_account_id, {
       individual: {
         first_name: profile.full_name.split(' ')[0],
@@ -88,6 +93,11 @@ export async function POST(req: NextRequest) {
       business_profile: {
         mcc: '8299', // Educational Services
         product_description: 'Serviços de coaching e treinamento esportivo',
+      },
+      // ToS acceptance com dados reais do usuário
+      tos_acceptance: {
+        date: Math.floor(Date.now() / 1000), // timestamp Unix
+        ip: userIp, // IP do usuário
       },
     })
 
