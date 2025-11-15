@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
           account_number: accountNumber.replace(/\D/g, ''), // Remover formatação
           account_holder_name: profile.full_name,
           account_holder_type: 'individual',
-          account_type: accountType === 'checking' ? 'checking' : 'savings',
+          // account_type não é suportado para contas BR
         },
       }
     )
