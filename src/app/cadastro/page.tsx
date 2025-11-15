@@ -155,102 +155,39 @@ export default function CadastroPage() {
 
     setLoading(true);
     setError(null);
-    showLoading('Criando sua conta...', 3000); // 3 segundos para cadastro
+    showLoading('Criando sua conta...', 5000);
 
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            referred_by: referralCode.trim().toUpperCase() || null,
-          },
+      // Usar API robusta que garante criação do profile
+      const response = await fetch('/api/auth/register-aluno', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          email,
+          password,
+          fullName,
+          inviteToken: inviteToken || null,
+          referralCode: referralCode || null,
+        }),
       });
 
-      if (signUpError) throw signUpError;
+      const data = await response.json();
 
-      if (data.user) {
-        // Se tem código de referral válido, criar entrada na tabela referrals
-        if (referralCode && referralValid) {
-          try {
-            // Buscar o perfil do referrer
-            const { data: referrerProfile } = await supabase
-              .from('profiles')
-              .select('id')
-              .eq('referral_code', referralCode.trim().toUpperCase())
-              .single();
-
-            if (referrerProfile) {
-              await supabase.from('referrals').insert({
-                referrer_id: referrerProfile.id,
-                referred_id: data.user.id,
-                referral_code: referralCode.trim().toUpperCase(),
-                referred_email: email,
-                referred_name: fullName,
-                status: 'pending',
-              });
-            }
-          } catch (refError) {
-            console.error('Erro ao criar referral:', refError);
-            // Não falhar o cadastro por causa disso
-          }
-        }
-
-        // Se foi cadastro via token de convite, vincular ao coach
-        if (inviteData && inviteToken) {
-          try {
-            console.log('[Cadastro] Vinculando aluno ao coach:', {
-              alunoId: data.user.id,
-              coachId: inviteData.coach_id,
-              token: inviteToken
-            });
-
-            // Atualizar perfil com coach_id
-            const { error: updateError } = await supabase
-              .from('profiles')
-              .update({
-                coach_id: inviteData.coach_id,
-                payment_due_day: inviteData.payment_due_day,
-              })
-              .eq('id', data.user.id);
-
-            if (updateError) {
-              console.error('[Cadastro] Erro ao vincular aluno:', updateError);
-              throw updateError;
-            }
-
-            // Marcar token como usado
-            const { error: tokenError } = await supabase
-              .from('invite_tokens')
-              .update({
-                used: true,
-                used_by: data.user.id,
-                used_at: new Date().toISOString(),
-              })
-              .eq('token', inviteToken);
-
-            if (tokenError) {
-              console.error('[Cadastro] Erro ao marcar token como usado:', tokenError);
-              // Não falhar o cadastro por causa disso
-            }
-
-            console.log('[Cadastro] Aluno vinculado ao coach com sucesso!');
-          } catch (inviteError) {
-            console.error('[Cadastro] Erro ao processar convite:', inviteError);
-            // Não falhar o cadastro por causa disso, mas logar o erro
-          }
-        }
-
-        setSuccess(true);
-        showLoading('Conta criada! Redirecionando...', 3000);
-        setTimeout(() => {
-          hideLoading();
-          router.push('/login');
-        }, 2000);
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao criar conta');
       }
+
+      setSuccess(true);
+      showLoading('Conta criada! Redirecionando...', 3000);
+      setTimeout(() => {
+        hideLoading();
+        router.push('/login');
+      }, 2000);
+
     } catch (err: any) {
+      console.error('[Cadastro] Erro:', err);
       setError(err.message || 'Erro ao criar conta');
       hideLoading();
     } finally {
