@@ -69,41 +69,48 @@ export async function POST(req: NextRequest) {
                    req.headers.get('x-real-ip') ||
                    '127.0.0.1'
 
-    // 1. Atualizar informações pessoais (individual) e ToS
-    await stripe.accounts.update(profile.stripe_account_id, {
-      individual: {
-        first_name: profile.full_name.split(' ')[0],
-        last_name: profile.full_name.split(' ').slice(1).join(' ') || profile.full_name.split(' ')[0],
-        email: profile.email,
-        id_number: cleanCpf, // CPF
-        dob: {
-          day: parseInt(day),
-          month: parseInt(month),
-          year: parseInt(year),
+    // 1. Criar Account Token com os dados KYC
+    // Para Custom Accounts, precisamos usar Account Tokens para atualizar dados sensíveis
+    const accountToken = await stripe.tokens.create({
+      account: {
+        individual: {
+          first_name: profile.full_name.split(' ')[0],
+          last_name: profile.full_name.split(' ').slice(1).join(' ') || profile.full_name.split(' ')[0],
+          email: profile.email,
+          id_number: cleanCpf, // CPF
+          dob: {
+            day: parseInt(day),
+            month: parseInt(month),
+            year: parseInt(year),
+          },
+          address: {
+            line1: `${street}, ${number}`,
+            line2: complement || undefined,
+            city: city,
+            state: state,
+            postal_code: cleanPostalCode,
+            country: 'BR',
+          },
         },
-        address: {
-          line1: `${street}, ${number}`,
-          line2: complement || undefined,
-          city: city,
-          state: state,
-          postal_code: cleanPostalCode,
-          country: 'BR',
-        },
+        business_type: 'individual',
+        tos_shown_and_accepted: true,
       },
+    })
+
+    console.log('[Submit KYC] Account token criado:', accountToken.id)
+
+    // 2. Atualizar conta com o token e informações adicionais
+    await stripe.accounts.update(profile.stripe_account_id, {
+      account_token: accountToken.id,
       business_profile: {
         mcc: '8299', // Educational Services
         product_description: 'Serviços de coaching e treinamento esportivo',
       },
-      // ToS acceptance com dados reais do usuário
-      tos_acceptance: {
-        date: Math.floor(Date.now() / 1000), // timestamp Unix
-        ip: userIp, // IP do usuário
-      },
     })
 
-    console.log('[Submit KYC] Informações pessoais atualizadas')
+    console.log('[Submit KYC] Informações pessoais atualizadas via Account Token')
 
-    // 2. Adicionar conta bancária externa
+    // 3. Adicionar conta bancária externa
     const externalAccount = await stripe.accounts.createExternalAccount(
       profile.stripe_account_id,
       {
@@ -122,7 +129,7 @@ export async function POST(req: NextRequest) {
 
     console.log('[Submit KYC] Conta bancária adicionada:', externalAccount.id)
 
-    // 3. Atualizar status no banco de dados
+    // 4. Atualizar status no banco de dados
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
@@ -135,7 +142,7 @@ export async function POST(req: NextRequest) {
       console.error('[Submit KYC] Erro ao atualizar status no banco:', updateError)
     }
 
-    // 4. Verificar status da conta após atualização
+    // 5. Verificar status da conta após atualização
     const account = await stripe.accounts.retrieve(profile.stripe_account_id)
 
     console.log('[Submit KYC] Status da conta:', {
