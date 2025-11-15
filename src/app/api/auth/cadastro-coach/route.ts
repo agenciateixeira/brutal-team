@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     console.log('[Cadastro Coach] Iniciando cadastro:', email)
 
     // Criar usuário no Supabase
-    const supabase = await createClient()
+    const supabase = createServerClient()
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
