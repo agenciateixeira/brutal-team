@@ -374,6 +374,25 @@ export default function CadastroCoachPage() {
     }
   };
 
+  // Funções de navegação entre etapas
+  const handleVoltarParaCadastro = () => {
+    setStep('cadastro');
+    setOnboardingError('');
+  };
+
+  const handleVoltarParaOnboarding = () => {
+    setStep('onboarding');
+    setError('');
+    setSelectedPlan(null);
+    setCheckoutClientSecret(null);
+  };
+
+  const handleVoltarParaPlano = () => {
+    setStep('plano');
+    setError('');
+    setCheckoutClientSecret(null);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-white p-4">
       <div className="max-w-4xl w-full space-y-8 p-8 bg-white rounded-xl shadow-2xl border border-gray-200">
@@ -609,6 +628,17 @@ export default function CadastroCoachPage() {
         {/* Step: Onboarding KYC */}
         {step === 'onboarding' && !success && (
           <div className="space-y-6">
+            {/* Botão Voltar */}
+            <button
+              onClick={handleVoltarParaCadastro}
+              className="flex items-center gap-2 text-gray-600 hover:text-primary-600 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="font-medium">Voltar para Cadastro</span>
+            </button>
+
             {console.log('[Cadastro Coach] Rendering onboarding step. stripeConnect:', !!stripeConnect, 'onboardingError:', onboardingError)}
             {/* Aviso de que está carregando */}
             {!stripeConnect && !onboardingError && (
@@ -711,6 +741,17 @@ export default function CadastroCoachPage() {
         {/* Step: Escolher Plano */}
         {step === 'plano' && !success && (
           <div className="space-y-6">
+            {/* Botão Voltar */}
+            <button
+              onClick={handleVoltarParaOnboarding}
+              className="flex items-center gap-2 text-gray-600 hover:text-primary-600 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="font-medium">Voltar para Dados Bancários</span>
+            </button>
+
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <p className="text-sm text-green-800">
                 <strong>✅ Dados bancários configurados!</strong> Agora escolha o plano que melhor se adequa ao seu negócio.
@@ -776,6 +817,17 @@ export default function CadastroCoachPage() {
         {/* Step: Pagamento */}
         {step === 'pagamento' && checkoutClientSecret && (
           <div className="space-y-6">
+            {/* Botão Voltar */}
+            <button
+              onClick={handleVoltarParaPlano}
+              className="flex items-center gap-2 text-gray-600 hover:text-primary-600 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="font-medium">Voltar para Escolher Plano</span>
+            </button>
+
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-800">
                 <strong>Passo 4: Finalize o pagamento</strong> para ativar sua conta.
