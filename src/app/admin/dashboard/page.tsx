@@ -52,11 +52,11 @@ export default async function AdminDashboardPage() {
 
   const { data: recentPayments } = await supabase
     .from('payments')
-    .select(\`
+    .select(`
       *,
       coach:coach_id(full_name, email),
       aluno:aluno_id(full_name, email)
-    \`)
+    `)
     .order('created_at', { ascending: false })
     .limit(20);
 
