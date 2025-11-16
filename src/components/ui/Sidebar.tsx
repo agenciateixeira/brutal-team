@@ -65,7 +65,7 @@ export default function Sidebar({ profile }: SidebarProps) {
   // Prefetch das páginas principais para navegação instantânea
   useEffect(() => {
     const pagesToPrefetch = isCoach
-      ? ['/coach/dashboard', '/coach/alunos', '/coach/templates', '/coach/anamnese', '/coach/pagamentos-stripe', '/coach/perfil']
+      ? ['/coach/dashboard', '/coach/alunos', '/coach/templates', '/coach/anamnese', '/coach/pagamentos-stripe', '/coach/configuracoes']
       : ['/aluno/dashboard', '/aluno/dieta', '/aluno/treino', '/aluno/protocolo', '/aluno/mensagens', '/aluno/progresso', '/aluno/indicacao', '/aluno/historico-pagamentos', '/aluno/configuracoes'];
 
     pagesToPrefetch.forEach((path) => {
@@ -143,7 +143,7 @@ export default function Sidebar({ profile }: SidebarProps) {
     { icon: ArrowRightLeft, label: 'Transferências', href: '/coach/transferencias' },
     { icon: Landmark, label: 'Dados Bancários', href: '/coach/dados-bancarios' },
     { icon: CreditCard, label: 'Assinatura', href: '/coach/assinatura' },
-    { icon: Settings, label: 'Configurações', href: '/coach/perfil' },
+    { icon: Settings, label: 'Configurações', href: '/coach/configuracoes' },
   ] : [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/aluno/dashboard' },
     { icon: ImageIcon, label: 'Atualização Semanal', href: '/aluno/progresso' },

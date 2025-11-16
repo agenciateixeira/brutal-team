@@ -47,7 +47,7 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
   useEffect(() => {
     const pagesToPrefetch = isAluno
       ? ['/aluno/dashboard', '/aluno/dieta', '/aluno/treino', '/aluno/protocolo', '/aluno/mensagens', '/aluno/progresso', '/aluno/historico-pagamentos']
-      : ['/coach/dashboard', '/coach/alunos', '/coach/templates', '/coach/pagamentos-stripe'];
+      : ['/coach/dashboard', '/coach/alunos', '/coach/templates', '/coach/pagamentos-stripe', '/coach/configuracoes'];
 
     pagesToPrefetch.forEach((path) => {
       router.prefetch(path);
@@ -139,7 +139,7 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
         { href: '/coach/transferencias', icon: ArrowRightLeft, label: 'Transferências' },
         { href: '/coach/dados-bancarios', icon: Landmark, label: 'Dados Bancários' },
         { href: '/coach/assinatura', icon: CreditCard, label: 'Assinatura' },
-        { href: '/coach/perfil', icon: Settings, label: 'Configurações' },
+        { href: '/coach/configuracoes', icon: Settings, label: 'Configurações' },
         { href: '/coach/anamnese', icon: BookOpen, label: 'Anamnese' },
       ];
 
