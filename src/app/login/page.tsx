@@ -30,7 +30,7 @@ export default function LoginPage() {
           // Buscar o perfil do usuário para saber o role
           const { data: profiles, error: profileError } = await supabase
             .from('profiles')
-            .select('role')
+            .select('role, email')
             .filter('id', 'eq', session.user.id);
 
           if (profileError || !profiles || profiles.length === 0) {
@@ -43,7 +43,9 @@ export default function LoginPage() {
           const profile = profiles[0];
 
           // Redirecionar baseado no role
-          if ('role' in profile && profile.role === 'coach') {
+          if ('email' in profile && profile.email === 'guilherme@agenciagtx.com.br') {
+            router.push('/admin/dashboard');
+          } else if ('role' in profile && profile.role === 'coach') {
             router.push('/coach/dashboard');
           } else {
             router.push('/aluno/dashboard');
@@ -78,7 +80,7 @@ export default function LoginPage() {
       // Buscar o perfil do usuário para saber o role
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, email')
         .filter('id', 'eq', authData.user.id);
 
       if (profileError || !profiles || profiles.length === 0) throw new Error('Perfil não encontrado');
@@ -87,7 +89,9 @@ export default function LoginPage() {
 
       // Redirecionar baseado no role
       showLoading('Preparando seu dashboard...', 3000);
-      if ('role' in profile && profile.role === 'coach') {
+      if ('email' in profile && profile.email === 'guilherme@agenciagtx.com.br') {
+        router.push('/admin/dashboard');
+      } else if ('role' in profile && profile.role === 'coach') {
         router.push('/coach/dashboard');
       } else {
         router.push('/aluno/dashboard');

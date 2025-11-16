@@ -1,8 +1,9 @@
 import { createServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import RequireAdmin from '@/components/auth/RequireAdmin';
+import AdminLayout from '@/components/layouts/AdminLayout';
 import {
   Users,
+  User2,
   DollarSign,
   TrendingUp,
   CreditCard,
@@ -44,11 +45,16 @@ export default async function AdminDashboardPage() {
     .select('*, subscriptions(*)')
     .eq('role', 'coach');
 
+  const { data: alunos } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('role', 'aluno');
+
   const { data: allPayments } = await supabase
     .from('payments')
     .select('*')
     .eq('status', 'succeeded')
-    .order('paid_at', { ascending: false });
+    .order('paid_at', { ascending: false});
 
   const { data: recentPayments } = await supabase
     .from('payments')
@@ -65,6 +71,8 @@ export default async function AdminDashboardPage() {
   const activeCoaches = coaches?.filter(c =>
     c.subscriptions?.some((s: any) => s.status === 'active' || s.status === 'trialing')
   ).length || 0;
+
+  const totalAlunos = alunos?.length || 0;
 
   const totalRevenue = allPayments?.reduce((sum, p) => sum + p.platform_fee, 0) || 0;
   const monthlyRevenue = allPayments?.filter(p => {
@@ -104,7 +112,7 @@ export default async function AdminDashboardPage() {
   };
 
   return (
-    <RequireAdmin profile={profile}>
+    <AdminLayout profile={profile}>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -118,7 +126,7 @@ export default async function AdminDashboardPage() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -134,6 +142,25 @@ export default async function AdminDashboardPage() {
                 </div>
                 <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
                   <Users size={24} className="text-blue-600 dark:text-blue-400" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                    Total de Alunos
+                  </p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                    {totalAlunos}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Cadastrados
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center">
+                  <User2 size={24} className="text-indigo-600 dark:text-indigo-400" />
                 </div>
               </div>
             </div>
@@ -321,6 +348,6 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
       </div>
-    </RequireAdmin>
+    </AdminLayout>
   );
 }
