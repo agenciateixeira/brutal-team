@@ -145,6 +145,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
               phone: studentPhone || null,
               role: 'aluno',
               coach_id: coachId,
+              first_access_completed: true, // Alunos do novo sistema não precisam de código
             })
 
           if (profileError) {
@@ -181,6 +182,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
             phone: studentPhone || null,
             role: 'aluno',
             coach_id: coachId,
+            first_access_completed: true, // Alunos do novo sistema não precisam de código
           })
 
         if (profileError) {

@@ -110,6 +110,7 @@ export async function POST(req: NextRequest) {
             phone: studentPhone || null,
             role: 'aluno',
             coach_id: coachId,
+            first_access_completed: true, // Alunos do novo sistema não precisam de código
           })
 
         if (profileError) {
@@ -135,8 +136,15 @@ export async function POST(req: NextRequest) {
           console.log('[Process Invitation] Coach_student relationship created for existing user')
         }
       } else {
-        // Profile já existe, apenas criar coach_students se não existir
-        console.log('[Process Invitation] Profile already exists, checking coach_students')
+        // Profile já existe, marcar first_access_completed e criar coach_students se não existir
+        console.log('[Process Invitation] Profile already exists, updating and checking coach_students')
+
+        // Atualizar first_access_completed
+        await supabaseAdmin
+          .from('profiles')
+          .update({ first_access_completed: true })
+          .eq('id', userId)
+
         const { data: existingCoachStudent } = await supabaseAdmin
           .from('coach_students')
           .select('id')
@@ -193,6 +201,7 @@ export async function POST(req: NextRequest) {
           phone: studentPhone || null,
           role: 'aluno',
           coach_id: coachId,
+          first_access_completed: true, // Alunos do novo sistema não precisam de código
         })
 
       if (profileError) {
