@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
-import { sendWelcomeEmail } from '@/lib/resend'
+import {
+  sendWelcomeEmail,
+  sendPaymentConfirmationEmail,
+  sendSubscriptionCanceledEmail,
+  sendRefundEmail,
+} from '@/lib/resend'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,6 +19,8 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://app.brutalteam.blog.br'
 
 /**
  * Webhook Stripe para processar eventos de subscription
@@ -210,6 +217,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
           type: 'recovery',
           email: studentEmail,
+          options: {
+            redirect_to: `${APP_URL}/redefinir-senha`,
+          },
         })
 
         if (resetError || !resetData.properties?.action_link) {
@@ -327,7 +337,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   // Buscar registro existente para fallback de metadata
   const { data: existing } = await supabase
     .from('subscriptions')
-    .select('id, coach_id, aluno_id')
+    .select('id, coach_id, aluno_id, status, current_period_end')
     .eq('stripe_subscription_id', subscription.id)
     .maybeSingle()
 
@@ -338,6 +348,8 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     console.log('[Webhook] Missing metadata in subscription and no local record found')
     return
   }
+
+  const previousStatus = existing?.status || null
 
   const subscriptionData = {
     aluno_id: studentId,
@@ -385,7 +397,16 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     }
   }
 
-  if (['canceled', 'unpaid'].includes(subscription.status as string)) {
+  const newStatus = subscription.status as string
+  const statusChangedToCanceled =
+    ['canceled', 'unpaid'].includes(newStatus) &&
+    !['canceled', 'unpaid'].includes((previousStatus as string) || '')
+
+  if (statusChangedToCanceled) {
+    await notifySubscriptionCancellation(coachId, studentId, subscriptionData.current_period_end)
+  }
+
+  if (['canceled', 'unpaid'].includes(newStatus)) {
     await deactivateCoachStudent(coachId, studentId)
   }
 }
@@ -399,7 +420,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
   const { data: existing, error: fetchError } = await supabase
     .from('subscriptions')
-    .select('id, coach_id, aluno_id')
+    .select('id, coach_id, aluno_id, status')
     .eq('stripe_subscription_id', subscription.id)
     .maybeSingle()
 
@@ -412,6 +433,8 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     console.log('[Webhook] Subscription not found locally for cancelation')
     return
   }
+
+  const alreadyCanceled = existing.status === 'canceled'
 
   const { error } = await supabase
     .from('subscriptions')
@@ -427,6 +450,15 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   } else {
     console.log('[Webhook] Subscription marked as canceled')
     await deactivateCoachStudent(existing.coach_id, existing.aluno_id)
+    if (!alreadyCanceled) {
+      await notifySubscriptionCancellation(
+        existing.coach_id,
+        existing.aluno_id,
+        subscription.current_period_end
+          ? new Date(subscription.current_period_end * 1000).toISOString()
+          : new Date().toISOString()
+      )
+    }
   }
 }
 
@@ -446,6 +478,38 @@ async function deactivateCoachStudent(coachId: string | null | undefined, studen
     console.error('[Webhook] Error updating coach_students status:', error)
   } else {
     console.log('[Webhook] coach_students status updated to inactive')
+  }
+}
+
+async function fetchCoachStudentProfiles(coachId: string, studentId: string) {
+  const [{ data: student }, { data: coach }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('full_name, email')
+      .eq('id', studentId)
+      .single(),
+    supabase
+      .from('profiles')
+      .select('full_name, email')
+      .eq('id', coachId)
+      .single(),
+  ])
+
+  return { student, coach }
+}
+
+async function notifySubscriptionCancellation(coachId: string, studentId: string, effectiveDate: string) {
+  try {
+    const { student, coach } = await fetchCoachStudentProfiles(coachId, studentId)
+    if (!student?.email) return
+    await sendSubscriptionCanceledEmail({
+      studentName: student.full_name || student.email,
+      studentEmail: student.email,
+      coachName: coach?.full_name || coach?.email || 'seu coach',
+      effectiveDate,
+    })
+  } catch (error) {
+    console.error('[Webhook] Error sending cancellation email:', error)
   }
 }
 
@@ -507,6 +571,20 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     console.error('[Webhook] Error creating payment record:', error)
   } else {
     console.log('[Webhook] Payment record created')
+    try {
+      const { student, coach } = await fetchCoachStudentProfiles(subscription.coach_id, subscription.aluno_id)
+      if (student?.email) {
+        await sendPaymentConfirmationEmail({
+          studentName: student.full_name || student.email,
+          studentEmail: student.email,
+          coachName: coach?.full_name || coach?.email || 'seu coach',
+          amount: invoice.total,
+          interval: subscription.interval,
+        })
+      }
+    } catch (notificationError) {
+      console.error('[Webhook] Error sending payment confirmation email:', notificationError)
+    }
   }
 }
 
@@ -655,5 +733,19 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
   } else {
     console.log('[Webhook] Subscription canceled due to refund')
     await deactivateCoachStudent(subscriptionRecord.coach_id, subscriptionRecord.aluno_id)
+    try {
+      const { student, coach } = await fetchCoachStudentProfiles(subscriptionRecord.coach_id, subscriptionRecord.aluno_id)
+      if (student?.email) {
+        await sendRefundEmail({
+          studentName: student.full_name || student.email,
+          studentEmail: student.email,
+          coachName: coach?.full_name || coach?.email || 'seu coach',
+          amount: refundAmount,
+          reason: charge.reason || charge.description || null,
+        })
+      }
+    } catch (notificationError) {
+      console.error('[Webhook] Error sending refund email:', notificationError)
+    }
   }
 }

@@ -193,7 +193,7 @@ export default function AlunosPage() {
       const res = await fetch('/api/coach/cancel-student-subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subscriptionId, cancelImmediately: false }),
+        body: JSON.stringify({ subscriptionId, cancelImmediately: true }),
       })
 
       const data = await res.json()

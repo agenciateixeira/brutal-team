@@ -244,6 +244,9 @@ export async function POST(req: NextRequest) {
     const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email: studentEmail,
+      options: {
+        redirect_to: `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.brutalteam.blog.br'}/redefinir-senha`,
+      },
     })
 
     if (resetError || !resetData.properties?.action_link) {
