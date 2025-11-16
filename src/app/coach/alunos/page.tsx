@@ -31,6 +31,8 @@ export default function AlunosPage() {
   const [students, setStudents] = useState<Student[]>([])
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [invitations, setInvitations] = useState<any[]>([])
+  const [invitationStats, setInvitationStats] = useState<any>(null)
   const [showModal, setShowModal] = useState(false)
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
@@ -65,6 +67,7 @@ export default function AlunosPage() {
   useEffect(() => {
     if (profile) {
       loadStudents()
+      loadInvitations()
     }
   }, [profile])
 
@@ -96,6 +99,17 @@ export default function AlunosPage() {
       const data = await res.json()
       setStudents(data.students || [])
       setStats(data.stats || {})
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const loadInvitations = async () => {
+    try {
+      const res = await fetch('/api/coach/list-payment-invitations?status=pending')
+      const data = await res.json()
+      setInvitations(data.invitations || [])
+      setInvitationStats(data.stats || {})
     } catch (err) {
       console.error(err)
     }
@@ -156,6 +170,7 @@ export default function AlunosPage() {
       trialDays: '0',
     })
     loadStudents()
+    loadInvitations()
   }
 
   const handleCancel = async (subscriptionId: string) => {
@@ -260,9 +275,92 @@ export default function AlunosPage() {
           </div>
         )}
 
+        {/* Convites Pendentes */}
+        {invitations.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                Convites Pendentes ({invitations.length})
+              </h2>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                        Aluno
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                        Valor
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                        Enviado em
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                        Expira em
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                        Ações
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {invitations.map((invitation) => (
+                      <tr key={invitation.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td className="px-6 py-4">
+                          <div className="font-medium text-gray-900 dark:text-white">
+                            {invitation.student_name}
+                          </div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            {invitation.student_email}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm font-medium text-[#0081A7]">
+                          {formatMoney(invitation.amount)}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                          {formatDate(invitation.created_at)}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                          {formatDate(invitation.expires_at)}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(invitation.link)
+                                showNotification('Link copiado!', 'success')
+                              }}
+                              className="text-[#0081A7] hover:text-[#006685] text-sm font-medium"
+                            >
+                              📋 Copiar Link
+                            </button>
+                            {invitation.whatsappLink && (
+                              <a
+                                href={invitation.whatsappLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-green-600 hover:text-green-700 text-sm font-medium"
+                              >
+                                📱 WhatsApp
+                              </a>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mb-6 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            {students.length} aluno{students.length !== 1 ? 's' : ''}
+            {students.length} aluno{students.length !== 1 ? 's' : ''} com assinatura ativa
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <button
@@ -276,7 +374,7 @@ export default function AlunosPage() {
               onClick={() => setShowModal(true)}
               className="w-full sm:w-auto bg-[#0081A7] text-white px-6 py-2 rounded-lg hover:bg-[#006685] transition-colors font-medium"
             >
-              + Nova Assinatura
+              + Criar Cobrança
             </button>
           </div>
         </div>

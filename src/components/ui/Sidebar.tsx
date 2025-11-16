@@ -137,7 +137,6 @@ export default function Sidebar({ profile }: SidebarProps) {
   const menuItems = isCoach ? [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/coach/dashboard' },
     { icon: Users, label: 'Alunos', href: '/coach/alunos' },
-    { icon: UserPlus, label: 'Convidar Aluno', href: '/coach/convidar-aluno' },
     { icon: FileText, label: 'Templates', href: '/coach/templates' },
     { icon: BookOpen, label: 'Anamnese', href: '/coach/anamnese' },
     { icon: Receipt, label: 'Pagamentos', href: '/coach/pagamentos-stripe' },

@@ -134,7 +134,6 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
         { href: '/aluno/indicacao', icon: Gift, label: 'Indicação' },
       ]
     : [
-        { href: '/coach/convidar-aluno', icon: UserPlus, label: 'Convidar Aluno' },
         { href: '/coach/pagamentos-stripe', icon: Receipt, label: 'Pagamentos Stripe' },
         { href: '/coach/transferencias', icon: ArrowRightLeft, label: 'Transferências' },
         { href: '/coach/dados-bancarios', icon: Landmark, label: 'Dados Bancários' },
