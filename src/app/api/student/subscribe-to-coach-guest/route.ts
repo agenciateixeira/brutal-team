@@ -161,13 +161,19 @@ export async function POST(req: NextRequest) {
 
     console.log('[Subscribe Guest] Checkout Session criado:', session.id)
 
-    // Atualizar convite com telefone se fornecido
-    if (studentPhone) {
-      await supabaseAdmin
-        .from('payment_invitations')
-        .update({ student_phone: studentPhone })
-        .eq('token', invitationToken)
+    // Atualizar convite com informações úteis para futuras sincronizações
+    const invitationUpdate: Record<string, any> = {
+      stripe_session_id: session.id,
     }
+
+    if (studentPhone) {
+      invitationUpdate.student_phone = studentPhone
+    }
+
+    await supabaseAdmin
+      .from('payment_invitations')
+      .update(invitationUpdate)
+      .eq('token', invitationToken)
 
     return NextResponse.json({
       success: true,

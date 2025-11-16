@@ -233,6 +233,7 @@ export async function POST(req: NextRequest) {
           status: 'completed',
           completed_at: new Date().toISOString(),
           student_id: user.id,
+          stripe_session_id: session.id,
         })
         .eq('token', invitationToken)
         .eq('status', 'pending')

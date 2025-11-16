@@ -262,6 +262,17 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     return
   }
 
+  const { data: coachAccount, error: coachAccountError } = await supabase
+    .from('profiles')
+    .select('stripe_account_id')
+    .eq('id', coachId)
+    .single()
+
+  if (coachAccountError || !coachAccount?.stripe_account_id) {
+    console.error('[Webhook] Coach Stripe account not found:', coachAccountError)
+    return
+  }
+
   const subscriptionId = session.subscription as string
 
   if (!subscriptionId) {
@@ -269,8 +280,36 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     return
   }
 
-  // A subscription já foi ou será criada pelo evento customer.subscription.created
-  console.log('[Webhook] Checkout completed, subscription will be handled by subscription.created event')
+  // Garantir que a subscription tenha os metadados obrigatórios e acionar o fluxo de sincronização
+  try {
+    const metadataPayload: Record<string, string> = {
+      coach_id: coachId,
+      student_id: studentId,
+    }
+
+    if (session.metadata?.student_email) {
+      metadataPayload.student_email = session.metadata.student_email
+    }
+
+    if (session.metadata?.invitation_token) {
+      metadataPayload.invitation_token = session.metadata.invitation_token
+    }
+
+    const updatedSubscription = await stripe.subscriptions.update(
+      subscriptionId,
+      {
+        metadata: metadataPayload,
+      },
+      {
+        stripeAccount: coachAccount.stripe_account_id,
+      }
+    )
+
+    // Processar imediatamente a subscription para garantir que o banco fique em sincronia
+    await handleSubscriptionUpdate(updatedSubscription)
+  } catch (error) {
+    console.error('[Webhook] Error updating subscription metadata:', error)
+  }
 }
 
 /**

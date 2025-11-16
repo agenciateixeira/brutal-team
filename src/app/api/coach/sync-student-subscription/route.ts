@@ -65,6 +65,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Aluno não pertence a este coach' }, { status: 403 })
     }
 
+    // Buscar informações do coach para acessar a conta Stripe conectada
+    const { data: coachProfile, error: coachError } = await supabaseAdmin
+      .from('profiles')
+      .select('stripe_account_id')
+      .eq('id', user.id)
+      .single()
+
+    if (coachError || !coachProfile?.stripe_account_id) {
+      console.error('[Sync Subscription] Coach missing Stripe account:', coachError)
+      return NextResponse.json(
+        { error: 'Configuração do Stripe não encontrada para este coach' },
+        { status: 400 }
+      )
+    }
+
+    const stripeAccountId = coachProfile.stripe_account_id
+
     console.log('[Sync Subscription] Student email:', student.email)
 
     // Primeiro, tentar buscar pelo payment_invitation para pegar o stripe_session_id
@@ -84,7 +101,10 @@ export async function POST(req: NextRequest) {
       console.log('[Sync Subscription] Found invitation with session:', invitation.stripe_session_id)
 
       try {
-        const session = await stripe.checkout.sessions.retrieve(invitation.stripe_session_id)
+        const session = await stripe.checkout.sessions.retrieve(
+          invitation.stripe_session_id,
+          { stripeAccount: stripeAccountId }
+        )
         subscriptionId = session.subscription as string
         console.log('[Sync Subscription] Found subscription from session:', subscriptionId)
       } catch (err) {
@@ -96,10 +116,15 @@ export async function POST(req: NextRequest) {
     if (!subscriptionId) {
       console.log('[Sync Subscription] Trying to find customer by email:', student.email)
 
-      const customers = await stripe.customers.list({
-        email: student.email,
-        limit: 1,
-      })
+      const customers = await stripe.customers.list(
+        {
+          email: student.email,
+          limit: 1,
+        },
+        {
+          stripeAccount: stripeAccountId,
+        }
+      )
 
       if (customers.data.length === 0) {
         console.error('[Sync Subscription] No Stripe customer found for email:', student.email)
@@ -116,10 +141,15 @@ export async function POST(req: NextRequest) {
       console.log('[Sync Subscription] Found Stripe customer:', customer.id)
 
       // Buscar todas as subscriptions do customer
-      const subscriptions = await stripe.subscriptions.list({
-        customer: customer.id,
-        limit: 1,
-      })
+      const subscriptions = await stripe.subscriptions.list(
+        {
+          customer: customer.id,
+          limit: 1,
+        },
+        {
+          stripeAccount: stripeAccountId,
+        }
+      )
 
       if (subscriptions.data.length === 0) {
         return NextResponse.json(
@@ -135,7 +165,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Buscar a subscription completa
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId!)
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId!, {
+      stripeAccount: stripeAccountId,
+    })
     console.log('[Sync Subscription] Retrieved subscription:', subscription.id, 'status:', subscription.status)
 
     // Processar e sincronizar a subscription
