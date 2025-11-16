@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createRouteClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
     }
 
-    const { coachId, planId, amount, interval = 'month' } = await req.json()
+    const { coachId, planId, amount, interval = 'month', invitationToken } = await req.json()
 
     if (!coachId) {
       return NextResponse.json({ error: 'Coach ID é obrigatório' }, { status: 400 })
@@ -109,36 +110,34 @@ export async function POST(req: NextRequest) {
       stripePriceId = plan.stripe_price_id
     }
 
-    // 4. Criar ou buscar Customer do aluno
+    // 4. Criar Customer do aluno na conta do coach
     const { data: studentProfile } = await supabase
       .from('profiles')
-      .select('stripe_customer_id, full_name, email')
+      .select('full_name, email')
       .eq('id', user.id)
       .single()
 
-    let customerId = studentProfile?.stripe_customer_id
-
-    if (!customerId) {
-      console.log('[Subscribe to Coach] Criando Customer para aluno')
-      const customer = await stripe.customers.create({
+    // SEMPRE criar novo customer na conta conectada do coach
+    // Customers não são compartilhados entre contas Stripe
+    console.log('[Subscribe to Coach] Criando Customer na conta do coach')
+    const customer = await stripe.customers.create(
+      {
         email: studentProfile?.email || user.email || '',
         name: studentProfile?.full_name || '',
         metadata: {
           user_id: user.id,
           platform: 'brutal_team',
           role: 'student',
+          coach_id: coachId,
         },
-      })
+      },
+      {
+        stripeAccount: coachProfile.stripe_account_id,
+      }
+    )
 
-      customerId = customer.id
-
-      await supabase
-        .from('profiles')
-        .update({ stripe_customer_id: customerId })
-        .eq('id', user.id)
-
-      console.log('[Subscribe to Coach] Customer criado:', customerId)
-    }
+    const customerId = customer.id
+    console.log('[Subscribe to Coach] Customer criado na conta do coach:', customerId)
 
     // 5. Se não tem stripePriceId, criar Price
     if (!stripePriceId) {
@@ -217,6 +216,33 @@ export async function POST(req: NextRequest) {
     )
 
     console.log('[Subscribe to Coach] Checkout Session criada:', session.id)
+
+    // Atualizar convite como completed se veio de um convite
+    if (invitationToken) {
+      console.log('[Subscribe to Coach] Marcando convite como completed:', invitationToken)
+
+      // Usar service_role para bypass RLS
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      )
+
+      const { error: invitationError } = await supabaseAdmin
+        .from('payment_invitations')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          student_id: user.id,
+        })
+        .eq('token', invitationToken)
+        .eq('status', 'pending')
+
+      if (invitationError) {
+        console.error('[Subscribe to Coach] Erro ao atualizar convite:', invitationError)
+      } else {
+        console.log('[Subscribe to Coach] Convite marcado como completed')
+      }
+    }
 
     return NextResponse.json({
       success: true,
