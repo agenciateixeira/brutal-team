@@ -225,6 +225,31 @@ export default function AlunosPage() {
     }
   }
 
+  const handleProcessInvitationManually = async (invitationToken: string, studentEmail: string) => {
+    if (!confirm(
+      `Processar manualmente o convite de ${studentEmail}?\n\n` +
+      'Isso irá criar o usuário, enviar email de boas-vindas e marcar o convite como completo.\n\n' +
+      'Use isso apenas se o pagamento já foi confirmado mas o webhook falhou.'
+    )) return
+
+    try {
+      const res = await fetch('/api/coach/process-invitation-manually', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invitationToken }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+
+      showNotification(data.message, 'success')
+      await loadInvitations()
+      await loadStudents()
+    } catch (err: any) {
+      showNotification(err.message, 'error')
+    }
+  }
+
   const handleSyncStripeAccount = async () => {
     setSyncing(true)
     try {
@@ -360,6 +385,13 @@ export default function AlunosPage() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => handleProcessInvitationManually(invitation.token, invitation.student_email)}
+                              className="px-3 py-1 text-xs font-medium bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:hover:bg-orange-900/30 rounded-lg transition-colors"
+                              title="Processar manualmente (se webhook falhou)"
+                            >
+                              Processar
+                            </button>
                             <button
                               onClick={() => {
                                 navigator.clipboard.writeText(invitation.link)
