@@ -336,13 +336,14 @@ export default function AlunosPage() {
                   <span className="absolute left-3 top-2 text-gray-500">R$</span>
                   <input
                     type="number"
-                    value={parseInt(formData.amount) / 100}
-                    onChange={(e) =>
+                    value={(parseInt(formData.amount) || 0) / 100}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value) || 0
                       setFormData({
                         ...formData,
-                        amount: (parseFloat(e.target.value) * 100).toString(),
+                        amount: Math.round(value * 100).toString(),
                       })
-                    }
+                    }}
                     step="0.01"
                     min="5"
                     required
