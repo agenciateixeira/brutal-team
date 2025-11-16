@@ -78,6 +78,11 @@ export async function POST(req: NextRequest) {
         await handlePaymentFailed(event.data.object as Stripe.Invoice)
         break
 
+      case 'charge.refunded':
+      case 'charge.refund.updated':
+        await handleChargeRefunded(event.data.object as Stripe.Charge)
+        break
+
       default:
         console.log('[Stripe Webhook] Unhandled event type:', event.type)
     }
@@ -319,20 +324,20 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   console.log('[Webhook] Subscription update:', subscription.id, subscription.status)
 
-  const coachId = subscription.metadata.coach_id
-  const studentId = subscription.metadata.student_id
-
-  if (!coachId || !studentId) {
-    console.log('[Webhook] Missing metadata in subscription')
-    return
-  }
-
-  // Verificar se subscription já existe
+  // Buscar registro existente para fallback de metadata
   const { data: existing } = await supabase
     .from('subscriptions')
-    .select('id')
+    .select('id, coach_id, aluno_id')
     .eq('stripe_subscription_id', subscription.id)
-    .single()
+    .maybeSingle()
+
+  const coachId = (subscription.metadata.coach_id as string) || existing?.coach_id
+  const studentId = (subscription.metadata.student_id as string) || existing?.aluno_id
+
+  if (!coachId || !studentId) {
+    console.log('[Webhook] Missing metadata in subscription and no local record found')
+    return
+  }
 
   const subscriptionData = {
     aluno_id: studentId,
@@ -379,6 +384,10 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
       console.log('[Webhook] Subscription created')
     }
   }
+
+  if (['canceled', 'unpaid'].includes(subscription.status as string)) {
+    await deactivateCoachStudent(coachId, studentId)
+  }
 }
 
 /**
@@ -388,6 +397,22 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   console.log('[Webhook] Subscription deleted:', subscription.id)
 
+  const { data: existing, error: fetchError } = await supabase
+    .from('subscriptions')
+    .select('id, coach_id, aluno_id')
+    .eq('stripe_subscription_id', subscription.id)
+    .maybeSingle()
+
+  if (fetchError) {
+    console.error('[Webhook] Error fetching subscription to cancel:', fetchError)
+    return
+  }
+
+  if (!existing) {
+    console.log('[Webhook] Subscription not found locally for cancelation')
+    return
+  }
+
   const { error } = await supabase
     .from('subscriptions')
     .update({
@@ -395,12 +420,32 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       canceled_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
-    .eq('stripe_subscription_id', subscription.id)
+    .eq('id', existing.id)
 
   if (error) {
     console.error('[Webhook] Error updating subscription to canceled:', error)
   } else {
     console.log('[Webhook] Subscription marked as canceled')
+    await deactivateCoachStudent(existing.coach_id, existing.aluno_id)
+  }
+}
+
+async function deactivateCoachStudent(coachId: string | null | undefined, studentId: string | null | undefined) {
+  if (!coachId || !studentId) return
+
+  const { error } = await supabase
+    .from('coach_students')
+    .update({
+      status: 'inactive',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('coach_id', coachId)
+    .eq('student_id', studentId)
+
+  if (error) {
+    console.error('[Webhook] Error updating coach_students status:', error)
+  } else {
+    console.log('[Webhook] coach_students status updated to inactive')
   }
 }
 
@@ -495,4 +540,120 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   }
 
   // TODO: Enviar notificação para coach e aluno
+}
+
+async function handleChargeRefunded(charge: Stripe.Charge) {
+  console.log('[Webhook] Charge refunded:', charge.id, 'amount_refunded:', charge.amount_refunded)
+
+  const invoiceId =
+    typeof charge.invoice === 'string'
+      ? charge.invoice
+      : charge.invoice?.id
+
+  const now = new Date().toISOString()
+  let paymentRecord: { id: string; metadata: any; coach_id: string; aluno_id: string } | null = null
+
+  if (invoiceId) {
+    const { data } = await supabase
+      .from('payments')
+      .select('id, metadata, coach_id, aluno_id')
+      .eq('stripe_invoice_id', invoiceId)
+      .maybeSingle()
+    paymentRecord = data
+  }
+
+  if (!paymentRecord && charge.payment_intent) {
+    const { data } = await supabase
+      .from('payments')
+      .select('id, metadata, coach_id, aluno_id')
+      .eq('stripe_payment_intent_id', charge.payment_intent as string)
+      .maybeSingle()
+    paymentRecord = data
+  }
+
+  if (!paymentRecord) {
+    const { data } = await supabase
+      .from('payments')
+      .select('id, metadata, coach_id, aluno_id')
+      .eq('stripe_charge_id', charge.id)
+      .maybeSingle()
+    paymentRecord = data
+  }
+
+  if (!paymentRecord) {
+    console.log('[Webhook] Payment record not found for refunded charge')
+  } else {
+    const refundAmount = charge.amount_refunded || charge.amount || 0
+
+    const { error: paymentError } = await supabase
+      .from('payments')
+      .update({
+        status: 'refunded',
+        refunded: true,
+        refund_amount: refundAmount,
+        refunded_at: now,
+        updated_at: now,
+      })
+      .eq('id', paymentRecord.id)
+
+    if (paymentError) {
+      console.error('[Webhook] Error updating payment as refunded:', paymentError)
+    } else {
+      console.log('[Webhook] Payment marked as refunded')
+    }
+  }
+
+  let subscriptionRecordId = paymentRecord?.metadata?.subscription_id as string | undefined
+  let subscriptionRecord:
+    | { id: string; coach_id: string; aluno_id: string }
+    | null = null
+
+  if (subscriptionRecordId) {
+    const { data } = await supabase
+      .from('subscriptions')
+      .select('id, coach_id, aluno_id')
+      .eq('id', subscriptionRecordId)
+      .maybeSingle()
+    subscriptionRecord = data
+  }
+
+  if (!subscriptionRecord) {
+    const stripeSubscriptionId =
+      typeof charge.subscription === 'string'
+        ? charge.subscription
+        : undefined
+
+    if (stripeSubscriptionId) {
+      const { data } = await supabase
+        .from('subscriptions')
+        .select('id, coach_id, aluno_id')
+        .eq('stripe_subscription_id', stripeSubscriptionId)
+        .maybeSingle()
+      subscriptionRecord = data
+    }
+  }
+
+  if (!subscriptionRecord) {
+    console.log('[Webhook] Subscription not found for refunded charge')
+    return
+  }
+
+  const { error: subscriptionError } = await supabase
+    .from('subscriptions')
+    .update({
+      status: 'canceled',
+      cancel_at_period_end: false,
+      canceled_at: now,
+      current_period_end: now,
+      updated_at: now,
+      cancellation_reason: 'refunded',
+    })
+    .eq('id', subscriptionRecord.id)
+
+  if (subscriptionError) {
+    console.error('[Webhook] Error canceling subscription after refund:', subscriptionError)
+  } else {
+    console.log('[Webhook] Subscription canceled due to refund')
+    await deactivateCoachStudent(subscriptionRecord.coach_id, subscriptionRecord.aluno_id)
+  }
 }
