@@ -36,7 +36,7 @@ Coach → Cria convite → Envia link → Aluno paga → Webhook cria usuário �
 - **Provedor:** Resend
 - **Domínio:** brutalteam.blog.br (verificado)
 - **Email:** noreply@brutalteam.blog.br
-- **API Key:** `re_ELF3EjBz_ywiNyFcPhrNxJMBte3y4aiY7`
+- **API Key:** `re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx` (configurada no .env)
 
 **Arquivos criados:**
 - `/src/lib/resend.ts` - Helper e template de email
@@ -44,7 +44,7 @@ Coach → Cria convite → Envia link → Aluno paga → Webhook cria usuário �
 
 **Variável de ambiente necessária (Vercel):**
 ```bash
-RESEND_API_KEY=re_ELF3EjBz_ywiNyFcPhrNxJMBte3y4aiY7
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 **Template do email:**
@@ -74,8 +74,9 @@ RESEND_API_KEY=re_ELF3EjBz_ywiNyFcPhrNxJMBte3y4aiY7
 
 **Secret do Webhook (configurado):**
 ```
-STRIPE_WEBHOOK_SECRET=whsec_0HJDBt2jxWRPokgctr3CzlGFqv98eJ8V
+STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
+> **⚠️ Importante:** O secret real está configurado nas variáveis de ambiente do Vercel.
 
 ---
 
@@ -201,15 +202,18 @@ npm install resend
 
 ### Locais (`.env.local`):
 ```bash
-RESEND_API_KEY=re_ELF3EjBz_ywiNyFcPhrNxJMBte3y4aiY7
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 ### Vercel (configurar manualmente):
 ```bash
-RESEND_API_KEY=re_ELF3EjBz_ywiNyFcPhrNxJMBte3y4aiY7
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-**Status:** ✅ Já configurado no Vercel pelo usuário
+**Status:** ✅ Já configurado no Vercel
+
+> **🔒 Segurança:** As credenciais reais estão nas variáveis de ambiente. Nunca commite valores reais no Git.
 
 ---
 
@@ -439,19 +443,21 @@ SELECT * FROM profiles WHERE email = 'email@aluno.com';
 ## 📞 Contas e Credenciais
 
 ### Stripe Connect
-- **Account ID (Plataforma):** `acct_1STLBmFNseQuOFRP`
-- **Webhook Secret:** `whsec_0HJDBt2jxWRPokgctr3CzlGFqv98eJ8V`
+- **Account ID (Plataforma):** `acct_xxxxxxxxxxxxxxxxxxxxx` (configurado no .env)
+- **Webhook Secret:** `whsec_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx` (configurado no .env)
 - **Fee da plataforma:** 2%
 
 ### Resend
 - **Domínio:** brutalteam.blog.br
-- **API Key:** re_ELF3EjBz_ywiNyFcPhrNxJMBte3y4aiY7
+- **API Key:** `re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx` (configurado no .env)
 - **Email:** noreply@brutalteam.blog.br
 - **Limite:** Grátis até 3.000 emails/mês
 
 ### Supabase
 - **URL:** https://kelmdelbrqsznzckznfb.supabase.co
 - **Project ID:** kelmdelbrqsznzckznfb
+
+> **🔒 Nota de Segurança:** Credenciais sensíveis foram removidas desta documentação. Os valores reais estão configurados nas variáveis de ambiente (.env.local e Vercel).
 
 ---
 
