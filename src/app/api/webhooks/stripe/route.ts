@@ -94,15 +94,145 @@ export async function POST(req: NextRequest) {
 /**
  * Handle checkout.session.completed
  * Quando um checkout é finalizado com sucesso
+ *
+ * NOVO FLUXO (guest checkout):
+ * - Cria usuário no auth.users
+ * - Cria profile
+ * - Marca convite como completed
+ * - Envia email de boas-vindas
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   console.log('[Webhook] Checkout completed:', session.id)
 
+  const invitationToken = session.metadata?.invitation_token
+  const studentEmail = session.metadata?.student_email
+  const studentName = session.metadata?.student_name
+  const studentPhone = session.metadata?.student_phone
   const coachId = session.metadata?.coach_id
+
+  // NOVO FLUXO: Criar usuário se veio de um convite (guest checkout)
+  if (invitationToken && studentEmail && studentName && !session.metadata?.student_id) {
+    console.log('[Webhook] Guest checkout detected, creating user for:', studentEmail)
+
+    try {
+      // 1. Verificar se usuário já existe
+      const { data: existingAuth } = await supabase.auth.admin.listUsers()
+      const userExists = existingAuth.users.find(u => u.email === studentEmail)
+
+      let userId: string
+
+      if (userExists) {
+        console.log('[Webhook] User already exists in auth:', userExists.id)
+        userId = userExists.id
+
+        // Verificar se profile existe
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', userId)
+          .single()
+
+        if (!existingProfile) {
+          // Criar profile para usuário órfão
+          console.log('[Webhook] Creating profile for existing auth user')
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: userId,
+              email: studentEmail,
+              full_name: studentName,
+              phone: studentPhone || null,
+              role: 'student',
+              coach_id: coachId,
+            })
+
+          if (profileError) {
+            console.error('[Webhook] Error creating profile:', profileError)
+          }
+        }
+      } else {
+        // 2. Criar usuário novo no auth
+        console.log('[Webhook] Creating new user in auth')
+        const { data: newUser, error: authError } = await supabase.auth.admin.createUser({
+          email: studentEmail,
+          email_confirm: true, // Confirma email automaticamente
+          user_metadata: {
+            full_name: studentName,
+            role: 'student',
+          },
+        })
+
+        if (authError || !newUser.user) {
+          console.error('[Webhook] Error creating user:', authError)
+          return
+        }
+
+        userId = newUser.user.id
+        console.log('[Webhook] User created:', userId)
+
+        // 3. Criar profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            email: studentEmail,
+            full_name: studentName,
+            phone: studentPhone || null,
+            role: 'student',
+            coach_id: coachId,
+          })
+
+        if (profileError) {
+          console.error('[Webhook] Error creating profile:', profileError)
+          return
+        }
+
+        console.log('[Webhook] Profile created')
+
+        // 4. Enviar email de boas-vindas com link para definir senha
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(studentEmail, {
+          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
+        })
+
+        if (resetError) {
+          console.error('[Webhook] Error sending welcome email:', resetError)
+        } else {
+          console.log('[Webhook] Welcome email sent to:', studentEmail)
+        }
+      }
+
+      // 5. Marcar convite como completed
+      const { error: inviteError } = await supabase
+        .from('payment_invitations')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          student_id: userId,
+        })
+        .eq('token', invitationToken)
+
+      if (inviteError) {
+        console.error('[Webhook] Error updating invitation:', inviteError)
+      } else {
+        console.log('[Webhook] Invitation marked as completed')
+      }
+
+      // 6. Atualizar metadata da session para incluir student_id
+      // (para processar a subscription corretamente)
+      session.metadata = {
+        ...session.metadata,
+        student_id: userId,
+      }
+
+    } catch (error) {
+      console.error('[Webhook] Error in guest checkout flow:', error)
+    }
+  }
+
   const studentId = session.metadata?.student_id
 
   if (!coachId || !studentId) {
-    console.log('[Webhook] Missing metadata in checkout session')
+    console.log('[Webhook] Missing metadata in checkout session after processing')
     return
   }
 

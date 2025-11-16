@@ -34,8 +34,6 @@ export default function PaymentInvitationPage() {
   const [processing, setProcessing] = useState(false)
 
   const [formData, setFormData] = useState({
-    password: '',
-    confirmPassword: '',
     phone: '',
     acceptTerms: false,
   })
@@ -71,79 +69,19 @@ export default function PaymentInvitationPage() {
 
     try {
       // Validações
-      if (formData.password.length < 6) {
-        throw new Error('A senha deve ter pelo menos 6 caracteres')
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        throw new Error('As senhas não coincidem')
-      }
-
       if (!formData.acceptTerms) {
         throw new Error('Você precisa aceitar os termos de uso')
       }
 
-      // 1. Verificar se email já existe
-      const { data: existingUser, error: checkError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', invitation!.studentEmail)
-        .maybeSingle() // Use maybeSingle() para evitar erro se não encontrar
+      console.log('[Payment] Criando checkout session sem autenticação')
 
-      if (checkError) {
-        console.error('Erro ao verificar email:', checkError)
-        // Continua tentando criar conta mesmo se houver erro na verificação
-      }
-
-      if (existingUser) {
-        // Email já cadastrado - fazer login e ir para checkout
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: invitation!.studentEmail,
-          password: formData.password,
-        })
-
-        if (signInError) {
-          throw new Error('Email já cadastrado. Verifique sua senha.')
-        }
-      } else {
-        // Criar nova conta
-        const { error: signUpError } = await supabase.auth.signUp({
-          email: invitation!.studentEmail,
-          password: formData.password,
-          options: {
-            data: {
-              full_name: invitation!.studentName,
-              role: 'student',
-            },
-          },
-        })
-
-        if (signUpError) {
-          // Se erro for "user already registered", tentar fazer login
-          if (signUpError.message.includes('already registered') || signUpError.message.includes('User already registered')) {
-            const { error: signInError } = await supabase.auth.signInWithPassword({
-              email: invitation!.studentEmail,
-              password: formData.password,
-            })
-
-            if (signInError) {
-              throw new Error('Email já cadastrado. Verifique sua senha.')
-            }
-          } else {
-            throw new Error(signUpError.message)
-          }
-        }
-      }
-
-      // 2. Criar checkout session
-      const checkoutRes = await fetch('/api/student/subscribe-to-coach', {
+      // Criar checkout session DIRETO (sem criar usuário)
+      const checkoutRes = await fetch('/api/student/subscribe-to-coach-guest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          coachId: invitation!.coach.id,
-          amount: invitation!.amount,
-          interval: invitation!.interval,
           invitationToken: token,
+          studentPhone: formData.phone,
         }),
       })
 
@@ -153,7 +91,7 @@ export default function PaymentInvitationPage() {
         throw new Error(checkoutData.error || 'Erro ao criar checkout')
       }
 
-      // 3. Redirecionar para Stripe Checkout
+      // Redirecionar para Stripe Checkout
       if (checkoutData.sessionUrl) {
         window.location.href = checkoutData.sessionUrl
       }
@@ -287,34 +225,10 @@ export default function PaymentInvitationPage() {
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Senha *
-              </label>
-              <input
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required
-                minLength={6}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0081A7]"
-                placeholder="Mínimo 6 caracteres"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Confirmar Senha *
-              </label>
-              <input
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                required
-                minLength={6}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0081A7]"
-                placeholder="Digite a senha novamente"
-              />
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                ℹ️ Você receberá um email com instruções para criar sua senha após confirmar o pagamento.
+              </p>
             </div>
 
             <div>
