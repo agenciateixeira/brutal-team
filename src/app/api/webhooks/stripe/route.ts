@@ -143,7 +143,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
               email: studentEmail,
               full_name: studentName,
               phone: studentPhone || null,
-              role: 'student',
+              role: 'aluno',
               coach_id: coachId,
             })
 
@@ -159,7 +159,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           email_confirm: true, // Confirma email automaticamente
           user_metadata: {
             full_name: studentName,
-            role: 'student',
+            role: 'aluno',
           },
         })
 
@@ -179,7 +179,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
             email: studentEmail,
             full_name: studentName,
             phone: studentPhone || null,
-            role: 'student',
+            role: 'aluno',
             coach_id: coachId,
           })
 

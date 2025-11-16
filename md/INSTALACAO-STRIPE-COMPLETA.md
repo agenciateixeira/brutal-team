@@ -48,7 +48,7 @@ O arquivo `.env.local` já está configurado com:
 # Stripe Connect
 STRIPE_SECRET_KEY=rk_live_51M96wZ...
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_51M96wZ...
-STRIPE_ACCOUNT_ID=acct_1STLBmFNseQuOFRP
+STRIPE_ACCOUNT_ID=acct_xxxxxxxxxxxxxxxxxxxxx
 ```
 
 ✅ **Já está pronto!**

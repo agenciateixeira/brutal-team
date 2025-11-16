@@ -401,7 +401,7 @@ export default function AlunosPage() {
                                 navigator.clipboard.writeText(invitation.link)
                                 showNotification('Link copiado para a área de transferência!', 'success')
                               }}
-                              className="p-2 text-[#0081A7] hover:bg-[#0081A7]/10 rounded-lg transition-colors"
+                              className="p-2 text-[#0081A7] bg-[#0081A7]/5 hover:bg-[#0081A7]/10 rounded-lg transition-colors"
                               title="Copiar link"
                             >
                               <Copy className="w-4 h-4" />
@@ -411,10 +411,10 @@ export default function AlunosPage() {
                                 href={invitation.whatsappLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="p-2 text-green-600 hover:bg-green-600/10 rounded-lg transition-colors"
+                                className="p-2 text-green-600 bg-green-600/5 hover:bg-green-600/10 rounded-lg transition-colors"
                                 title="Enviar via WhatsApp"
                               >
-                                <WhatsAppIcon className="w-4 h-4" />
+                                <WhatsAppIcon className="w-4 h-4 fill-current" />
                               </a>
                             )}
                           </div>

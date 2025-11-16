@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
             email: studentEmail,
             full_name: studentName,
             phone: studentPhone || null,
-            role: 'student',
+            role: 'aluno',
             coach_id: coachId,
           })
 
@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
         email_confirm: true,
         user_metadata: {
           full_name: studentName,
-          role: 'student',
+          role: 'aluno',
         },
       })
 
@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
           email: studentEmail,
           full_name: studentName,
           phone: studentPhone || null,
-          role: 'student',
+          role: 'aluno',
           coach_id: coachId,
         })
 
