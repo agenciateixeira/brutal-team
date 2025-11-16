@@ -557,9 +557,13 @@ export default function AlunosPage() {
                       </td>
                       <td className="px-6 py-4 text-right text-sm">
                         <div className="flex items-center justify-end gap-3">
-                          {!student.subscription && (
+                          {(!student.subscription || !student.subscription.amount) && (
                             <button
-                              onClick={() => handleSyncSubscription(student.student.id, student.student.email)}
+                              onClick={() => {
+                                console.log('[BUTTON CLICK] Botão sincronizar clicado!')
+                                console.log('[BUTTON CLICK] Student:', student)
+                                handleSyncSubscription(student.student.id, student.student.email)
+                              }}
                               className="px-3 py-1 text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:hover:bg-purple-900/30 rounded-lg transition-colors"
                               title="Sincronizar assinatura do Stripe"
                             >
