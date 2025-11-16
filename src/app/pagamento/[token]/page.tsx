@@ -198,9 +198,16 @@ export default function PaymentInvitationPage() {
       <div className="max-w-2xl mx-auto">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Brutal Team
-          </h1>
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/logo.png"
+              alt="Brutal Team"
+              width={200}
+              height={60}
+              className="h-16 w-auto"
+              priority
+            />
+          </div>
           <p className="text-gray-600 dark:text-gray-400">
             Complete seu cadastro para começar
           </p>
