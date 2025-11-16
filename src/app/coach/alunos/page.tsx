@@ -225,6 +225,43 @@ export default function AlunosPage() {
     }
   }
 
+  const handleSyncSubscription = async (studentId: string, studentEmail: string) => {
+    console.log('[handleSyncSubscription] Iniciando para:', studentId, studentEmail)
+
+    if (!confirm(
+      `Sincronizar assinatura do aluno ${studentEmail}?\n\n` +
+      'Isso irá buscar a assinatura no Stripe e atualizar no banco de dados.'
+    )) {
+      console.log('[handleSyncSubscription] Cancelado pelo usuário')
+      return
+    }
+
+    console.log('[handleSyncSubscription] Enviando requisição...')
+
+    try {
+      const res = await fetch('/api/coach/sync-student-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId }),
+      })
+
+      console.log('[handleSyncSubscription] Resposta:', res.status, res.ok)
+
+      const data = await res.json()
+      console.log('[handleSyncSubscription] Data:', data)
+
+      if (!res.ok) throw new Error(data.error || 'Erro ao sincronizar assinatura')
+
+      showNotification(data.message, 'success')
+      console.log('[handleSyncSubscription] Recarregando lista de alunos...')
+      await loadStudents()
+      console.log('[handleSyncSubscription] Concluído!')
+    } catch (err: any) {
+      console.error('[handleSyncSubscription] Erro:', err)
+      showNotification(err.message, 'error')
+    }
+  }
+
   const handleProcessInvitationManually = async (invitationToken: string, studentEmail: string) => {
     if (!confirm(
       `Processar manualmente o convite de ${studentEmail}?\n\n` +
@@ -520,6 +557,15 @@ export default function AlunosPage() {
                       </td>
                       <td className="px-6 py-4 text-right text-sm">
                         <div className="flex items-center justify-end gap-3">
+                          {!student.subscription && (
+                            <button
+                              onClick={() => handleSyncSubscription(student.student.id, student.student.email)}
+                              className="px-3 py-1 text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:hover:bg-purple-900/30 rounded-lg transition-colors"
+                              title="Sincronizar assinatura do Stripe"
+                            >
+                              🔄 Sincronizar
+                            </button>
+                          )}
                           <button
                             onClick={() => handleResendWelcomeEmail(student.student.id, student.student.email)}
                             className="flex items-center gap-1 text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"

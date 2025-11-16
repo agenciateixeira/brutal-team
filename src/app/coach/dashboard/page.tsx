@@ -31,18 +31,34 @@ export default async function CoachDashboard() {
     redirect('/aluno/dashboard');
   }
 
-  // Buscar alunos aprovados APENAS deste coach
-  const { data: alunos } = await supabase
-    .from('profiles')
+  // Buscar alunos APENAS deste coach através da tabela coach_students
+  const { data: coachStudentsData } = await supabase
+    .from('coach_students')
     .select(`
-      *,
-      progress_photos(count),
-      messages!messages_aluno_id_fkey(count)
+      student_id,
+      status
     `)
-    .eq('role', 'aluno')
-    .eq('approved', true)
-    .eq('coach_id', session.user.id) // ✅ FILTRO CRÍTICO: apenas alunos deste coach
-    .order('created_at', { ascending: false });
+    .eq('coach_id', session.user.id)
+    .eq('status', 'active');
+
+  // Extrair IDs dos alunos
+  const alunoIds = coachStudentsData?.map((cs: any) => cs.student_id) || [];
+
+  // Buscar dados completos dos alunos se houver IDs
+  let alunos: any[] = [];
+  if (alunoIds.length > 0) {
+    const { data } = await supabase
+      .from('profiles')
+      .select(`
+        *,
+        progress_photos(count),
+        messages!messages_aluno_id_fkey(count)
+      `)
+      .in('id', alunoIds)
+      .order('created_at', { ascending: false });
+
+    alunos = data || [];
+  }
 
   // Buscar mensagens não lidas por aluno
   const { data: unreadMessages } = await supabase
