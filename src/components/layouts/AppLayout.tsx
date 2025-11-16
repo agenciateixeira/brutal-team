@@ -5,6 +5,7 @@ import Sidebar from '@/components/ui/Sidebar';
 import BottomNavigation from '@/components/ui/BottomNavigation';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import RequireSubscription from '@/components/auth/RequireSubscription';
+import RequirePayment from '@/components/auth/RequirePayment';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -12,14 +13,23 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ children, profile }: AppLayoutProps) {
-  // Se for coach, envolve com RequireSubscription
-  const content = profile.role === 'coach' ? (
-    <RequireSubscription profile={profile}>
-      {children}
-    </RequireSubscription>
-  ) : (
-    children
-  );
+  // Se for coach, verifica se tem subscription
+  // Se for aluno, verifica se está em dia com pagamento
+  let content = children;
+
+  if (profile.role === 'coach') {
+    content = (
+      <RequireSubscription profile={profile}>
+        {children}
+      </RequireSubscription>
+    );
+  } else if (profile.role === 'aluno') {
+    content = (
+      <RequirePayment profile={profile}>
+        {children}
+      </RequirePayment>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
