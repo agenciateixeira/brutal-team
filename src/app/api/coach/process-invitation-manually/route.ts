@@ -119,6 +119,46 @@ export async function POST(req: NextRequest) {
             { status: 500 }
           )
         }
+
+        // Criar registro coach_students
+        const { error: coachStudentError } = await supabaseAdmin
+          .from('coach_students')
+          .insert({
+            coach_id: coachId,
+            student_id: userId,
+            status: 'active',
+          })
+
+        if (coachStudentError) {
+          console.error('[Process Invitation] Error creating coach_student for existing user:', coachStudentError)
+        } else {
+          console.log('[Process Invitation] Coach_student relationship created for existing user')
+        }
+      } else {
+        // Profile já existe, apenas criar coach_students se não existir
+        console.log('[Process Invitation] Profile already exists, checking coach_students')
+        const { data: existingCoachStudent } = await supabaseAdmin
+          .from('coach_students')
+          .select('id')
+          .eq('coach_id', coachId)
+          .eq('student_id', userId)
+          .single()
+
+        if (!existingCoachStudent) {
+          const { error: coachStudentError } = await supabaseAdmin
+            .from('coach_students')
+            .insert({
+              coach_id: coachId,
+              student_id: userId,
+              status: 'active',
+            })
+
+          if (coachStudentError) {
+            console.error('[Process Invitation] Error creating coach_student for existing profile:', coachStudentError)
+          } else {
+            console.log('[Process Invitation] Coach_student relationship created for existing profile')
+          }
+        }
       }
     } else {
       // Criar novo usuário
@@ -164,6 +204,21 @@ export async function POST(req: NextRequest) {
       }
 
       console.log('[Process Invitation] Profile created')
+
+      // Criar registro coach_students
+      const { error: coachStudentError } = await supabaseAdmin
+        .from('coach_students')
+        .insert({
+          coach_id: coachId,
+          student_id: userId,
+          status: 'active',
+        })
+
+      if (coachStudentError) {
+        console.error('[Process Invitation] Error creating coach_student:', coachStudentError)
+      } else {
+        console.log('[Process Invitation] Coach_student relationship created')
+      }
     }
 
     // Buscar nome do coach
