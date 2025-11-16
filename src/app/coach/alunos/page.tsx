@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import AppLayout from '@/components/layouts/AppLayout'
-import { Copy } from 'lucide-react'
+import { Copy, Mail } from 'lucide-react'
 
 // Componente SVG do WhatsApp
 const WhatsAppIcon = ({ className }: { className?: string }) => (
@@ -201,6 +201,25 @@ export default function AlunosPage() {
 
       await loadStudents()
       showNotification(data.message, 'success')
+    } catch (err: any) {
+      showNotification(err.message, 'error')
+    }
+  }
+
+  const handleResendWelcomeEmail = async (studentId: string, studentEmail: string) => {
+    if (!confirm(`Reenviar email de boas-vindas para ${studentEmail}?`)) return
+
+    try {
+      const res = await fetch('/api/coach/resend-welcome-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+
+      showNotification(`Email enviado com sucesso para ${studentEmail}!`, 'success')
     } catch (err: any) {
       showNotification(err.message, 'error')
     }
@@ -464,14 +483,24 @@ export default function AlunosPage() {
                         {formatMoney(student.stats.total_received)}
                       </td>
                       <td className="px-6 py-4 text-right text-sm">
-                        {student.subscription && student.subscription.status === 'active' && (
+                        <div className="flex items-center justify-end gap-3">
                           <button
-                            onClick={() => handleCancel(student.subscription!.id)}
-                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                            onClick={() => handleResendWelcomeEmail(student.student.id, student.student.email)}
+                            className="flex items-center gap-1 text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                            title="Reenviar email de boas-vindas"
                           >
-                            Cancelar
+                            <Mail className="w-4 h-4" />
+                            <span className="hidden sm:inline">Email</span>
                           </button>
-                        )}
+                          {student.subscription && student.subscription.status === 'active' && (
+                            <button
+                              onClick={() => handleCancel(student.subscription!.id)}
+                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                            >
+                              Cancelar
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
