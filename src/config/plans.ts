@@ -6,7 +6,7 @@ export interface Plan {
   price: number
   priceId: string // Price ID do Stripe
   productId: string // Product ID do Stripe
-  interval: 'month'
+  interval: 'mês'
   maxAlunos: number
   features: string[]
   popular?: boolean
@@ -19,7 +19,7 @@ export const PLANS: Plan[] = [
     price: 139,
     priceId: 'price_1STMV9FMnw8AtxwIeniXcviA', // ✅ LIVE MODE
     productId: 'prod_TQBiK9gw1XBAcC',
-    interval: 'month',
+    interval: 'mês',
     maxAlunos: 6,
     features: [
       'Até 6 alunos ativos',
@@ -35,7 +35,7 @@ export const PLANS: Plan[] = [
     price: 269,
     priceId: 'price_1STMVRFMnw8AtxwICgQfochD', // ✅ LIVE MODE
     productId: 'prod_TQBqwGhm2JaJEv',
-    interval: 'month',
+    interval: 'mês',
     maxAlunos: 12,
     features: [
       'Até 12 alunos ativos',
@@ -53,7 +53,7 @@ export const PLANS: Plan[] = [
     price: 997,
     priceId: 'price_1STMVfFMnw8AtxwIZ1H5lsJK', // ✅ LIVE MODE
     productId: 'prod_TQBtqGXjRBZ8Dg',
-    interval: 'month',
+    interval: 'mês',
     maxAlunos: 50,
     features: [
       'Até 50 alunos ativos',
@@ -71,7 +71,7 @@ export const PLANS: Plan[] = [
     price: 29.9, // Por usuário
     priceId: 'price_1STMXEFMnw8AtxwIqjvuWGOm', // ✅ LIVE MODE
     productId: 'prod_TQByvqHCvch9HV',
-    interval: 'month',
+    interval: 'mês',
     maxAlunos: 999, // Ilimitado
     features: [
       'Alunos ilimitados',
