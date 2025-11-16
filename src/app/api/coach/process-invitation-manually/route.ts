@@ -22,16 +22,33 @@ export async function POST(req: NextRequest) {
     } = await supabase.auth.getUser()
 
     if (!user) {
+      console.error('[Process Invitation] Not authenticated')
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
     }
 
     const { invitationToken } = await req.json()
 
     if (!invitationToken) {
+      console.error('[Process Invitation] Missing invitation token')
       return NextResponse.json({ error: 'Token do convite é obrigatório' }, { status: 400 })
     }
 
     console.log('[Process Invitation] Processing invitation manually:', invitationToken)
+    console.log('[Process Invitation] Coach ID:', user.id)
+
+    // Verificar variáveis de ambiente
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      console.error('[Process Invitation] NEXT_PUBLIC_SUPABASE_URL not configured')
+      return NextResponse.json({ error: 'Configuração do Supabase ausente' }, { status: 500 })
+    }
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('[Process Invitation] SUPABASE_SERVICE_ROLE_KEY not configured')
+      return NextResponse.json({ error: 'Chave de administração do Supabase ausente' }, { status: 500 })
+    }
+    if (!process.env.RESEND_API_KEY) {
+      console.error('[Process Invitation] RESEND_API_KEY not configured')
+      return NextResponse.json({ error: 'Chave da API de email ausente' }, { status: 500 })
+    }
 
     // Usar service_role para bypass RLS
     const supabaseAdmin = createClient(
@@ -159,6 +176,7 @@ export async function POST(req: NextRequest) {
     const coachName = coachProfile?.full_name || 'seu coach'
 
     // Gerar link de reset password
+    console.log('[Process Invitation] Generating reset link for:', studentEmail)
     const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email: studentEmail,
@@ -166,21 +184,32 @@ export async function POST(req: NextRequest) {
 
     if (resetError || !resetData.properties?.action_link) {
       console.error('[Process Invitation] Error generating reset link:', resetError)
-    } else {
-      console.log('[Process Invitation] Reset link generated successfully')
+      console.error('[Process Invitation] Reset data:', resetData)
+      return NextResponse.json(
+        { error: 'Erro ao gerar link de recuperação de senha', details: resetError?.message },
+        { status: 500 }
+      )
+    }
 
-      // Enviar email de boas-vindas
-      try {
-        await sendWelcomeEmail({
-          studentName,
-          studentEmail,
-          coachName,
-          resetPasswordUrl: resetData.properties.action_link,
-        })
-        console.log('[Process Invitation] Welcome email sent via Resend to:', studentEmail)
-      } catch (emailError) {
-        console.error('[Process Invitation] Error sending welcome email:', emailError)
-      }
+    console.log('[Process Invitation] Reset link generated successfully')
+
+    // Enviar email de boas-vindas
+    try {
+      console.log('[Process Invitation] Sending welcome email to:', studentEmail)
+      await sendWelcomeEmail({
+        studentName,
+        studentEmail,
+        coachName,
+        resetPasswordUrl: resetData.properties.action_link,
+      })
+      console.log('[Process Invitation] Welcome email sent via Resend to:', studentEmail)
+    } catch (emailError: any) {
+      console.error('[Process Invitation] Error sending welcome email:', emailError)
+      console.error('[Process Invitation] Email error details:', emailError.message)
+      return NextResponse.json(
+        { error: 'Erro ao enviar email de boas-vindas', details: emailError.message },
+        { status: 500 }
+      )
     }
 
     // Marcar convite como completed
@@ -210,10 +239,12 @@ export async function POST(req: NextRequest) {
       studentEmail,
     })
   } catch (error: any) {
-    console.error('[Process Invitation] Error:', error)
+    console.error('[Process Invitation] Unexpected error:', error)
+    console.error('[Process Invitation] Error stack:', error.stack)
     return NextResponse.json(
       {
         error: error.message || 'Erro ao processar convite',
+        details: error.stack,
       },
       { status: 500 }
     )

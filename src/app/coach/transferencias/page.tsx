@@ -284,7 +284,7 @@ export default function Transferencias() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="font-bold mt-0.5">4.</span>
-                <span>Transferências automáticas em até 7 dias úteis</span>
+                <span>Transferências automáticas em até 30 dias úteis</span>
               </li>
             </ul>
           </div>

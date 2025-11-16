@@ -240,7 +240,11 @@ export default function AlunosPage() {
       })
 
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
+      if (!res.ok) {
+        const errorMessage = data.error || 'Erro ao processar convite'
+        const errorDetails = data.details ? `\n\nDetalhes: ${data.details}` : ''
+        throw new Error(errorMessage + errorDetails)
+      }
 
       showNotification(data.message, 'success')
       await loadInvitations()
