@@ -1,66 +1,76 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import AppLayout from '@/components/layouts/AppLayout'
 import { CreditCard, Calendar, AlertCircle, XCircle, CheckCircle } from 'lucide-react'
 import { PLANS } from '@/config/plans'
 
+interface CoachSubscription {
+  id: string
+  status: string
+  cancel_at_period_end: boolean
+  current_period_start?: string | null
+  current_period_end?: string | null
+  price_id?: string | null
+  amount?: number | null
+  interval?: string | null
+}
+
 export default function AssinaturaPage() {
   const router = useRouter()
-  const supabase = createClient()
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<any>(null)
-  const [subscription, setSubscription] = useState<any>(null)
+  const [subscription, setSubscription] = useState<CoachSubscription | null>(null)
   const [canceling, setCanceling] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  useEffect(() => {
-    loadData()
-  }, [])
+  const loadData = useCallback(async () => {
+    setLoading(true)
+    setError('')
 
-  const loadData = async () => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      const response = await fetch('/api/coach/get-platform-subscription', {
+        cache: 'no-store',
+      })
 
-      if (!user) {
+      if (response.status === 401) {
         router.push('/login')
         return
       }
 
-      // Carregar perfil
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
+      const data = await response.json()
 
-      setProfile(profileData)
+      if (!response.ok) {
+        setError(data.error || 'Erro ao carregar dados')
+        setProfile(null)
+        setSubscription(null)
+        return
+      }
 
-      // Carregar assinatura ativa
-      const { data: subscriptionData } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('coach_id', user.id)
-        .in('status', ['active', 'trialing'])
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
+      setProfile(data.profile)
+      setSubscription(data.subscription)
 
-      setSubscription(subscriptionData)
+      if (data.warning) {
+        setError(data.warning)
+      }
     } catch (err) {
       console.error('Erro ao carregar dados:', err)
+      setError('Erro ao carregar dados. Tente novamente.')
+      setProfile(null)
+      setSubscription(null)
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   const handleCancelSubscription = async () => {
-    if (!subscription?.stripe_subscription_id) {
+    if (!subscription?.id) {
       setError('Assinatura não encontrada')
       return
     }
@@ -84,22 +94,27 @@ export default function AssinaturaPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          subscriptionId: subscription.stripe_subscription_id,
+          subscriptionId: subscription.id,
         }),
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Erro ao cancelar assinatura')
+        throw new Error(data.error || 'Erro ao cancelar assinatura')
       }
 
-      const data = await response.json()
+      const periodEnd =
+        data.currentPeriodEnd ||
+        subscription.current_period_end ||
+        null
+
       setSuccess(
-        'Assinatura cancelada com sucesso. ' +
-        'Você terá acesso até ' + new Date(subscription.current_period_end).toLocaleDateString('pt-BR')
+        periodEnd
+          ? `Assinatura cancelada com sucesso. Você terá acesso até ${new Date(periodEnd).toLocaleDateString('pt-BR')}`
+          : 'Assinatura cancelada com sucesso.'
       )
 
-      // Recarregar dados
       await loadData()
     } catch (err: any) {
       console.error('Erro ao cancelar assinatura:', err)
@@ -110,8 +125,16 @@ export default function AssinaturaPage() {
   }
 
   const getCurrentPlan = () => {
-    if (!subscription) return null
-    return PLANS.find((p) => p.priceId === subscription.stripe_price_id)
+    if (profile?.subscription_plan) {
+      const planById = PLANS.find((p) => p.id === profile.subscription_plan)
+      if (planById) return planById
+    }
+
+    if (subscription?.price_id) {
+      return PLANS.find((p) => p.priceId === subscription.price_id)
+    }
+
+    return null
   }
 
   const currentPlan = getCurrentPlan()
@@ -119,10 +142,20 @@ export default function AssinaturaPage() {
     profile?.stripe_subscription_status === 'active' ||
     profile?.stripe_subscription_status === 'trialing'
 
-  if (loading || !profile) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-gray-600 dark:text-gray-400">Carregando...</div>
+      </div>
+    )
+  }
+
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-red-600 dark:text-red-400">
+          {error || 'Não foi possível carregar suas informações.'}
+        </div>
       </div>
     )
   }
@@ -182,14 +215,14 @@ export default function AssinaturaPage() {
         )}
 
         {/* Assinatura Ativa */}
-        {hasActiveSubscription && currentPlan && subscription && (
+        {hasActiveSubscription && subscription && (
           <div className="space-y-6">
             {/* Card do Plano Atual */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
-                    Plano {currentPlan.name}
+                    Plano {currentPlan ? currentPlan.name : 'Atual'}
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400">
                     {profile.stripe_subscription_status === 'trialing'
@@ -211,14 +244,25 @@ export default function AssinaturaPage() {
                 <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
                   <span className="text-gray-600 dark:text-gray-400">Valor</span>
                   <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                    R$ {currentPlan.price.toFixed(2).replace('.', ',')} / {currentPlan.interval}
+                    {currentPlan
+                      ? `R$ ${currentPlan.price.toFixed(2).replace('.', ',')} / ${currentPlan.interval}`
+                      : subscription?.amount
+                        ? new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL',
+                          }).format((subscription.amount || 0) / 100)
+                        : '-'}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
                   <span className="text-gray-600 dark:text-gray-400">Limite de alunos</span>
                   <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {currentPlan.maxAlunos === 999 ? 'Ilimitado' : currentPlan.maxAlunos}
+                    {currentPlan
+                      ? currentPlan.maxAlunos === 999
+                        ? 'Ilimitado'
+                        : currentPlan.maxAlunos
+                      : '-'}
                   </span>
                 </div>
 
@@ -230,11 +274,13 @@ export default function AssinaturaPage() {
                   <span className="text-gray-900 dark:text-white font-medium">
                     {subscription.cancel_at_period_end
                       ? 'Não haverá'
-                      : new Date(subscription.current_period_end).toLocaleDateString('pt-BR')}
+                      : subscription.current_period_end
+                        ? new Date(subscription.current_period_end).toLocaleDateString('pt-BR')
+                        : '-'}
                   </span>
                 </div>
 
-                {subscription.cancel_at_period_end && (
+                {subscription.cancel_at_period_end && subscription.current_period_end && (
                   <div className="flex items-center justify-between py-3">
                     <span className="text-gray-600 dark:text-gray-400">Acesso até</span>
                     <span className="text-red-600 dark:text-red-400 font-medium">
@@ -246,22 +292,24 @@ export default function AssinaturaPage() {
             </div>
 
             {/* Recursos do Plano */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Recursos inclusos
-              </h4>
-              <ul className="space-y-3">
-                {currentPlan.features.map((feature, index) => (
-                  <li
-                    key={index}
-                    className="flex items-start gap-3 text-gray-700 dark:text-gray-300"
-                  >
-                    <CheckCircle size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {currentPlan && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Recursos inclusos
+                </h4>
+                <ul className="space-y-3">
+                  {currentPlan.features.map((feature, index) => (
+                    <li
+                      key={index}
+                      className="flex items-start gap-3 text-gray-700 dark:text-gray-300"
+                    >
+                      <CheckCircle size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Ações */}
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
