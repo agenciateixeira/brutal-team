@@ -7,7 +7,7 @@ import { LayoutDashboard, Users, CreditCard, TrendingUp, LogOut, Sun, Moon, Menu
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { useTheme } from '@/components/providers/ThemeProvider';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useState } from 'react';
 
 interface AdminLayoutProps {
