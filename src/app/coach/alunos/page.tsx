@@ -34,6 +34,7 @@ export default function AlunosPage() {
   const [showModal, setShowModal] = useState(false)
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
+  const [syncing, setSyncing] = useState(false)
 
   const [formData, setFormData] = useState({
     studentEmail: '',
@@ -144,6 +145,28 @@ export default function AlunosPage() {
     }
   }
 
+  const handleSyncStripeAccount = async () => {
+    setSyncing(true)
+    try {
+      const res = await fetch('/api/coach/sync-stripe-account', {
+        method: 'POST',
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Erro ao sincronizar conta')
+      }
+
+      await loadProfile()
+      alert(data.message)
+    } catch (err: any) {
+      alert(err.message)
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   const formatMoney = (cents: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -208,12 +231,21 @@ export default function AlunosPage() {
           <div className="text-sm text-gray-600 dark:text-gray-400">
             {students.length} aluno{students.length !== 1 ? 's' : ''}
           </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="bg-[#0081A7] text-white px-6 py-2 rounded-lg hover:bg-[#006685] transition-colors font-medium"
-          >
-            + Nova Assinatura
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleSyncStripeAccount}
+              disabled={syncing}
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium disabled:opacity-50"
+            >
+              {syncing ? 'Sincronizando...' : '🔄 Sincronizar Stripe'}
+            </button>
+            <button
+              onClick={() => setShowModal(true)}
+              className="bg-[#0081A7] text-white px-6 py-2 rounded-lg hover:bg-[#006685] transition-colors font-medium"
+            >
+              + Nova Assinatura
+            </button>
+          </div>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
