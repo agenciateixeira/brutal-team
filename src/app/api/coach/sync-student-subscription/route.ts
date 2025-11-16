@@ -67,105 +67,158 @@ export async function POST(req: NextRequest) {
 
     console.log('[Sync Subscription] Student email:', student.email)
 
-    // Buscar customer do Stripe pelo email
-    const customers = await stripe.customers.list({
-      email: student.email,
-      limit: 1,
-    })
+    // Primeiro, tentar buscar pelo payment_invitation para pegar o stripe_session_id
+    const { data: invitation } = await supabaseAdmin
+      .from('payment_invitations')
+      .select('stripe_session_id, metadata')
+      .eq('student_id', studentId)
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
 
-    if (customers.data.length === 0) {
-      console.error('[Sync Subscription] No Stripe customer found for email:', student.email)
-      return NextResponse.json(
-        { error: 'Nenhum cliente encontrado no Stripe para este email' },
-        { status: 404 }
-      )
+    let subscriptionId: string | null = null
+
+    // Se tiver stripe_session_id, buscar a subscription pela session
+    if (invitation?.stripe_session_id) {
+      console.log('[Sync Subscription] Found invitation with session:', invitation.stripe_session_id)
+
+      try {
+        const session = await stripe.checkout.sessions.retrieve(invitation.stripe_session_id)
+        subscriptionId = session.subscription as string
+        console.log('[Sync Subscription] Found subscription from session:', subscriptionId)
+      } catch (err) {
+        console.error('[Sync Subscription] Error retrieving session:', err)
+      }
     }
 
-    const customer = customers.data[0]
-    console.log('[Sync Subscription] Found Stripe customer:', customer.id)
+    // Se não encontrou pela session, tentar pelo email
+    if (!subscriptionId) {
+      console.log('[Sync Subscription] Trying to find customer by email:', student.email)
 
-    // Buscar todas as subscriptions do customer
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customer.id,
-      limit: 10,
-    })
+      const customers = await stripe.customers.list({
+        email: student.email,
+        limit: 1,
+      })
 
-    console.log('[Sync Subscription] Found', subscriptions.data.length, 'subscriptions')
+      if (customers.data.length === 0) {
+        console.error('[Sync Subscription] No Stripe customer found for email:', student.email)
+        return NextResponse.json(
+          {
+            error: 'Não foi possível sincronizar automaticamente. Por favor, entre em contato com o suporte.',
+            details: `Nenhum cliente encontrado no Stripe para o email ${student.email}. Pode ser que o pagamento tenha sido feito com outro email.`
+          },
+          { status: 404 }
+        )
+      }
 
-    if (subscriptions.data.length === 0) {
-      return NextResponse.json(
-        { error: 'Nenhuma assinatura encontrada no Stripe para este aluno' },
-        { status: 404 }
-      )
+      const customer = customers.data[0]
+      console.log('[Sync Subscription] Found Stripe customer:', customer.id)
+
+      // Buscar todas as subscriptions do customer
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customer.id,
+        limit: 1,
+      })
+
+      if (subscriptions.data.length === 0) {
+        return NextResponse.json(
+          {
+            error: 'Cliente encontrado mas sem assinaturas ativas no Stripe.',
+            details: 'O cliente existe no Stripe mas não possui assinaturas.'
+          },
+          { status: 404 }
+        )
+      }
+
+      subscriptionId = subscriptions.data[0].id
     }
 
-    // Sincronizar cada subscription
-    let syncedCount = 0
-    for (const subscription of subscriptions.data) {
-      console.log('[Sync Subscription] Processing subscription:', subscription.id, 'status:', subscription.status)
+    // Buscar a subscription completa
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId!)
+    console.log('[Sync Subscription] Retrieved subscription:', subscription.id, 'status:', subscription.status)
 
-      // Verificar se já existe no banco
-      const { data: existing } = await supabaseAdmin
+    // Processar e sincronizar a subscription
+    console.log('[Sync Subscription] Processing subscription:', subscription.id, 'status:', subscription.status)
+
+    // Verificar se já existe no banco
+    const { data: existing } = await supabaseAdmin
+      .from('subscriptions')
+      .select('id')
+      .eq('stripe_subscription_id', subscription.id)
+      .single()
+
+    const subscriptionData = {
+      aluno_id: studentId,
+      coach_id: student.coach_id,
+      stripe_subscription_id: subscription.id,
+      stripe_customer_id: subscription.customer as string,
+      stripe_price_id: subscription.items.data[0]?.price.id,
+      amount: subscription.items.data[0]?.price.unit_amount || 0,
+      currency: subscription.currency,
+      interval: subscription.items.data[0]?.price.recurring?.interval || 'month',
+      status: subscription.status,
+      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      payment_due_day: new Date(subscription.current_period_end * 1000).getDate(),
+      cancel_at_period_end: subscription.cancel_at_period_end,
+      cancel_at: subscription.cancel_at ? new Date(subscription.cancel_at * 1000).toISOString() : null,
+      canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
+      trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
+      trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+      updated_at: new Date().toISOString(),
+    }
+
+    if (existing) {
+      // Atualizar
+      const { error } = await supabaseAdmin
         .from('subscriptions')
-        .select('id')
-        .eq('stripe_subscription_id', subscription.id)
+        .update(subscriptionData)
+        .eq('id', existing.id)
+
+      if (error) {
+        console.error('[Sync Subscription] Error updating subscription:', error)
+        throw error
+      }
+
+      console.log('[Sync Subscription] Updated subscription:', existing.id)
+
+      return NextResponse.json({
+        success: true,
+        message: 'Assinatura sincronizada com sucesso!',
+        subscription: {
+          id: existing.id,
+          stripe_id: subscription.id,
+          status: subscription.status,
+          amount: subscriptionData.amount,
+        },
+      })
+    } else {
+      // Criar
+      const { data: newSubscription, error } = await supabaseAdmin
+        .from('subscriptions')
+        .insert(subscriptionData)
+        .select()
         .single()
 
-      const subscriptionData = {
-        aluno_id: studentId,
-        coach_id: student.coach_id,
-        stripe_subscription_id: subscription.id,
-        stripe_customer_id: subscription.customer as string,
-        stripe_price_id: subscription.items.data[0]?.price.id,
-        amount: subscription.items.data[0]?.price.unit_amount || 0,
-        currency: subscription.currency,
-        interval: subscription.items.data[0]?.price.recurring?.interval || 'month',
-        status: subscription.status,
-        current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-        payment_due_day: new Date(subscription.current_period_end * 1000).getDate(),
-        cancel_at_period_end: subscription.cancel_at_period_end,
-        cancel_at: subscription.cancel_at ? new Date(subscription.cancel_at * 1000).toISOString() : null,
-        canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
-        trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
-        trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
-        updated_at: new Date().toISOString(),
+      if (error) {
+        console.error('[Sync Subscription] Error creating subscription:', error)
+        throw error
       }
 
-      if (existing) {
-        // Atualizar
-        const { error } = await supabaseAdmin
-          .from('subscriptions')
-          .update(subscriptionData)
-          .eq('id', existing.id)
+      console.log('[Sync Subscription] Created subscription:', newSubscription.id)
 
-        if (error) {
-          console.error('[Sync Subscription] Error updating subscription:', error)
-        } else {
-          console.log('[Sync Subscription] Updated subscription:', existing.id)
-          syncedCount++
-        }
-      } else {
-        // Criar
-        const { error } = await supabaseAdmin
-          .from('subscriptions')
-          .insert(subscriptionData)
-
-        if (error) {
-          console.error('[Sync Subscription] Error creating subscription:', error)
-        } else {
-          console.log('[Sync Subscription] Created subscription')
-          syncedCount++
-        }
-      }
+      return NextResponse.json({
+        success: true,
+        message: 'Assinatura criada com sucesso!',
+        subscription: {
+          id: newSubscription.id,
+          stripe_id: subscription.id,
+          status: subscription.status,
+          amount: subscriptionData.amount,
+        },
+      })
     }
-
-    return NextResponse.json({
-      success: true,
-      message: `${syncedCount} assinatura(s) sincronizada(s) com sucesso`,
-      synced: syncedCount,
-      total: subscriptions.data.length,
-    })
   } catch (error: any) {
     console.error('[Sync Subscription] Unexpected error:', error)
     return NextResponse.json(
