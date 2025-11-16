@@ -1,4 +1,4 @@
-export type UserRole = 'coach' | 'aluno';
+export type UserRole = 'coach' | 'aluno' | 'admin';
 export type PaymentStatus = 'active' | 'pending' | 'overdue' | 'suspended';
 
 export interface Profile {
