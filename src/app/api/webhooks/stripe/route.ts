@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
+import { sendWelcomeEmail } from '@/lib/resend'
 
 export const dynamic = 'force-dynamic'
 
@@ -189,15 +190,38 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
         console.log('[Webhook] Profile created')
 
-        // 4. Enviar email de boas-vindas com link para definir senha
-        const { error: resetError } = await supabase.auth.resetPasswordForEmail(studentEmail, {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
+        // 4. Buscar informações do coach
+        const { data: coachProfile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', coachId)
+          .single()
+
+        const coachName = coachProfile?.full_name || 'seu coach'
+
+        // 5. Gerar token de reset password via Supabase
+        const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
+          type: 'recovery',
+          email: studentEmail,
         })
 
-        if (resetError) {
-          console.error('[Webhook] Error sending welcome email:', resetError)
+        if (resetError || !resetData.properties?.action_link) {
+          console.error('[Webhook] Error generating reset link:', resetError)
         } else {
-          console.log('[Webhook] Welcome email sent to:', studentEmail)
+          console.log('[Webhook] Reset link generated successfully')
+
+          // 6. Enviar email de boas-vindas via Resend com template customizado
+          try {
+            await sendWelcomeEmail({
+              studentName,
+              studentEmail,
+              coachName,
+              resetPasswordUrl: resetData.properties.action_link,
+            })
+            console.log('[Webhook] Welcome email sent via Resend to:', studentEmail)
+          } catch (emailError) {
+            console.error('[Webhook] Error sending welcome email via Resend:', emailError)
+          }
         }
       }
 
