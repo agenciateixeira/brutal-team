@@ -62,8 +62,7 @@ export async function POST(req: NextRequest) {
       .update({
         stripe_charges_enabled: account.charges_enabled,
         stripe_payouts_enabled: account.payouts_enabled,
-        stripe_details_submitted: account.details_submitted,
-        stripe_onboarding_complete: account.charges_enabled && account.payouts_enabled,
+        stripe_account_status: account.charges_enabled && account.payouts_enabled ? 'active' : 'pending',
         updated_at: new Date().toISOString(),
       })
       .eq('id', user.id)
