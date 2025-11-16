@@ -47,10 +47,20 @@ export default function AlunosPage() {
   })
   const [paymentLink, setPaymentLink] = useState('')
   const [whatsappLink, setWhatsappLink] = useState('')
+  const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [toastType, setToastType] = useState<'success' | 'error'>('success')
 
   useEffect(() => {
     loadProfile()
   }, [])
+
+  const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
+    setToastMessage(message)
+    setToastType(type)
+    setShowToast(true)
+    setTimeout(() => setShowToast(false), 3000)
+  }
 
   useEffect(() => {
     if (profile) {
@@ -162,9 +172,9 @@ export default function AlunosPage() {
       if (!res.ok) throw new Error(data.error)
 
       await loadStudents()
-      alert(data.message)
+      showNotification(data.message, 'success')
     } catch (err: any) {
-      alert(err.message)
+      showNotification(err.message, 'error')
     }
   }
 
@@ -182,9 +192,9 @@ export default function AlunosPage() {
       }
 
       await loadProfile()
-      alert(data.message)
+      showNotification(data.message, 'success')
     } catch (err: any) {
-      alert(err.message)
+      showNotification(err.message, 'error')
     } finally {
       setSyncing(false)
     }
@@ -389,7 +399,7 @@ export default function AlunosPage() {
                           type="button"
                           onClick={() => {
                             navigator.clipboard.writeText(paymentLink)
-                            alert('Link copiado!')
+                            showNotification('Link copiado para a área de transferência!', 'success')
                           }}
                           className="px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 text-sm"
                         >
@@ -559,6 +569,24 @@ export default function AlunosPage() {
               </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {showToast && (
+        <div className="fixed bottom-4 right-4 z-50 animate-slideUp">
+          <div
+            className={`rounded-lg shadow-lg px-6 py-4 flex items-center gap-3 ${
+              toastType === 'success'
+                ? 'bg-green-600 text-white'
+                : 'bg-red-600 text-white'
+            }`}
+          >
+            <span className="text-2xl">
+              {toastType === 'success' ? '✅' : '❌'}
+            </span>
+            <p className="font-medium">{toastMessage}</p>
           </div>
         </div>
       )}
