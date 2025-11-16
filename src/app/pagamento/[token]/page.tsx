@@ -84,11 +84,16 @@ export default function PaymentInvitationPage() {
       }
 
       // 1. Verificar se email já existe
-      const { data: existingUser } = await supabase
+      const { data: existingUser, error: checkError } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', invitation!.studentEmail)
-        .single()
+        .maybeSingle() // Use maybeSingle() para evitar erro se não encontrar
+
+      if (checkError) {
+        console.error('Erro ao verificar email:', checkError)
+        // Continua tentando criar conta mesmo se houver erro na verificação
+      }
 
       if (existingUser) {
         // Email já cadastrado - fazer login e ir para checkout
@@ -114,7 +119,19 @@ export default function PaymentInvitationPage() {
         })
 
         if (signUpError) {
-          throw new Error(signUpError.message)
+          // Se erro for "user already registered", tentar fazer login
+          if (signUpError.message.includes('already registered') || signUpError.message.includes('User already registered')) {
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+              email: invitation!.studentEmail,
+              password: formData.password,
+            })
+
+            if (signInError) {
+              throw new Error('Email já cadastrado. Verifique sua senha.')
+            }
+          } else {
+            throw new Error(signUpError.message)
+          }
         }
       }
 

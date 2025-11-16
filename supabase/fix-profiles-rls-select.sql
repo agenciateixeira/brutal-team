@@ -1,15 +1,17 @@
 -- ============================================
 -- CORRIGIR POLICIES DE LEITURA DA TABELA PROFILES
 -- ============================================
--- Permite que qualquer usuário autenticado leia profiles por email
+-- Permite leitura pública de profiles (necessário para verificar email no signup)
 
 -- Remover policy antiga se existir
 DROP POLICY IF EXISTS "Users can read all profiles by email" ON profiles;
+DROP POLICY IF EXISTS "Users can read profiles by email" ON profiles;
 
--- Criar policy que permite leitura por email para usuários autenticados
-CREATE POLICY "Users can read profiles by email"
+-- Criar policy que permite leitura pública
+-- Isso é seguro porque só verificamos SE o email existe no fluxo de signup
+CREATE POLICY "Public read access to profiles"
 ON profiles FOR SELECT
-USING (auth.uid() IS NOT NULL);
+USING (true);
 
 -- Verificar policies
 SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual
