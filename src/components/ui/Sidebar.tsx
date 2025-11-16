@@ -66,7 +66,7 @@ export default function Sidebar({ profile }: SidebarProps) {
   useEffect(() => {
     const pagesToPrefetch = isCoach
       ? ['/coach/dashboard', '/coach/alunos', '/coach/templates', '/coach/anamnese', '/coach/pagamentos-stripe', '/coach/perfil']
-      : ['/aluno/dashboard', '/aluno/dieta', '/aluno/treino', '/aluno/protocolo', '/aluno/mensagens', '/aluno/progresso', '/aluno/indicacao', '/aluno/configuracoes'];
+      : ['/aluno/dashboard', '/aluno/dieta', '/aluno/treino', '/aluno/protocolo', '/aluno/mensagens', '/aluno/progresso', '/aluno/indicacao', '/aluno/historico-pagamentos', '/aluno/configuracoes'];
 
     pagesToPrefetch.forEach((path) => {
       router.prefetch(path);
@@ -154,6 +154,7 @@ export default function Sidebar({ profile }: SidebarProps) {
     { icon: BookOpen, label: 'Guia Nutricional', href: '/aluno/guia-nutricional' },
     { icon: Users2, label: 'Comunidade', href: '/aluno/comunidade' },
     { icon: Gift, label: 'Indicação', href: '/aluno/indicacao' },
+    { icon: Receipt, label: 'Pagamentos', href: '/aluno/historico-pagamentos' },
     { icon: Settings, label: 'Configurações', href: '/aluno/configuracoes' },
   ];
 

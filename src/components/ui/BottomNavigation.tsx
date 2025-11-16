@@ -46,7 +46,7 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
   // Prefetch das páginas principais para navegação instantânea
   useEffect(() => {
     const pagesToPrefetch = isAluno
-      ? ['/aluno/dashboard', '/aluno/dieta', '/aluno/treino', '/aluno/protocolo', '/aluno/mensagens', '/aluno/progresso']
+      ? ['/aluno/dashboard', '/aluno/dieta', '/aluno/treino', '/aluno/protocolo', '/aluno/mensagens', '/aluno/progresso', '/aluno/historico-pagamentos']
       : ['/coach/dashboard', '/coach/alunos', '/coach/templates', '/coach/pagamentos-stripe'];
 
     pagesToPrefetch.forEach((path) => {
@@ -132,6 +132,7 @@ export default function BottomNavigation({ profile }: BottomNavigationProps) {
         { href: '/aluno/guia-nutricional', icon: BookOpen, label: 'Guia Nutricional' },
         { href: '/aluno/protocolo', icon: Syringe, label: 'Protocolo' },
         { href: '/aluno/indicacao', icon: Gift, label: 'Indicação' },
+        { href: '/aluno/historico-pagamentos', icon: Receipt, label: 'Pagamentos' },
       ]
     : [
         { href: '/coach/pagamentos-stripe', icon: Receipt, label: 'Pagamentos Stripe' },
