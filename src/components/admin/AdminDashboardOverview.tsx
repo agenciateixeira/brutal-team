@@ -17,15 +17,14 @@ type NumberLike = number | null | undefined
 export interface AdminStats {
   totalCoaches: number
   activeCoaches: number
+  churnCoaches: number
   totalStudents: number
   activeStudents: number
-  totalPlatformRevenue: number
-  monthlyPlatformRevenue: number
-  totalGrossVolume: number
-  monthlyGrossVolume: number
-  totalCoachPayouts: number
+  churnStudents: number
+  grossVolume: number
+  platformRevenue: number
+  coachPayouts: number
   coachSubscriptionMRR: number
-  totalTransactions: number
 }
 
 export interface ChartPoint {
@@ -111,12 +110,18 @@ export default function AdminDashboardOverview({
   topCoaches,
   recentPayments,
 }: Props) {
-  const monthlyGrowth = stats.totalGrossVolume
-    ? Math.min(
-        Math.max((stats.monthlyGrossVolume / stats.totalGrossVolume) * 100, 0),
-        100
-      )
-    : 0
+  const {
+    totalCoaches,
+    activeCoaches,
+    churnCoaches,
+    totalStudents,
+    activeStudents,
+    churnStudents,
+    grossVolume,
+    platformRevenue,
+    coachPayouts,
+    coachSubscriptionMRR,
+  } = stats
 
   return (
     <div className="space-y-8">
@@ -131,27 +136,27 @@ export default function AdminDashboardOverview({
       <div className="grid gap-4 lg:grid-cols-4">
         <StatCard
           title="Total de Coaches"
-          value={stats.totalCoaches}
-          subtitle={`${stats.activeCoaches} ativos`}
+          value={totalCoaches}
+          subtitle={`${activeCoaches} ativos • ${churnCoaches} churn`}
           icon={Users}
         />
         <StatCard
           title="Alunos ativos"
-          value={stats.activeStudents}
-          subtitle={`${stats.totalStudents} cadastrados`}
+          value={totalStudents}
+          subtitle={`${activeStudents} ativos • ${churnStudents} churn`}
           icon={UserCheck}
         />
         <StatCard
-          title="Pagamentos (Mês)"
-          value={currency.format(stats.monthlyGrossVolume / 100)}
-          subtitle={`${monthlyGrowth.toFixed(1)}% do volume total`}
+          title="Pagamentos (período)"
+          value={currency.format(grossVolume / 100)}
+          subtitle="Período selecionado"
           icon={Wallet}
           accent
         />
         <StatCard
           title="Taxa da plataforma"
-          value={currency.format(stats.monthlyPlatformRevenue / 100)}
-          subtitle={`Acumulado ${currency.format(stats.totalPlatformRevenue / 100)}`}
+          value={currency.format(platformRevenue / 100)}
+          subtitle="Período selecionado"
           icon={TrendingUp}
         />
       </div>
@@ -165,7 +170,7 @@ export default function AdminDashboardOverview({
               <p className="text-sm text-gray-500">Últimos 60 dias</p>
             </div>
             <div className="rounded-full border border-[#0081A7]/20 bg-[#0081A7]/10 px-4 py-2 text-sm font-semibold text-[#0081A7] dark:border-[#064E63] dark:bg-[#032B36] dark:text-[#4DD0E1]">
-              {currency.format(stats.totalGrossVolume / 100)} processados
+              {currency.format(grossVolume / 100)} processados
             </div>
           </div>
           <div className="mt-4 h-64 w-full">
@@ -186,7 +191,7 @@ export default function AdminDashboardOverview({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Assinaturas de coaches</p>
-                <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">{currency.format(stats.coachSubscriptionMRR / 100)}</h3>
+                <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">{currency.format(coachSubscriptionMRR / 100)}</h3>
                 <p className="text-xs text-gray-500">MRR estimado</p>
               </div>
               <div className="rounded-full bg-[#0081A7]/10 p-3 text-[#0081A7]">
@@ -211,7 +216,7 @@ export default function AdminDashboardOverview({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Recebido pelos coaches</p>
-                <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">{currency.format(stats.totalCoachPayouts / 100)}</h3>
+                <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">{currency.format(coachPayouts / 100)}</h3>
                 <p className="text-xs text-gray-500">Total desde o início</p>
               </div>
               <div className="rounded-full bg-[#00AFB9]/10 p-3 text-[#00AFB9]">
