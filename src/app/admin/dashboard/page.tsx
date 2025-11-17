@@ -40,15 +40,35 @@ export default async function AdminDashboardPage() {
   }
 
   // Buscar estatísticas gerais
-  const { data: coaches } = await supabase
-    .from('profiles')
-    .select('*, subscriptions(*)')
-    .eq('role', 'coach');
-
-  const { data: alunos } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('role', 'aluno');
+  const [
+    { count: totalCoaches },
+    { count: activeCoaches },
+    { count: churnedCoaches },
+    { count: totalStudents },
+    { count: activeStudents },
+    { count: churnedStudents },
+  ] = await Promise.all([
+    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'coach'),
+    supabase
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('role', 'coach')
+      .in('stripe_subscription_status', ['active', 'trialing']),
+    supabase
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('role', 'coach')
+      .in('stripe_subscription_status', ['canceled', 'unpaid', 'past_due']),
+    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'aluno'),
+    supabase
+      .from('coach_students')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'active'),
+    supabase
+      .from('coach_students')
+      .select('id', { count: 'exact', head: true })
+      .in('status', ['inactive', 'blocked']),
+  ]);
 
   const { data: allPayments } = await supabase
     .from('payments')
@@ -67,12 +87,12 @@ export default async function AdminDashboardPage() {
     .limit(20);
 
   // Calcular estatísticas
-  const totalCoaches = coaches?.length || 0;
-  const activeCoaches = coaches?.filter(c =>
-    c.subscriptions?.some((s: any) => s.status === 'active' || s.status === 'trialing')
-  ).length || 0;
-
-  const totalAlunos = alunos?.length || 0;
+  const totalCoachesCount = totalCoaches || 0;
+  const activeCoachesCount = activeCoaches || 0;
+  const churnCoachesCount = churnedCoaches || 0;
+  const totalAlunos = totalStudents || 0;
+  const activeStudentsCount = activeStudents || 0;
+  const churnStudentsCount = churnedStudents || 0;
 
   const totalRevenue = allPayments?.reduce((sum, p) => sum + p.platform_fee, 0) || 0;
   const monthlyRevenue = allPayments?.filter(p => {
@@ -134,10 +154,10 @@ export default async function AdminDashboardPage() {
                     Total de Coaches
                   </p>
                   <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {totalCoaches}
+                    {totalCoachesCount}
                   </p>
                   <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                    {activeCoaches} ativos
+                    {activeCoachesCount} ativos • {churnCoachesCount} churn
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
@@ -155,8 +175,8 @@ export default async function AdminDashboardPage() {
                   <p className="text-3xl font-bold text-gray-900 dark:text-white">
                     {totalAlunos}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Cadastrados
+                  <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                    {activeStudentsCount} ativos • {churnStudentsCount} churn
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center">
