@@ -31,11 +31,6 @@ export default function RequirePayment({ children }: RequirePaymentProps) {
 
   const isAllowedPath = allowedPaths.some(path => pathname?.startsWith(path))
 
-  useEffect(() => {
-    if (!profile) return
-    checkPaymentStatus()
-  }, [profile, checkPaymentStatus])
-
   const checkPaymentStatus = useCallback(async () => {
     if (!profile) return
     try {
@@ -76,6 +71,11 @@ export default function RequirePayment({ children }: RequirePaymentProps) {
       setLoading(false)
     }
   }, [profile, supabase])
+
+  useEffect(() => {
+    if (!profile) return
+    checkPaymentStatus()
+  }, [profile, checkPaymentStatus])
 
   useEffect(() => {
     if (!loading && isBlocked && !isAllowedPath) {
