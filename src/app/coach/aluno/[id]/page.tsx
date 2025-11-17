@@ -42,7 +42,7 @@ export default async function AlunoDetailPage({ params }: { params: { id: string
     redirect('/coach/dashboard');
   }
 
-  const alunoEmail = alunoProfile.email.toLowerCase();
+  const alunoEmail = alunoProfile.email?.trim().toLowerCase() || '';
 
   // Buscar fotos de progresso
   const { data: photos } = await supabase

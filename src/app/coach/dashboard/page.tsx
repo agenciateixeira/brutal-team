@@ -60,6 +60,32 @@ export default async function CoachDashboard() {
     alunos = data || [];
   }
 
+  const alunoEmailsNormalized = (alunos || [])
+    .map(aluno => aluno.email?.trim().toLowerCase())
+    .filter((email): email is string => !!email);
+
+  let anamneseByEmail = new Map<string, boolean>();
+
+  if (alunoEmailsNormalized.length > 0) {
+    const { data: anamneseRows, error: anamneseFetchError } = await supabase
+      .from('anamnese_responses')
+      .select('temp_email')
+      .in('temp_email', alunoEmailsNormalized)
+      .eq('completed', true)
+      .order('completed_at', { ascending: false });
+
+    if (anamneseFetchError) {
+      console.error('Erro ao buscar anamneses completas:', anamneseFetchError);
+    } else {
+      for (const row of anamneseRows || []) {
+        const key = row.temp_email?.trim().toLowerCase();
+        if (key && !anamneseByEmail.has(key)) {
+          anamneseByEmail.set(key, true);
+        }
+      }
+    }
+  }
+
   // Buscar mensagens não lidas por aluno
   const { data: unreadMessages } = await supabase
     .from('messages')
@@ -146,23 +172,8 @@ export default async function CoachDashboard() {
         console.error('Erro ao buscar treino ativo:', workoutError);
       }
 
-      // Verificar se tem anamnese completa
-      let hasAnamnese = false;
-      if (aluno.email) {
-        const { data: anamneseRows, error: anamneseError } = await supabase
-          .from('anamnese_responses')
-          .select('id')
-          .eq('temp_email', aluno.email.toLowerCase())
-          .eq('completed', true)
-          .order('completed_at', { ascending: false })
-          .limit(1);
-
-        if (anamneseError) {
-          console.error('Erro ao buscar anamnese:', anamneseError);
-        }
-
-        hasAnamnese = !!anamneseRows?.[0];
-      }
+      const alunoEmailNormalized = aluno.email?.trim().toLowerCase();
+      const hasAnamnese = alunoEmailNormalized ? !!anamneseByEmail.get(alunoEmailNormalized) : false;
 
       return {
         ...aluno,

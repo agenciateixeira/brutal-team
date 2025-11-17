@@ -42,15 +42,24 @@ export default async function CoachAnamnesePage() {
   console.log('[Security] Alunos deste coach:', alunos?.length || 0);
 
   // Extrair emails dos alunos
-  const alunosEmails = alunos?.map(a => a.email) || [];
+  const alunosEmails = alunos
+    ?.map(a => a.email?.trim().toLowerCase())
+    .filter((email): email is string => !!email) || [];
 
-  // Buscar anamneses completas desses alunos
-  const { data: anamneses, error: anamneseError } = await supabase
-    .from('anamnese_responses')
-    .select('*')
-    .in('temp_email', alunosEmails)
-    .eq('completed', true)
-    .order('completed_at', { ascending: false });
+  let anamneses: any[] = [];
+  let anamneseError: any = null;
+
+  if (alunosEmails.length > 0) {
+    const { data, error } = await supabase
+      .from('anamnese_responses')
+      .select('*')
+      .in('temp_email', alunosEmails)
+      .eq('completed', true)
+      .order('completed_at', { ascending: false });
+
+    anamneses = data || [];
+    anamneseError = error;
+  }
 
   console.log('Emails dos alunos:', alunosEmails);
   console.log('Anamneses encontradas:', anamneses?.length || 0);
@@ -61,7 +70,13 @@ export default async function CoachAnamnesePage() {
   const alunosProfiles = alunos;
 
   // Criar mapa de email -> perfil
-  const profileMap = new Map(alunosProfiles?.map(p => [p.email, p]) || []);
+  const profileMap = new Map<string, any>();
+  (alunosProfiles || []).forEach((p: any) => {
+    const key = p.email?.trim().toLowerCase();
+    if (key) {
+      profileMap.set(key, p);
+    }
+  });
 
   return (
     <AppLayout profile={profile}>
@@ -94,7 +109,7 @@ export default async function CoachAnamnesePage() {
             </div>
           ) : (
             anamneses.map((anamnese) => {
-              const alunoProfile = profileMap.get(anamnese.temp_email);
+              const alunoProfile = profileMap.get(anamnese.temp_email?.trim().toLowerCase() || '');
 
               return (
                 <details

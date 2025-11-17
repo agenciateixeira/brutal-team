@@ -126,7 +126,7 @@ export default async function AlunoDashboard() {
   const shouldShowFirstAccessModal = !profile.first_access_completed;
 
   // Verificar se o aluno completou o questionário (anamnese)
-  const normalizedEmail = profile?.email?.toLowerCase();
+  const normalizedEmail = session.user.email?.trim().toLowerCase();
   let hasCompletedQuestionnaire = false;
 
   if (normalizedEmail) {

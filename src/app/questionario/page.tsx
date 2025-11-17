@@ -122,11 +122,19 @@ export default function QuestionarioPage() {
   const handleSubmit = async () => {
     setLoading(true);
 
+    const sanitizedEmail = tempEmail.trim().toLowerCase();
+
+    if (!sanitizedEmail) {
+      setToast({ type: 'error', message: 'Por favor, informe um e-mail válido' });
+      setLoading(false);
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('anamnese_responses')
         .insert({
-          temp_email: tempEmail.toLowerCase(),
+          temp_email: sanitizedEmail,
           nome_completo: nomeCompleto,
           idade: parseInt(idade),
           altura: parseFloat(altura),
