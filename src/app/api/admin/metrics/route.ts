@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/server'
-import { createClient } from '@supabase/supabase-js'
+import { createAdminSupabaseClient } from '@/lib/supabase/admin'
 import { PLANS } from '@/config/plans'
 
 const ADMIN_EMAIL = 'guilherme@agenciagtx.com.br'
@@ -19,12 +19,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
     }
 
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const adminClient = createAdminSupabaseClient()
+    const supabaseAdmin = adminClient ?? supabaseRoute
+    const usingFallbackClient = !adminClient
 
-    const { data: profile } = await supabaseAdmin
+    const { data: profile } = await supabaseRoute
       .from('profiles')
       .select('email')
       .eq('id', user.id)
@@ -35,6 +34,7 @@ export async function GET(req: NextRequest) {
     }
 
     const { startISO, endISO, startLabel, endLabel } = resolveRange(req)
+    const includeReports = req.nextUrl.searchParams.get('include') === 'reports'
 
     const [
       totalCoachesRes,
@@ -207,6 +207,30 @@ export async function GET(req: NextRequest) {
       })
       .slice(0, 20)
 
+    let reportsData: {
+      payments: any[]
+      coaches: any[]
+      alunos: any[]
+    } | null = null
+    let reportsError: string | null = null
+
+    if (includeReports) {
+      const [fullPaymentsRes, coachesListRes, alunosListRes] = await Promise.all([
+        supabaseAdmin.from('payments').select('*').order('created_at', { ascending: false }),
+        supabaseAdmin.from('profiles').select('*, subscriptions(*)').eq('role', 'coach'),
+        supabaseAdmin.from('profiles').select('*').eq('role', 'aluno'),
+      ])
+
+      reportsData = {
+        payments: fullPaymentsRes.data ?? [],
+        coaches: coachesListRes.data ?? [],
+        alunos: alunosListRes.data ?? [],
+      }
+
+      const firstReportsError = fullPaymentsRes.error || coachesListRes.error || alunosListRes.error
+      reportsError = firstReportsError?.message || null
+    }
+
     return NextResponse.json({
       stats: {
         totalCoaches: totalCoachesRes.count || 0,
@@ -223,11 +247,14 @@ export async function GET(req: NextRequest) {
       chartData,
       planBreakdown,
       topCoaches,
-      recentPayments,
-      range: {
+        recentPayments,
+        range: {
         startDate: startLabel,
         endDate: endLabel,
       },
+      reports: reportsData,
+      reportsError,
+      usingFallbackClient,
     })
   } catch (error: any) {
     console.error('[Admin Metrics] Unexpected error:', error)
@@ -289,4 +316,3 @@ function formatChartLabel(value: string) {
   const date = new Date(value)
   return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
 }
-

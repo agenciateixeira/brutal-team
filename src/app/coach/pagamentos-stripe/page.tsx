@@ -249,7 +249,7 @@ export default function PagamentosStripe() {
             </li>
             <li className="flex items-start gap-2">
               <span className="font-bold mt-0.5">•</span>
-              <span>As transferências para sua conta acontecem automaticamente em até 7 dias</span>
+              <span>As transferências para sua conta acontecem automaticamente em até 30 dias</span>
             </li>
           </ul>
         </div>

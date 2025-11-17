@@ -1,3 +1,4 @@
+
 import { createServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import AdminLayout from '@/components/layouts/AdminLayout';
@@ -7,15 +8,21 @@ import {
   Clock,
   Mail,
   Calendar,
-  CreditCard,
-  Users
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
+import { PLANS } from '@/config/plans';
+import { createAdminSupabaseClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 const ADMIN_EMAIL = 'guilherme@agenciagtx.com.br';
+
+const planLabels = PLANS.reduce<Record<string, string>>((acc, plan) => {
+  acc[plan.id] = `${plan.name} - R$ ${plan.price.toFixed(2).replace('.', ',')}`;
+  return acc;
+}, {});
 
 export default async function AdminCoachesPage() {
   const supabase = createServerClient();
@@ -38,28 +45,48 @@ export default async function AdminCoachesPage() {
     redirect(profile?.role === 'coach' ? '/coach/dashboard' : '/aluno/dashboard');
   }
 
-  // Buscar todos os coaches com suas assinaturas
-  const { data: coaches } = await supabase
+  const supabaseAdmin = createAdminSupabaseClient();
+
+  const db = supabaseAdmin ?? supabase;
+  const usingFallbackClient = !supabaseAdmin;
+
+  const {
+    data: coachesData,
+    error: coachesError,
+  } = await db
     .from('profiles')
-    .select(`
-      *,
-      subscriptions(*)
-    `)
+    .select('id, full_name, email, created_at, stripe_subscription_status, subscription_plan, stripe_subscription_id')
     .eq('role', 'coach')
     .order('created_at', { ascending: false });
 
-  // Buscar contagem de alunos por coach
-  const { data: alunosCount } = await supabase
-    .from('aluno_coach')
-    .select('coach_id, aluno_id');
+  const coaches = coachesData ?? [];
 
-  // Mapear contagem de alunos por coach
-  const alunosByCoach = alunosCount?.reduce((acc: any, item: any) => {
-    acc[item.coach_id] = (acc[item.coach_id] || 0) + 1;
+  const {
+    data: coachStudentsData,
+    error: coachStudentsError,
+  } = await db
+    .from('coach_students')
+    .select('coach_id, status');
+
+  const coachStudents = coachStudentsData ?? [];
+  const dataError = coachesError || coachStudentsError;
+
+  const studentsByCoach = coachStudents.reduce<Record<string, { total: number; active: number }>>((acc, record) => {
+    const entry = acc[record.coach_id] || { total: 0, active: 0 };
+    entry.total += 1;
+    if (record.status === 'active') entry.active += 1;
+    acc[record.coach_id] = entry;
     return acc;
-  }, {}) || {};
+  }, {});
 
-  const getStatusBadge = (status: string) => {
+  const totalCoaches = coaches.length;
+  const activeCoaches = coaches.filter(({ stripe_subscription_status }) =>
+    ['active', 'trialing'].includes(stripe_subscription_status || '')
+  ).length;
+  const trialingCoaches = coaches.filter(({ stripe_subscription_status }) => stripe_subscription_status === 'trialing').length;
+  const noSubscriptionCoaches = totalCoaches - activeCoaches;
+
+  const getStatusBadge = (status: string | null) => {
     switch (status) {
       case 'active':
         return (
@@ -75,19 +102,19 @@ export default async function AdminCoachesPage() {
             Trial
           </span>
         );
+      case 'past_due':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400">
+            <Clock size={12} />
+            Vencido
+          </span>
+        );
       case 'canceled':
       case 'cancelled':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400">
             <XCircle size={12} />
             Cancelado
-          </span>
-        );
-      case 'past_due':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400">
-            <Clock size={12} />
-            Vencido
           </span>
         );
       default:
@@ -100,23 +127,18 @@ export default async function AdminCoachesPage() {
     }
   };
 
-  const getPlanBadge = (priceId: string | null) => {
-    if (!priceId) return <span className="text-xs text-gray-500">-</span>;
-
-    // Identificar o plano baseado no price_id
-    if (priceId.includes('month')) {
-      return <span className="text-xs font-medium text-gray-900 dark:text-white">Mensal - R$ 49,90</span>;
-    } else if (priceId.includes('year')) {
-      return <span className="text-xs font-medium text-gray-900 dark:text-white">Anual - R$ 499,00</span>;
-    }
-    return <span className="text-xs text-gray-500">Plano personalizado</span>;
+  const getPlanBadge = (planId: string | null) => {
+    if (!planId) return <span className="text-xs text-gray-500">Sem plano</span>;
+    return <span className="text-xs font-medium text-gray-900 dark:text-white">{planLabels[planId] || 'Plano personalizado'}</span>;
   };
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   return (
     <AdminLayout profile={profile}>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
           <div className="mb-8">
             <Link
               href="/admin/dashboard"
@@ -132,156 +154,95 @@ export default async function AdminCoachesPage() {
             </p>
           </div>
 
-          {/* Stats Cards */}
+          {dataError && (
+            <div className="mb-8 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-900/20 dark:text-red-200">
+              <p className="font-semibold">Não conseguimos carregar todos os coaches agora.</p>
+              <p className="mt-1 text-xs opacity-80">{dataError.message}</p>
+              {usingFallbackClient && (
+                <p className="mt-1 text-xs opacity-80">
+                  Verifique se a variável <code className="font-mono">SUPABASE_SERVICE_ROLE_KEY</code> está configurada para liberar o acesso administrativo completo.
+                </p>
+              )}
+            </div>
+          )}
+
+          {!dataError && usingFallbackClient && (
+            <div className="mb-8 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-900/20 dark:text-amber-200">
+              <p className="font-semibold">Listando com permissões limitadas.</p>
+              <p className="text-xs opacity-80">
+                Configure <code className="font-mono">SUPABASE_SERVICE_ROLE_KEY</code> para enxergar todos os coaches sem as restrições de RLS dos dados.
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                    Total de Coaches
-                  </p>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {coaches?.length || 0}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-                  <Users size={24} className="text-blue-600 dark:text-blue-400" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                    Com Assinatura Ativa
-                  </p>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {coaches?.filter((c: any) =>
-                      c.subscriptions?.some((s: any) => s.status === 'active' || s.status === 'trialing')
-                    ).length || 0}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                  <CheckCircle size={24} className="text-green-600 dark:text-green-400" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                    Em Trial
-                  </p>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {coaches?.filter((c: any) =>
-                      c.subscriptions?.some((s: any) => s.status === 'trialing')
-                    ).length || 0}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-                  <Clock size={24} className="text-blue-600 dark:text-blue-400" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                    Sem Assinatura
-                  </p>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {coaches?.filter((c: any) =>
-                      !c.subscriptions || c.subscriptions.length === 0 ||
-                      c.subscriptions.every((s: any) => s.status === 'canceled' || s.status === 'cancelled')
-                    ).length || 0}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
-                  <XCircle size={24} className="text-red-600 dark:text-red-400" />
-                </div>
-              </div>
-            </div>
+            <StatCard title="Total de Coaches" value={totalCoaches} icon={Users} description="Cadastrados" />
+            <StatCard title="Com assinatura ativa" value={activeCoaches} icon={CheckCircle} description="Status ativo / trial" />
+            <StatCard title="Em trial" value={trialingCoaches} icon={Clock} description="Período de teste" />
+            <StatCard title="Sem assinatura" value={noSubscriptionCoaches} icon={XCircle} description="Necessita ativação" />
           </div>
 
-          {/* Coaches Table */}
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Todos os Coaches
-              </h2>
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Coaches cadastrados</h2>
+                <p className="text-sm text-gray-500">Gerencie assinaturas e alunos vinculados</p>
+              </div>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-900/50">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-50 dark:bg-gray-900/50 text-gray-600 dark:text-gray-400">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                      Coach
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                      Plano
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                      Alunos
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                      Cadastro
-                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide">Coach</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide">Plano</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide">Alunos</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide">Assinatura</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide">Criado em</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {coaches?.map((coach: any) => {
-                    const activeSubscription = coach.subscriptions?.find(
-                      (s: any) => s.status === 'active' || s.status === 'trialing'
-                    );
-                    const latestSubscription = coach.subscriptions?.[0];
-                    const subscription = activeSubscription || latestSubscription;
-
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                  {coaches.map((coach) => {
+                    const status = coach.stripe_subscription_status || 'none';
+                    const alunos = studentsByCoach[coach.id] || { total: 0, active: 0 };
                     return (
-                      <tr key={coach.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold">
-                              {coach.full_name?.[0]?.toUpperCase() || coach.email[0].toUpperCase()}
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                {coach.full_name || 'Sem nome'}
-                              </div>
-                              <div className="text-xs text-gray-500 flex items-center gap-1">
-                                <Mail size={12} />
-                                {coach.email}
-                              </div>
-                            </div>
+                      <tr key={coach.id} className="hover:bg-gray-50/70 dark:hover:bg-gray-800/60">
+                        <td className="px-6 py-4">
+                          <div className="font-semibold text-gray-900 dark:text-white">{coach.full_name || coach.email}</div>
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <Mail size={12} /> {coach.email}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {getPlanBadge(subscription?.stripe_price_id)}
+                        <td className="px-6 py-4">
+                          <div>{getPlanBadge(coach.subscription_plan)}</div>
+                          <div className="mt-1 text-xs text-gray-500">ID: {coach.subscription_plan || '—'}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {getStatusBadge(subscription?.status || 'none')}
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-semibold text-gray-900 dark:text-white">{alunos.active} ativos</div>
+                          <div className="text-xs text-gray-500">{alunos.total} no total</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-1 text-sm text-gray-900 dark:text-white">
-                            <Users size={16} />
-                            <span className="font-semibold">{alunosByCoach[coach.id] || 0}</span>
-                          </div>
+                        <td className="px-6 py-4">
+                          <div className="mb-1">{getStatusBadge(status)}</div>
+                          {coach.stripe_subscription_id && (
+                            <div className="text-xs text-gray-500">ID: {coach.stripe_subscription_id}</div>
+                          )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-1 text-xs text-gray-500">
-                            <Calendar size={12} />
-                            {new Date(coach.created_at).toLocaleDateString('pt-BR')}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white">
+                            <Calendar size={14} />
+                            {formatDate(coach.created_at)}
                           </div>
                         </td>
                       </tr>
                     );
                   })}
+                  {coaches.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-500">
+                        Nenhum coach cadastrado.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -289,5 +250,29 @@ export default async function AdminCoachesPage() {
         </div>
       </div>
     </AdminLayout>
+  );
+}
+
+interface StatCardProps {
+  title: string;
+  value: number;
+  icon: React.ComponentType<{ size?: number }>;
+  description: string;
+}
+
+function StatCard({ title, value, icon: Icon, description }: StatCardProps) {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{title}</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white">{value}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{description}</p>
+        </div>
+        <div className="w-12 h-12 bg-blue-100/70 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+          <Icon size={24} className="text-blue-600 dark:text-blue-400" />
+        </div>
+      </div>
+    </div>
   );
 }

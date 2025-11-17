@@ -103,7 +103,7 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
           {/* User Info */}
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white font-bold">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0081A7] to-[#00AFB9] flex items-center justify-center text-white font-bold">
                 {profile.full_name?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
@@ -131,7 +131,7 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
                   className={`
                     flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
                     ${isActive
-                      ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-semibold'
+                      ? 'bg-[#E0F7FA] dark:bg-[#032B36] text-[#0081A7] dark:text-[#4DD0E1] font-semibold'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                     }
                   `}
@@ -154,7 +154,7 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
             </button>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-[#F07167] dark:text-[#F6A89C] hover:bg-[#FEE4DE] dark:hover:bg-[#F07167]/20 transition-colors"
             >
               <LogOut size={20} />
               <span className="font-medium">Sair</span>
@@ -187,7 +187,7 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
           {/* User Info */}
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white font-bold">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0081A7] to-[#00AFB9] flex items-center justify-center text-white font-bold">
                 {profile.full_name?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
@@ -214,7 +214,7 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
                   className={`
                     flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
                     ${isActive
-                      ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-semibold'
+                      ? 'bg-[#E0F7FA] dark:bg-[#032B36] text-[#0081A7] dark:text-[#4DD0E1] font-semibold'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                     }
                   `}
@@ -237,7 +237,7 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
             </button>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-[#F07167] dark:text-[#F6A89C] hover:bg-[#FEE4DE] dark:hover:bg-[#F07167]/20 transition-colors"
             >
               <LogOut size={20} />
               <span className="font-medium">Sair</span>

@@ -7,10 +7,11 @@ import {
   Clock,
   DollarSign,
   TrendingUp,
-  CreditCard,
-  Download
+  CreditCard
 } from 'lucide-react';
 import Link from 'next/link';
+import { createAdminSupabaseClient } from '@/lib/supabase/admin';
+import { formatCentsToBRL } from '@/lib/currency';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -38,8 +39,12 @@ export default async function AdminTransacoesPage() {
     redirect(profile?.role === 'coach' ? '/coach/dashboard' : '/aluno/dashboard');
   }
 
+  const adminClient = createAdminSupabaseClient();
+  const db = adminClient ?? supabase;
+  const usingFallbackClient = !adminClient;
+
   // Buscar todas as transações
-  const { data: allPayments } = await supabase
+  const { data: allPaymentsData, error: paymentsError } = await db
     .from('payments')
     .select(`
       *,
@@ -47,6 +52,8 @@ export default async function AdminTransacoesPage() {
       aluno:aluno_id(full_name, email)
     `)
     .order('created_at', { ascending: false });
+
+  const allPayments = allPaymentsData ?? [];
 
   // Calcular estatísticas
   const totalTransactions = allPayments?.length || 0;
@@ -130,21 +137,37 @@ export default async function AdminTransacoesPage() {
             </div>
           </div>
 
+          {paymentsError && (
+            <div className="mb-8 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-900/20 dark:text-red-200">
+              <p className="font-semibold">Não conseguimos carregar todas as transações.</p>
+              <p className="text-xs opacity-80 mt-1">{paymentsError.message}</p>
+            </div>
+          )}
+
+          {!paymentsError && usingFallbackClient && (
+            <div className="mb-8 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-900/20 dark:text-amber-100">
+              <p className="font-semibold">Listando com permissões limitadas.</p>
+              <p className="text-xs opacity-80">
+                Configure <code className="font-mono">SUPABASE_SERVICE_ROLE_KEY</code> para garantir a visão completa das transações.
+              </p>
+            </div>
+          )}
+
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                    Receita Total (2%)
-                  </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  Receita Total (2%)
+                </p>
                   <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    R$ {(totalRevenue / 100).toFixed(2).replace('.', ',')}
+                    {formatCentsToBRL(totalRevenue)}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Volume: R$ {(totalVolume / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    Volume: {formatCentsToBRL(totalVolume)}
                   </p>
-                </div>
+              </div>
                 <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
                   <DollarSign size={24} className="text-green-600 dark:text-green-400" />
                 </div>
@@ -152,18 +175,18 @@ export default async function AdminTransacoesPage() {
             </div>
 
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                    Receita Mensal
-                  </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  Receita Mensal
+                </p>
                   <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    R$ {(monthlyRevenue / 100).toFixed(2).replace('.', ',')}
+                    {formatCentsToBRL(monthlyRevenue)}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Mês atual
-                  </p>
-                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Mês atual
+                </p>
+              </div>
                 <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
                   <TrendingUp size={24} className="text-purple-600 dark:text-purple-400" />
                 </div>
@@ -278,10 +301,10 @@ export default async function AdminTransacoesPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white">
-                        R$ {(payment.amount / 100).toFixed(2).replace('.', ',')}
+                        {formatCentsToBRL(payment.amount)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600 dark:text-green-400">
-                        R$ {(payment.platform_fee / 100).toFixed(2).replace('.', ',')}
+                        {formatCentsToBRL(payment.platform_fee)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(payment.status)}
