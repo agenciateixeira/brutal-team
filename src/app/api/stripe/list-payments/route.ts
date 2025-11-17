@@ -30,33 +30,104 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Conta Stripe não encontrada' }, { status: 404 })
     }
 
-    // Buscar os últimos 100 pagamentos
-    const charges = await stripe.charges.list({
-      limit: 100,
-    }, {
+    const searchParams = req.nextUrl.searchParams
+    const limit = Math.min(Number(searchParams.get('limit') || 25), 100)
+    const startingAfter = searchParams.get('starting_after') || undefined
+    const endingBefore = searchParams.get('ending_before') || undefined
+    const statusFilter = searchParams.get('status')?.toLowerCase() || 'all'
+    const searchTerm = searchParams.get('search')?.toLowerCase()
+    const startDate = searchParams.get('startDate')
+    const endDate = searchParams.get('endDate')
+
+    const stripeParams: Stripe.ChargeListParams = {
+      limit,
+    }
+
+    if (startingAfter) {
+      stripeParams.starting_after = startingAfter
+    }
+
+    if (endingBefore) {
+      stripeParams.ending_before = endingBefore
+    }
+
+    if (startDate || endDate) {
+      stripeParams.created = {}
+      if (startDate) {
+        stripeParams.created.gte = Math.floor(new Date(startDate).getTime() / 1000)
+      }
+      if (endDate) {
+        stripeParams.created.lte = Math.floor(new Date(endDate).getTime() / 1000)
+      }
+    }
+
+    // Buscar pagamentos com os filtros aplicados
+    const charges = await stripe.charges.list(stripeParams, {
       stripeAccount: profile.stripe_account_id,
     })
 
-    // Formatar dados para exibição
-    const payments = charges.data.map((charge) => ({
+    let filteredCharges = charges.data
+
+    if (statusFilter !== 'all') {
+      if (statusFilter === 'refunded') {
+        filteredCharges = filteredCharges.filter((charge) => charge.refunded || (charge.amount_refunded || 0) > 0)
+      } else {
+        filteredCharges = filteredCharges.filter((charge) => charge.status === statusFilter)
+      }
+    }
+
+    if (searchTerm) {
+      filteredCharges = filteredCharges.filter((charge) => {
+        const email = charge.billing_details?.email?.toLowerCase() || ''
+        const name = charge.billing_details?.name?.toLowerCase() || ''
+        const description = charge.description?.toLowerCase() || ''
+        return email.includes(searchTerm) || name.includes(searchTerm) || description.includes(searchTerm)
+      })
+    }
+
+    const summary = filteredCharges.reduce(
+      (acc, charge) => {
+        const fees = charge.application_fee_amount || 0
+        acc.gross += charge.amount || 0
+        acc.fees += fees
+        acc.net += (charge.amount || 0) - fees
+        acc.refunded += charge.amount_refunded || 0
+        return acc
+      },
+      { gross: 0, net: 0, fees: 0, refunded: 0 }
+    )
+
+    const payments = filteredCharges.map((charge) => ({
       id: charge.id,
-      amount: charge.amount, // em centavos
+      amount: charge.amount,
       currency: charge.currency,
       status: charge.status,
       created: charge.created,
       description: charge.description || '',
       customer_email: charge.billing_details?.email || '',
+      customer_name: charge.billing_details?.name || '',
       payment_method: charge.payment_method_details?.type || 'card',
       refunded: charge.refunded,
-      net_amount: charge.amount - (charge.application_fee_amount || 0), // valor líquido
+      net_amount: (charge.amount || 0) - (charge.application_fee_amount || 0),
+      application_fee_amount: charge.application_fee_amount || 0,
+      amount_refunded: charge.amount_refunded || 0,
+      receipt_url: charge.receipt_url || '',
+      invoice_id: typeof charge.invoice === 'string' ? charge.invoice : charge.invoice?.id || null,
+      subscription_id:
+        typeof charge.subscription === 'string' ? charge.subscription : charge.subscription?.id || null,
     }))
+
+    const nextCursor = charges.has_more && charges.data.length > 0 ? charges.data[charges.data.length - 1].id : null
+    const prevCursor = charges.data.length > 0 ? charges.data[0].id : null
 
     return NextResponse.json({
       payments,
-      total: charges.data.length,
+      total: filteredCharges.length,
       has_more: charges.has_more,
+      next_cursor: nextCursor,
+      prev_cursor: prevCursor,
+      summary,
     })
-
   } catch (error: any) {
     console.error('[List Payments] Erro:', error)
     return NextResponse.json(

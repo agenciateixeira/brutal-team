@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import AppLayout from '@/components/layouts/AppLayout'
+import { Search, Filter, RefreshCw } from 'lucide-react'
 
 interface Payment {
   id: string
@@ -13,9 +14,64 @@ interface Payment {
   created: number
   description: string
   customer_email: string
+  customer_name?: string
   payment_method: string
   refunded: boolean
   net_amount: number
+  application_fee_amount: number
+  amount_refunded: number
+  receipt_url?: string
+  invoice_id?: string | null
+  subscription_id?: string | null
+}
+
+interface PaymentSummary {
+  gross: number
+  net: number
+  fees: number
+  refunded: number
+}
+
+type RangeOption = '7d' | '30d' | 'custom'
+
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(amount / 100)
+
+const formatDate = (timestamp: number) =>
+  new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(timestamp * 1000))
+
+const getRangeValues = (option: RangeOption) => {
+  const end = new Date()
+  const start = new Date()
+
+  switch (option) {
+    case '7d':
+      start.setDate(start.getDate() - 6)
+      break
+    case '30d':
+      start.setDate(start.getDate() - 29)
+      break
+    case 'custom':
+    default:
+      start.setDate(start.getDate() - 29)
+      break
+  }
+
+  const format = (date: Date) => date.toISOString().split('T')[0]
+
+  return {
+    start: format(start),
+    end: format(end),
+  }
 }
 
 export default function PagamentosStripe() {
@@ -25,6 +81,18 @@ export default function PagamentosStripe() {
   const [profile, setProfile] = useState<any>(null)
   const [payments, setPayments] = useState<Payment[]>([])
   const [error, setError] = useState('')
+  const [range, setRange] = useState<RangeOption>('30d')
+  const defaultRange = useMemo(() => getRangeValues('30d'), [])
+  const [startDate, setStartDate] = useState(defaultRange.start)
+  const [endDate, setEndDate] = useState(defaultRange.end)
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [searchInput, setSearchInput] = useState('')
+  const [appliedSearch, setAppliedSearch] = useState('')
+  const [summary, setSummary] = useState<PaymentSummary>({ gross: 0, net: 0, fees: 0, refunded: 0 })
+  const [isFetching, setIsFetching] = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [nextCursor, setNextCursor] = useState<string | null>(null)
+  const [hasMore, setHasMore] = useState(false)
 
   useEffect(() => {
     loadProfile()
@@ -34,7 +102,8 @@ export default function PagamentosStripe() {
     if (profile && profile.stripe_account_id) {
       loadPayments()
     }
-  }, [profile])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, startDate, endDate, statusFilter, appliedSearch])
 
   const loadProfile = async () => {
     try {
@@ -63,8 +132,19 @@ export default function PagamentosStripe() {
   }
 
   const loadPayments = async () => {
+    if (!profile?.stripe_account_id) return
     try {
-      const response = await fetch('/api/stripe/list-payments')
+      setIsFetching(true)
+      setError('')
+
+      const params = new URLSearchParams()
+      params.set('limit', '25')
+      params.set('startDate', startDate)
+      params.set('endDate', endDate)
+      if (statusFilter !== 'all') params.set('status', statusFilter)
+      if (appliedSearch) params.set('search', appliedSearch)
+
+      const response = await fetch(`/api/stripe/list-payments?${params.toString()}`)
 
       if (!response.ok) {
         const errorData = await response.json()
@@ -72,28 +152,86 @@ export default function PagamentosStripe() {
       }
 
       const data = await response.json()
-      setPayments(data.payments)
+      setPayments(data.payments || [])
+      setSummary(data.summary || { gross: 0, net: 0, fees: 0, refunded: 0 })
+      setNextCursor(data.next_cursor || null)
+      setHasMore(Boolean(data.has_more && data.next_cursor))
     } catch (err: any) {
       console.error('Erro ao carregar pagamentos:', err)
       setError(err.message)
+    } finally {
+      setIsFetching(false)
+      setIsLoadingMore(false)
     }
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(amount / 100)
+  const handleLoadMore = async () => {
+    if (!profile?.stripe_account_id) return
+    if (!nextCursor || isLoadingMore) return
+    try {
+      setIsLoadingMore(true)
+      const params = new URLSearchParams()
+      params.set('limit', '25')
+      params.set('startDate', startDate)
+      params.set('endDate', endDate)
+      params.set('starting_after', nextCursor)
+      if (statusFilter !== 'all') params.set('status', statusFilter)
+      if (appliedSearch) params.set('search', appliedSearch)
+
+      const response = await fetch(`/api/stripe/list-payments?${params.toString()}`)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Erro ao carregar mais pagamentos')
+      }
+
+      const data = await response.json()
+      setPayments((prev) => {
+        const existingIds = new Set(prev.map((payment) => payment.id))
+        const merged = [...prev]
+        data.payments.forEach((payment: Payment) => {
+          if (!existingIds.has(payment.id)) {
+            merged.push(payment)
+          }
+        })
+        return merged
+      })
+      setSummary(data.summary || summary)
+      setNextCursor(data.next_cursor || null)
+      setHasMore(Boolean(data.has_more && data.next_cursor))
+    } catch (err: any) {
+      console.error('Erro ao carregar mais pagamentos:', err)
+      setError(err.message)
+    } finally {
+      setIsLoadingMore(false)
+    }
   }
 
-  const formatDate = (timestamp: number) => {
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(timestamp * 1000))
+  const handleRangeChange = (option: RangeOption) => {
+    setRange(option)
+    if (option === 'custom') return
+    const { start, end } = getRangeValues(option)
+    setStartDate(start)
+    setEndDate(end)
+  }
+
+  const handleApplyCustom = () => {
+    if (!startDate || !endDate) return
+    if (new Date(startDate) > new Date(endDate)) {
+      setError('A data inicial não pode ser maior que a data final')
+      return
+    }
+    setRange('custom')
+    setError('')
+    loadPayments()
+  }
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setAppliedSearch(searchInput.trim())
+  }
+
+  const handleRefresh = () => {
+    loadPayments()
   }
 
   const getStatusBadge = (status: string) => {
@@ -149,7 +287,7 @@ export default function PagamentosStripe() {
 
   return (
     <AppLayout profile={profile}>
-      <div className="max-w-7xl mx-auto py-8 px-4">
+      <div className="max-w-7xl mx-auto py-8 px-4 space-y-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Pagamentos Recebidos
@@ -157,6 +295,107 @@ export default function PagamentosStripe() {
           <p className="text-gray-600 dark:text-gray-400">
             Visualize todos os pagamentos recebidos dos seus alunos
           </p>
+        </div>
+
+        <div className="space-y-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="flex flex-wrap items-center gap-2">
+            {(['7d', '30d', 'custom'] as RangeOption[]).map((option) => (
+              <button
+                key={option}
+                onClick={() => handleRangeChange(option)}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                  range === option
+                    ? 'bg-[#0081A7] text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200'
+                }`}
+              >
+                {option === '7d' && 'Últimos 7 dias'}
+                {option === '30d' && 'Últimos 30 dias'}
+                {option === 'custom' && 'Personalizado'}
+              </button>
+            ))}
+
+            <button
+              onClick={handleRefresh}
+              className="ml-auto inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              <RefreshCw size={16} className={isFetching ? 'animate-spin' : ''} />
+              Atualizar
+            </button>
+          </div>
+
+          {range === 'custom' && (
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-col text-sm text-gray-600 dark:text-gray-300">
+                <label className="mb-1">Data inicial</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#00AFB9] focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+                />
+              </div>
+              <div className="flex flex-col text-sm text-gray-600 dark:text-gray-300">
+                <label className="mb-1">Data final</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#00AFB9] focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+                />
+              </div>
+              <button
+                onClick={handleApplyCustom}
+                className="rounded-full bg-[#00AFB9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0081A7]"
+              >
+                Aplicar
+              </button>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-col text-sm text-gray-600 dark:text-gray-300">
+              <label className="mb-1">Status</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#00AFB9] focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+              >
+                <option value="all">Todos</option>
+                <option value="succeeded">Pagos</option>
+                <option value="pending">Pendentes</option>
+                <option value="failed">Falhos</option>
+                <option value="refunded">Reembolsados</option>
+              </select>
+            </div>
+
+            <form onSubmit={handleSearchSubmit} className="flex flex-1 items-center gap-2">
+              <div className="flex flex-1 items-center rounded-full border border-gray-200 px-3 py-2 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <Search size={16} className="text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar por email, nome ou descrição"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="flex-1 bg-transparent px-2 text-sm text-gray-700 focus:outline-none dark:text-gray-200"
+                />
+              </div>
+              <button
+                type="submit"
+                className="inline-flex items-center gap-2 rounded-full bg-[#0081A7] px-4 py-2 text-sm font-semibold text-white hover:bg-[#006685]"
+              >
+                <Filter size={16} />
+                Filtrar
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-4">
+          <SummaryCard title="Receita (período)" value={formatCurrency(summary.gross)} subtitle="Valor bruto" />
+          <SummaryCard title="Valor líquido" value={formatCurrency(summary.net)} subtitle="Após taxas" />
+          <SummaryCard title="Taxas" value={formatCurrency(summary.fees)} subtitle="Plataforma + Stripe" />
+          <SummaryCard title="Reembolsos" value={formatCurrency(summary.refunded)} subtitle="Total estornado" />
         </div>
 
         {/* Erro */}
@@ -193,7 +432,13 @@ export default function PagamentosStripe() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {payments.length === 0 ? (
+                {isFetching ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                      Carregando pagamentos...
+                    </td>
+                  </tr>
+                ) : payments.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                       Nenhum pagamento recebido ainda
@@ -233,6 +478,18 @@ export default function PagamentosStripe() {
           </div>
         </div>
 
+        {hasMore && (
+          <div className="text-center">
+            <button
+              onClick={handleLoadMore}
+              className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-6 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200"
+              disabled={isLoadingMore}
+            >
+              {isLoadingMore ? 'Carregando...' : 'Carregar mais'}
+            </button>
+          </div>
+        )}
+
         {/* Informações */}
         <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
           <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-3">
@@ -255,5 +512,15 @@ export default function PagamentosStripe() {
         </div>
       </div>
     </AppLayout>
+  )
+}
+
+function SummaryCard({ title, value, subtitle }: { title: string; value: string; subtitle: string }) {
+  return (
+    <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
+      <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">{value}</p>
+      <p className="text-xs text-gray-500 dark:text-gray-400">{subtitle}</p>
+    </div>
   )
 }
