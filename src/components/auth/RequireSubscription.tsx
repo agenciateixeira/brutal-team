@@ -21,6 +21,22 @@ export default function RequireSubscription({ children }: RequireSubscriptionPro
   const pathname = usePathname()
   const { profile, loading, session } = useAuth()
 
+  const hasActiveSubscription =
+    profile?.stripe_subscription_status === 'active' ||
+    profile?.stripe_subscription_status === 'trialing'
+
+  const allowedPaths = ['/coach/assinatura', '/coach/pagamento-sucesso']
+  const isAllowedPath = allowedPaths.some((path) => pathname?.startsWith(path))
+
+  useEffect(() => {
+    if (loading) return
+    if (!profile) return
+    if (!hasActiveSubscription && !isAllowedPath) {
+      console.log('[RequireSubscription] Redirecionando para /coach/assinatura')
+      router.push('/coach/assinatura')
+    }
+  }, [loading, profile, hasActiveSubscription, isAllowedPath, router])
+
   if (loading || (!profile && session)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -43,26 +59,6 @@ export default function RequireSubscription({ children }: RequireSubscriptionPro
     )
   }
 
-  const hasActiveSubscription =
-    profile?.stripe_subscription_status === 'active' ||
-    profile?.stripe_subscription_status === 'trialing'
-
-  const allowedPaths = [
-    '/coach/assinatura',
-    '/coach/pagamento-sucesso',
-  ]
-
-  const isAllowedPath = allowedPaths.some(path => pathname?.startsWith(path))
-
-  useEffect(() => {
-    // Se não tem assinatura ativa e não está em uma página permitida
-    if (!hasActiveSubscription && !isAllowedPath) {
-      console.log('[RequireSubscription] Redirecionando para /coach/assinatura')
-      router.push('/coach/assinatura')
-    }
-  }, [hasActiveSubscription, isAllowedPath, pathname])
-
-  // Se não tem assinatura e não está em página permitida, não renderiza
   if (!hasActiveSubscription && !isAllowedPath) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -76,6 +72,5 @@ export default function RequireSubscription({ children }: RequireSubscriptionPro
     )
   }
 
-  // Se tem assinatura OU está em página permitida, renderiza normalmente
   return <>{children}</>
 }

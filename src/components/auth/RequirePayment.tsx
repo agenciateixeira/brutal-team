@@ -34,7 +34,7 @@ export default function RequirePayment({ children }: RequirePaymentProps) {
   useEffect(() => {
     if (!profile) return
     checkPaymentStatus()
-  }, [profile?.id])
+  }, [profile, checkPaymentStatus])
 
   const checkPaymentStatus = useCallback(async () => {
     if (!profile) return
@@ -78,12 +78,11 @@ export default function RequirePayment({ children }: RequirePaymentProps) {
   }, [profile, supabase])
 
   useEffect(() => {
-    // Se bloqueado e não está em página permitida, redireciona
     if (!loading && isBlocked && !isAllowedPath) {
       console.log('[RequirePayment] Redirecionando para /aluno/pagamento')
       router.push('/aluno/pagamento')
     }
-  }, [isBlocked, isAllowedPath, pathname, loading])
+  }, [isBlocked, isAllowedPath, loading, router])
 
   if (authLoading || loading || (!profile && session)) {
     return (

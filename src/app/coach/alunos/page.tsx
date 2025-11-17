@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import AppLayout from '@/components/layouts/AppLayout'
 import { Copy, Mail } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
 // Componente SVG do WhatsApp
 const WhatsAppIcon = ({ className }: { className?: string }) => (
@@ -39,8 +39,7 @@ interface Student {
 
 export default function AlunosPage() {
   const router = useRouter()
-  const supabase = createClient()
-  const [profile, setProfile] = useState<any>(null)
+  const { profile, loading: authLoading, session, refresh } = useAuth()
   const [students, setStudents] = useState<Student[]>([])
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -66,10 +65,6 @@ export default function AlunosPage() {
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
 
-  useEffect(() => {
-    loadProfile()
-  }, [])
-
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     setToastMessage(message)
     setToastType(type)
@@ -77,36 +72,7 @@ export default function AlunosPage() {
     setTimeout(() => setShowToast(false), 3000)
   }
 
-  useEffect(() => {
-    if (profile) {
-      loadStudents()
-      loadInvitations()
-    }
-  }, [profile])
-
-  const loadProfile = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/login')
-        return
-      }
-
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-      setProfile(data)
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const loadStudents = async () => {
+  const loadStudents = useCallback(async () => {
     try {
       const res = await fetch('/api/coach/list-students')
       const data = await res.json()
@@ -115,9 +81,9 @@ export default function AlunosPage() {
     } catch (err) {
       console.error(err)
     }
-  }
+  }, [])
 
-  const loadInvitations = async () => {
+  const loadInvitations = useCallback(async () => {
     try {
       const res = await fetch('/api/coach/list-payment-invitations?status=pending')
       const data = await res.json()
@@ -126,7 +92,27 @@ export default function AlunosPage() {
     } catch (err) {
       console.error(err)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!authLoading && !session) {
+      router.push('/login')
+    }
+  }, [authLoading, session, router])
+
+  useEffect(() => {
+    if (authLoading) return
+    if (!profile) {
+      setLoading(false)
+      return
+    }
+    const loadAll = async () => {
+      setLoading(true)
+      await Promise.all([loadStudents(), loadInvitations()])
+      setLoading(false)
+    }
+    loadAll()
+  }, [authLoading, profile, loadStudents, loadInvitations])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -304,7 +290,7 @@ export default function AlunosPage() {
         throw new Error(data.error || 'Erro ao sincronizar conta')
       }
 
-      await loadProfile()
+      await refresh()
       showNotification(data.message, 'success')
     } catch (err: any) {
       showNotification(err.message, 'error')
@@ -324,7 +310,7 @@ export default function AlunosPage() {
     return new Date(date).toLocaleDateString('pt-BR')
   }
 
-  if (loading) {
+  if (authLoading || loading || (!profile && session)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-gray-600 dark:text-gray-400">Carregando...</div>
@@ -332,8 +318,16 @@ export default function AlunosPage() {
     )
   }
 
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-gray-600 dark:text-gray-400">Sessão expirada. Faça login novamente.</div>
+      </div>
+    )
+  }
+
   return (
-    <AppLayout profile={profile}>
+    <AppLayout>
       <div className="max-w-7xl mx-auto py-8 px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">

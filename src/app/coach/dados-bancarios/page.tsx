@@ -47,7 +47,7 @@ export default function DadosBancarios() {
     }
   }, [])
 
-  const createStripeAccount = async () => {
+  const createStripeAccount = useCallback(async () => {
     try {
       console.log('[Dados Bancários] Criando conta Stripe...')
       const response = await fetch('/api/stripe/create-connect-account', {
@@ -68,7 +68,7 @@ export default function DadosBancarios() {
     } catch (err) {
       console.error('[Dados Bancários] Erro ao criar conta Stripe:', err)
     }
-  }
+  }, [refresh])
 
   useEffect(() => {
     if (!profile) return
@@ -77,7 +77,7 @@ export default function DadosBancarios() {
     } else {
       createStripeAccount()
     }
-  }, [profile, loadBankAccount])
+  }, [profile, loadBankAccount, createStripeAccount])
 
   const handleKycSubmit = async (kycData: KYCSubmitData) => {
     setKycLoading(true)
