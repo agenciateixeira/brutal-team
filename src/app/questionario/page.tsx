@@ -122,15 +122,27 @@ export default function QuestionarioPage() {
   const handleSubmit = async () => {
     setLoading(true);
 
-    const sanitizedEmail = tempEmail.trim().toLowerCase();
-
-    if (!sanitizedEmail) {
-      setToast({ type: 'error', message: 'Por favor, informe um e-mail válido' });
-      setLoading(false);
-      return;
-    }
-
     try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError) {
+        console.error('Erro ao recuperar usuário antes de enviar anamnese:', userError);
+      }
+
+      let sanitizedEmail = tempEmail.trim().toLowerCase();
+      if (user?.email) {
+        sanitizedEmail = user.email.trim().toLowerCase();
+      }
+
+      if (!sanitizedEmail) {
+        setToast({ type: 'error', message: 'Por favor, informe um e-mail válido' });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase
         .from('anamnese_responses')
         .insert({
@@ -167,15 +179,10 @@ export default function QuestionarioPage() {
 
       setToast({ type: 'success', message: 'Questionário enviado com sucesso!' });
 
-      // Verificar se usuário está logado para saber para onde redirecionar
-      const { data: { user } } = await supabase.auth.getUser();
-
       setTimeout(() => {
         if (user) {
-          // Se está logado, volta para dashboard do aluno
           router.push('/aluno/dashboard');
         } else {
-          // Se NÃO está logado, vai para cadastro
           router.push('/cadastro');
         }
       }, 2000);

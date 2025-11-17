@@ -1,4 +1,5 @@
 import { createServerClient } from '@/lib/supabase/server';
+import { createAdminSupabaseClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import AppLayout from '@/components/layouts/AppLayout';
 import AlunosList from '@/components/coach/AlunosList';
@@ -60,13 +61,33 @@ export default async function CoachDashboard() {
     alunos = data || [];
   }
 
-  const alunoEmailsNormalized = (alunos || [])
-    .map(aluno => aluno.email?.trim().toLowerCase())
-    .filter((email): email is string => !!email);
+  const supabaseAdmin = createAdminSupabaseClient();
+  const alunoEmailsNormalized =
+    (alunos || [])
+      .map(aluno => aluno.email?.trim().toLowerCase())
+      .filter((email): email is string => !!email);
 
-  let anamneseByEmail = new Map<string, boolean>();
+  const anamneseByEmail = new Map<string, boolean>();
 
-  if (alunoEmailsNormalized.length > 0) {
+  if (supabaseAdmin && alunoEmailsNormalized.length > 0) {
+    const { data: anamneseRows, error: adminAnamneseError } = await supabaseAdmin
+      .from('anamnese_responses')
+      .select('temp_email')
+      .in('temp_email', alunoEmailsNormalized)
+      .eq('completed', true)
+      .order('completed_at', { ascending: false });
+
+    if (adminAnamneseError) {
+      console.error('Erro (admin) ao buscar anamneses completas:', adminAnamneseError);
+    } else {
+      for (const row of anamneseRows || []) {
+        const key = row.temp_email?.trim().toLowerCase();
+        if (key && !anamneseByEmail.has(key)) {
+          anamneseByEmail.set(key, true);
+        }
+      }
+    }
+  } else if (alunoEmailsNormalized.length > 0) {
     const { data: anamneseRows, error: anamneseFetchError } = await supabase
       .from('anamnese_responses')
       .select('temp_email')
@@ -173,7 +194,23 @@ export default async function CoachDashboard() {
       }
 
       const alunoEmailNormalized = aluno.email?.trim().toLowerCase();
-      const hasAnamnese = alunoEmailNormalized ? !!anamneseByEmail.get(alunoEmailNormalized) : false;
+      let hasAnamnese = alunoEmailNormalized ? !!anamneseByEmail.get(alunoEmailNormalized) : false;
+
+      if (!hasAnamnese && alunoEmailNormalized && !supabaseAdmin) {
+        const { data: anamneseRows, error: anamneseError } = await supabase
+          .from('anamnese_responses')
+          .select('id')
+          .eq('temp_email', alunoEmailNormalized)
+          .eq('completed', true)
+          .order('completed_at', { ascending: false })
+          .limit(1);
+
+        if (anamneseError) {
+          console.error('Erro ao buscar anamnese individual:', anamneseError);
+        } else {
+          hasAnamnese = !!anamneseRows?.[0];
+        }
+      }
 
       return {
         ...aluno,

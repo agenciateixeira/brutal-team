@@ -1,4 +1,5 @@
 import { createServerClient } from '@/lib/supabase/server';
+import { createAdminSupabaseClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import AppLayout from '@/components/layouts/AppLayout';
 import AlunoDetails from '@/components/coach/AlunoDetails';
@@ -88,11 +89,39 @@ export default async function AlunoDetailPage({ params }: { params: { id: string
     .limit(1)
     .maybeSingle();
 
+  const supabaseAdmin = createAdminSupabaseClient();
+
   // Primeiro, vamos verificar se existem anamneses para este email SEM filtro de completed
-  const { data: allAnamneseForEmail, count: totalCount } = await supabase
-    .from('anamnese_responses')
-    .select('*', { count: 'exact' })
-    .eq('temp_email', alunoEmail);
+  let allAnamneseForEmail: any[] = [];
+  let totalCount = 0;
+
+  if (alunoEmail) {
+    if (supabaseAdmin) {
+      const { data, error, count } = await supabaseAdmin
+        .from('anamnese_responses')
+        .select('*', { count: 'exact' })
+        .eq('temp_email', alunoEmail);
+
+      if (error) {
+        console.error('Erro (admin) ao buscar anamneses deste aluno:', error);
+      } else {
+        allAnamneseForEmail = data || [];
+        totalCount = count || 0;
+      }
+    } else {
+      const { data, error, count } = await supabase
+        .from('anamnese_responses')
+        .select('*', { count: 'exact' })
+        .eq('temp_email', alunoEmail);
+
+      if (error) {
+        console.error('Erro ao buscar anamneses deste aluno:', error);
+      } else {
+        allAnamneseForEmail = data || [];
+        totalCount = count || 0;
+      }
+    }
+  }
 
   console.log('=== DEBUG ANAMNESE DO ALUNO ===');
   console.log('📧 Email do aluno:', alunoProfile.email);
@@ -100,13 +129,34 @@ export default async function AlunoDetailPage({ params }: { params: { id: string
   console.log('📋 Dados de todas anamneses:', allAnamneseForEmail);
 
   // Buscar respostas do questionário de anamnese (apenas completas, mais recente)
-  const { data: anamneseResponseRows, error: anamneseError } = await supabase
-    .from('anamnese_responses')
-    .select('*')
-    .eq('temp_email', alunoEmail)
-    .eq('completed', true)
-    .order('completed_at', { ascending: false })
-    .limit(1);
+  let anamneseError: any = null;
+  let anamneseResponseRows: any[] | null = null;
+
+  if (alunoEmail) {
+    if (supabaseAdmin) {
+      const { data, error } = await supabaseAdmin
+        .from('anamnese_responses')
+        .select('*')
+        .eq('temp_email', alunoEmail)
+        .eq('completed', true)
+        .order('completed_at', { ascending: false })
+        .limit(1);
+
+      anamneseResponseRows = data;
+      anamneseError = error;
+    } else {
+      const { data, error } = await supabase
+        .from('anamnese_responses')
+        .select('*')
+        .eq('temp_email', alunoEmail)
+        .eq('completed', true)
+        .order('completed_at', { ascending: false })
+        .limit(1);
+
+      anamneseResponseRows = data;
+      anamneseError = error;
+    }
+  }
 
   const anamneseResponse = anamneseResponseRows?.[0] || null;
 

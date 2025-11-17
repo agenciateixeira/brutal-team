@@ -1,4 +1,5 @@
 import { createServerClient } from '@/lib/supabase/server';
+import { createAdminSupabaseClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import AppLayout from '@/components/layouts/AppLayout';
 import { BookOpen, User, Mail, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
@@ -46,19 +47,32 @@ export default async function CoachAnamnesePage() {
     ?.map(a => a.email?.trim().toLowerCase())
     .filter((email): email is string => !!email) || [];
 
+  const supabaseAdmin = createAdminSupabaseClient();
   let anamneses: any[] = [];
   let anamneseError: any = null;
 
   if (alunosEmails.length > 0) {
-    const { data, error } = await supabase
-      .from('anamnese_responses')
-      .select('*')
-      .in('temp_email', alunosEmails)
-      .eq('completed', true)
-      .order('completed_at', { ascending: false });
+    if (supabaseAdmin) {
+      const { data, error } = await supabaseAdmin
+        .from('anamnese_responses')
+        .select('*')
+        .in('temp_email', alunosEmails)
+        .eq('completed', true)
+        .order('completed_at', { ascending: false });
 
-    anamneses = data || [];
-    anamneseError = error;
+      anamneses = data || [];
+      anamneseError = error;
+    } else {
+      const { data, error } = await supabase
+        .from('anamnese_responses')
+        .select('*')
+        .in('temp_email', alunosEmails)
+        .eq('completed', true)
+        .order('completed_at', { ascending: false });
+
+      anamneses = data || [];
+      anamneseError = error;
+    }
   }
 
   console.log('Emails dos alunos:', alunosEmails);

@@ -1,4 +1,5 @@
 import { createServerClient } from '@/lib/supabase/server';
+import { createAdminSupabaseClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import Sidebar from '@/components/ui/Sidebar';
 import BottomNavigation from '@/components/ui/BottomNavigation';
@@ -10,6 +11,9 @@ import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import GamificationDashboardWrapper from '@/components/gamification/GamificationDashboardWrapper';
 import { TrendingUp, Apple, AlertCircle, FileQuestion, Bell, Sparkles, Activity } from 'lucide-react';
 import Link from 'next/link';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function AlunoDashboard() {
   const supabase = createServerClient();
@@ -127,22 +131,41 @@ export default async function AlunoDashboard() {
 
   // Verificar se o aluno completou o questionário (anamnese)
   const normalizedEmail = session.user.email?.trim().toLowerCase();
+  const supabaseAdmin = createAdminSupabaseClient();
   let hasCompletedQuestionnaire = false;
 
   if (normalizedEmail) {
-    const { data: anamneseResponseData, error: anamneseError } = await supabase
-      .from('anamnese_responses')
-      .select('id, completed, completed_at')
-      .eq('temp_email', normalizedEmail)
-      .eq('completed', true)
-      .order('completed_at', { ascending: false })
-      .limit(1);
+    if (supabaseAdmin) {
+      const { data: adminAnamnese, error: adminAnamneseError } = await supabaseAdmin
+        .from('anamnese_responses')
+        .select('id')
+        .eq('temp_email', normalizedEmail)
+        .eq('completed', true)
+        .order('completed_at', { ascending: false })
+        .limit(1);
 
-    if (anamneseError) {
-      console.error('Erro ao verificar anamnese do aluno:', anamneseError);
+      if (adminAnamneseError) {
+        console.error('Erro (admin) ao verificar anamnese do aluno:', adminAnamneseError);
+      } else {
+        hasCompletedQuestionnaire = !!adminAnamnese?.[0];
+      }
     }
 
-    hasCompletedQuestionnaire = !!anamneseResponseData?.[0]?.completed;
+    if (!hasCompletedQuestionnaire) {
+      const { data: anamneseResponseData, error: anamneseError } = await supabase
+        .from('anamnese_responses')
+        .select('id, completed, completed_at')
+        .eq('temp_email', normalizedEmail)
+        .eq('completed', true)
+        .order('completed_at', { ascending: false })
+        .limit(1);
+
+      if (anamneseError) {
+        console.error('Erro ao verificar anamnese do aluno:', anamneseError);
+      }
+
+      hasCompletedQuestionnaire = !!anamneseResponseData?.[0]?.completed;
+    }
   }
 
   // Buscar observação pública do coach (últimos 7 dias)
