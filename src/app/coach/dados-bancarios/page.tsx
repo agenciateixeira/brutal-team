@@ -1,34 +1,51 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import AppLayout from '@/components/layouts/AppLayout'
 import KYCForm, { KYCSubmitData } from '@/components/forms/KYCForm'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function DadosBancarios() {
   const router = useRouter()
-  const supabase = createClient()
-  const [loading, setLoading] = useState(true)
-  const [profile, setProfile] = useState<any>(null)
+  const { profile, loading: authLoading, refresh, session } = useAuth()
   const [bankAccount, setBankAccount] = useState<any>(null)
   const [accountStatus, setAccountStatus] = useState<any>(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [kycLoading, setKycLoading] = useState(false)
+  const [bankLoading, setBankLoading] = useState(false)
 
   useEffect(() => {
-    loadProfile()
-  }, [])
-
-  useEffect(() => {
-    if (profile && profile.stripe_account_id) {
-      loadBankAccount()
-    } else if (profile && !profile.stripe_account_id) {
-      // Criar conta Stripe se não existir
-      createStripeAccount()
+    if (!authLoading && !session) {
+      router.push('/login')
     }
-  }, [profile])
+  }, [authLoading, session, router])
+
+  const loadBankAccount = useCallback(async () => {
+    setBankLoading(true)
+    try {
+      const response = await fetch('/api/stripe/get-bank-account')
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Erro ao carregar conta bancária:', errorData)
+        return
+      }
+
+      const data = await response.json()
+
+      if (data.hasAccount) {
+        setBankAccount(data.bankAccount)
+        setAccountStatus(data.accountStatus)
+        setSuccess(true)
+      }
+    } catch (err: any) {
+      console.error('Erro ao carregar conta bancária:', err)
+    } finally {
+      setBankLoading(false)
+    }
+  }, [])
 
   const createStripeAccount = async () => {
     try {
@@ -47,66 +64,20 @@ export default function DadosBancarios() {
       console.log('[Dados Bancários] Conta Stripe criada:', data.accountId)
 
       // Recarregar perfil para obter o stripe_account_id
-      await loadProfile()
+      await refresh()
     } catch (err) {
       console.error('[Dados Bancários] Erro ao criar conta Stripe:', err)
     }
   }
 
-  const loadProfile = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (!user) {
-        router.push('/login')
-        return
-      }
-
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-      console.log('[Dados Bancários] Profile carregado:', {
-        hasProfile: !!profileData,
-        hasStripeAccountId: !!profileData?.stripe_account_id,
-        chargesEnabled: profileData?.stripe_charges_enabled,
-        payoutsEnabled: profileData?.stripe_payouts_enabled,
-      })
-
-      setProfile(profileData)
-    } catch (err) {
-      console.error('Erro ao carregar perfil:', err)
-      setError('Erro ao carregar dados do perfil')
-    } finally {
-      setLoading(false)
+  useEffect(() => {
+    if (!profile) return
+    if (profile.stripe_account_id) {
+      loadBankAccount()
+    } else {
+      createStripeAccount()
     }
-  }
-
-  const loadBankAccount = async () => {
-    try {
-      const response = await fetch('/api/stripe/get-bank-account')
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        console.error('Erro ao carregar conta bancária:', errorData)
-        return
-      }
-
-      const data = await response.json()
-
-      if (data.hasAccount) {
-        setBankAccount(data.bankAccount)
-        setAccountStatus(data.accountStatus)
-        setSuccess(true) // Mostrar como sucesso se já tem conta cadastrada
-      }
-    } catch (err: any) {
-      console.error('Erro ao carregar conta bancária:', err)
-    }
-  }
+  }, [profile, loadBankAccount])
 
   const handleKycSubmit = async (kycData: KYCSubmitData) => {
     setKycLoading(true)
@@ -133,7 +104,7 @@ export default function DadosBancarios() {
 
       // Mostrar sucesso e recarregar perfil
       setSuccess(true)
-      await loadProfile()
+      await refresh()
 
       // Redirecionar para dashboard após 2 segundos
       setTimeout(() => {
@@ -148,7 +119,9 @@ export default function DadosBancarios() {
     }
   }
 
-  if (loading || !profile) {
+  const loadingState = authLoading || (!profile && session) || bankLoading
+
+  if (loadingState) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-gray-600 dark:text-gray-400">Carregando...</div>
@@ -156,8 +129,16 @@ export default function DadosBancarios() {
     )
   }
 
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-gray-600 dark:text-gray-400">Sessão expirada. Faça login novamente.</div>
+      </div>
+    )
+  }
+
   return (
-    <AppLayout profile={profile}>
+    <AppLayout>
       <div className="max-w-6xl mx-auto py-8 px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">

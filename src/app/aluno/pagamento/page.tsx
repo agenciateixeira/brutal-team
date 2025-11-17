@@ -1,51 +1,32 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import AppLayout from '@/components/layouts/AppLayout'
 import { AlertCircle, CreditCard, Clock, CheckCircle } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function PagamentoPage() {
   const router = useRouter()
   const supabase = createClient()
+  const { profile, loading: authLoading, session } = useAuth()
   const [loading, setLoading] = useState(true)
-  const [profile, setProfile] = useState<any>(null)
   const [subscription, setSubscription] = useState<any>(null)
   const [coach, setCoach] = useState<any>(null)
   const [processingPayment, setProcessingPayment] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  useEffect(() => {
-    loadData()
-  }, [])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
+    if (!profile) return
+    setLoading(true)
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (!user) {
-        router.push('/login')
-        return
-      }
-
-      // Carregar perfil
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-      setProfile(profileData)
-
       // Carregar subscription
       const { data: subscriptionData } = await supabase
         .from('subscriptions')
         .select('*')
-        .eq('aluno_id', user.id)
+        .eq('aluno_id', profile.id)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
@@ -53,36 +34,58 @@ export default function PagamentoPage() {
       setSubscription(subscriptionData)
 
       // Carregar dados do coach
-      if (profileData?.coach_id) {
+      if (profile.coach_id) {
         const { data: coachData } = await supabase
           .from('profiles')
           .select('full_name, email, phone')
-          .eq('id', profileData.coach_id)
+          .eq('id', profile.coach_id)
           .single()
 
         setCoach(coachData)
       }
     } catch (err) {
       console.error('Erro ao carregar dados:', err)
+      setError('Não foi possível carregar os dados de pagamento.')
     } finally {
       setLoading(false)
     }
-  }
+  }, [profile, supabase])
+
+  useEffect(() => {
+    if (!authLoading && !session) {
+      router.push('/login')
+    }
+  }, [authLoading, session, router])
+
+  useEffect(() => {
+    if (!authLoading && profile) {
+      loadData()
+    }
+  }, [authLoading, profile, loadData])
 
   const handleUpdatePaymentMethod = async () => {
+    if (!profile || !profile.coach_id) {
+      setError('Não encontramos um coach vinculado ao seu perfil.')
+      return
+    }
+    if (!subscription) {
+      setError('Não encontramos uma assinatura para regularizar.')
+      return
+    }
     setProcessingPayment(true)
     setError('')
     setSuccess('')
 
     try {
-      // Chamar API para criar sessão de atualização de pagamento
-      const response = await fetch('/api/stripe/update-payment-method', {
+      const response = await fetch('/api/student/subscribe-to-coach', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          subscriptionId: subscription?.stripe_subscription_id,
+          coachId: profile.coach_id,
+          amount: subscription.amount,
+          interval: subscription.interval || 'month',
         }),
       })
 
@@ -91,15 +94,14 @@ export default function PagamentoPage() {
         throw new Error(errorData.error || 'Erro ao processar pagamento')
       }
 
-      const { url } = await response.json()
+      const { sessionUrl } = await response.json()
 
-      // Redirecionar para o Stripe
-      if (url) {
-        window.location.href = url
+      if (sessionUrl) {
+        window.location.href = sessionUrl
       }
     } catch (err: any) {
       console.error('Erro ao atualizar forma de pagamento:', err)
-      setError(err.message)
+      setError(err.message || 'Erro ao iniciar o pagamento.')
     } finally {
       setProcessingPayment(false)
     }
@@ -117,7 +119,7 @@ export default function PagamentoPage() {
   const isOverdue = subscription?.status === 'past_due' || subscription?.status === 'unpaid'
   const isBlocked = isOverdue && getHoursSinceOverdue() >= 24
 
-  if (loading || !profile) {
+  if (authLoading || loading || (!profile && session)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-gray-600 dark:text-gray-400">Carregando...</div>
@@ -125,8 +127,16 @@ export default function PagamentoPage() {
     )
   }
 
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-gray-600 dark:text-gray-400">Sessão expirada. Faça login novamente.</div>
+      </div>
+    )
+  }
+
   return (
-    <AppLayout profile={profile}>
+    <AppLayout>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
         {/* Header */}
         <div className="mb-8">

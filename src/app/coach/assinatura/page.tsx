@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import AppLayout from '@/components/layouts/AppLayout'
 import { loadStripe } from '@stripe/stripe-js'
 import {
@@ -22,43 +21,21 @@ const getStripePromise = () => {
 
 const stripePromise = getStripePromise()
 
+import { useAuth } from '@/contexts/AuthContext'
+
 export default function GerenciarAssinatura() {
   const router = useRouter()
-  const supabase = createClient()
-  const [loading, setLoading] = useState(true)
-  const [profile, setProfile] = useState<any>(null)
+  const { profile, loading: authLoading, session } = useAuth()
+  const [loading, setLoading] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    loadProfile()
-  }, [])
-
-  const loadProfile = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (!user) {
-        router.push('/login')
-        return
-      }
-
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-      setProfile(profileData)
-    } catch (err) {
-      console.error('Erro ao carregar perfil:', err)
-    } finally {
-      setLoading(false)
+    if (!authLoading && !session) {
+      router.push('/login')
     }
-  }
+  }, [authLoading, session, router])
 
   const handleSelectPlan = async (planId: string) => {
     setLoading(true)
@@ -107,7 +84,7 @@ export default function GerenciarAssinatura() {
     profile?.stripe_subscription_status === 'active' ||
     profile?.stripe_subscription_status === 'trialing'
 
-  if (loading || !profile) {
+  if (authLoading || !profile) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-gray-600 dark:text-gray-400">Carregando...</div>
@@ -117,7 +94,7 @@ export default function GerenciarAssinatura() {
 
   if (clientSecret) {
     return (
-      <AppLayout profile={profile}>
+      <AppLayout>
         <div className="max-w-4xl mx-auto py-8 px-4">
           <button
             onClick={handleReturn}
@@ -150,7 +127,7 @@ export default function GerenciarAssinatura() {
   }
 
   return (
-    <AppLayout profile={profile}>
+    <AppLayout>
       <div className="max-w-7xl mx-auto py-8 px-4">
         {/* Header */}
         <div className="mb-8">

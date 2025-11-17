@@ -1,18 +1,37 @@
 'use client';
 
-import { Profile } from '@/types';
-import Sidebar from '@/components/ui/Sidebar';
-import BottomNavigation from '@/components/ui/BottomNavigation';
-import PullToRefresh from '@/components/ui/PullToRefresh';
-import RequireSubscription from '@/components/auth/RequireSubscription';
-import RequirePayment from '@/components/auth/RequirePayment';
+import { ReactNode } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import Sidebar from '@/components/ui/Sidebar'
+import BottomNavigation from '@/components/ui/BottomNavigation'
+import PullToRefresh from '@/components/ui/PullToRefresh'
+import RequireSubscription from '@/components/auth/RequireSubscription'
+import RequirePayment from '@/components/auth/RequirePayment'
 
 interface AppLayoutProps {
-  children: React.ReactNode;
-  profile: Profile;
+  children: ReactNode
+  profile?: any
 }
 
-export default function AppLayout({ children, profile }: AppLayoutProps) {
+export default function AppLayout({ children, profile: profileProp }: AppLayoutProps) {
+  const { profile: contextProfile, loading, session } = useAuth()
+  const profile = profileProp || contextProfile
+
+  if (loading || (!profile && session)) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-gray-600 dark:text-gray-400">Carregando...</div>
+      </div>
+    )
+  }
+
+  if (!profile) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-gray-600 dark:text-gray-400">Sessão expirada. Faça login novamente.</div>
+      </div>
+    )
+  }
   // Se for coach, verifica se tem subscription
   // Se for aluno, verifica se está em dia com pagamento
   let content = children;

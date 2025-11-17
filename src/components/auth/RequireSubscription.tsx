@@ -2,12 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { Profile } from '@/types'
-
-interface RequireSubscriptionProps {
-  profile: Profile
-  children: React.ReactNode
-}
+import { useAuth } from '@/contexts/AuthContext'
 
 /**
  * Componente que bloqueia acesso às páginas do coach
@@ -17,9 +12,36 @@ interface RequireSubscriptionProps {
  * - /coach/assinatura (para escolher plano)
  * - /coach/pagamento-sucesso (após pagamento)
  */
-export default function RequireSubscription({ profile, children }: RequireSubscriptionProps) {
+interface RequireSubscriptionProps {
+  children: React.ReactNode
+}
+
+export default function RequireSubscription({ children }: RequireSubscriptionProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const { profile, loading, session } = useAuth()
+
+  if (loading || (!profile && session)) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0081A7] mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Verificando assinatura...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0081A7] mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Sessão expirada, redirecionando...</p>
+        </div>
+      </div>
+    )
+  }
 
   const hasActiveSubscription =
     profile?.stripe_subscription_status === 'active' ||

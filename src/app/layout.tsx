@@ -3,6 +3,7 @@ import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AlertProvider } from "@/contexts/AlertContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
 import { LoadingProvider } from "@/components/providers/LoadingProvider";
 import { RouteLoadingProvider } from "@/components/providers/RouteLoadingProvider";
@@ -48,21 +49,23 @@ export default function RootLayout({
       <body className={`${montserrat.className} ${montserrat.variable} bg-white`}>
         <ServiceWorkerRegistration />
         <AuthPersistence />
-        <ThemeProvider>
-          <AlertProvider>
-            <LoadingProvider>
-              <Suspense fallback={null}>
-                <RouteLoadingProvider>
-                  <PageTransition>
-                    {children}
-                  </PageTransition>
-                </RouteLoadingProvider>
-              </Suspense>
-              <PWAInstallPrompt />
-              <NotificationToast />
-            </LoadingProvider>
-          </AlertProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <AlertProvider>
+              <LoadingProvider>
+                <Suspense fallback={null}>
+                  <RouteLoadingProvider>
+                    <PageTransition>
+                      {children}
+                    </PageTransition>
+                  </RouteLoadingProvider>
+                </Suspense>
+                <PWAInstallPrompt />
+                <NotificationToast />
+              </LoadingProvider>
+            </AlertProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

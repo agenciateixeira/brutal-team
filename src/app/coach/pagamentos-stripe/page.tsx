@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import AppLayout from '@/components/layouts/AppLayout'
 import { Search, Filter, RefreshCw } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface Payment {
   id: string
@@ -76,9 +76,7 @@ const getRangeValues = (option: RangeOption) => {
 
 export default function PagamentosStripe() {
   const router = useRouter()
-  const supabase = createClient()
-  const [loading, setLoading] = useState(true)
-  const [profile, setProfile] = useState<any>(null)
+  const { profile, session, loading: authLoading } = useAuth()
   const [payments, setPayments] = useState<Payment[]>([])
   const [error, setError] = useState('')
   const [range, setRange] = useState<RangeOption>('30d')
@@ -95,43 +93,12 @@ export default function PagamentosStripe() {
   const [hasMore, setHasMore] = useState(false)
 
   useEffect(() => {
-    loadProfile()
-  }, [])
-
-  useEffect(() => {
-    if (profile && profile.stripe_account_id) {
-      loadPayments()
+    if (!authLoading && !session) {
+      router.push('/login')
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, startDate, endDate, statusFilter, appliedSearch])
+  }, [authLoading, session, router])
 
-  const loadProfile = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (!user) {
-        router.push('/login')
-        return
-      }
-
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-      setProfile(profileData)
-    } catch (err) {
-      console.error('Erro ao carregar perfil:', err)
-      setError('Erro ao carregar dados do perfil')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const loadPayments = async () => {
+  const loadPayments = useCallback(async () => {
     if (!profile?.stripe_account_id) return
     try {
       setIsFetching(true)
@@ -163,7 +130,11 @@ export default function PagamentosStripe() {
       setIsFetching(false)
       setIsLoadingMore(false)
     }
-  }
+  }, [appliedSearch, endDate, profile?.stripe_account_id, startDate, statusFilter])
+
+  useEffect(() => {
+    loadPayments()
+  }, [loadPayments])
 
   const handleLoadMore = async () => {
     if (!profile?.stripe_account_id) return
@@ -195,7 +166,7 @@ export default function PagamentosStripe() {
         })
         return merged
       })
-      setSummary(data.summary || summary)
+      setSummary(data.summary || { gross: 0, net: 0, fees: 0, refunded: 0 })
       setNextCursor(data.next_cursor || null)
       setHasMore(Boolean(data.has_more && data.next_cursor))
     } catch (err: any) {
@@ -250,7 +221,7 @@ export default function PagamentosStripe() {
     )
   }
 
-  if (loading || !profile) {
+  if (authLoading || (!profile && session)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-gray-600 dark:text-gray-400">Carregando...</div>

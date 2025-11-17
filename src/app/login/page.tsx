@@ -193,9 +193,9 @@ export default function LoginPage() {
             <Link href="/recuperar-senha" className="text-sm text-gray-600 hover:text-primary-600 font-medium transition-colors">
               Esqueci minha senha
             </Link>
-            <Link href="/cadastro" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
-              Não tem uma conta? Cadastre-se
-            </Link>
+            <span className="text-sm text-gray-500">
+              Precisa de acesso? Solicite ao seu coach.
+            </span>
           </div>
 
           {/* Link sutil para cadastro de coach */}
