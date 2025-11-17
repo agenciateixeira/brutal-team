@@ -67,11 +67,8 @@ interface Props {
   recentPayments: RecentPayment[]
 }
 
-const currency = new Intl.NumberFormat('pt-BR', {
-  style: 'currency',
-  currency: 'BRL',
-  minimumFractionDigits: 2,
-})
+const formatMoney = (valueInCents: number) => `R$ ${(valueInCents / 100).toFixed(2).replace('.', ',')}`
+const formatMoneyFromUnits = (value: number) => `R$ ${value.toFixed(2).replace('.', ',')}`
 
 const formatNumber = (value: NumberLike) =>
   new Intl.NumberFormat('pt-BR').format(value || 0)
@@ -95,7 +92,7 @@ const ChartTooltip = ({ active, payload, label }: TooltipProps<number, string>) 
             style={{ backgroundColor: entry.color }}
           />
           <span className="text-gray-700">
-            {entry.dataKey === 'gross' ? 'Pagamentos' : 'Taxa'}: {currency.format(entry.value || 0)}
+            {entry.dataKey === 'gross' ? 'Pagamentos' : 'Taxa'}: {formatMoneyFromUnits(entry.value || 0)}
           </span>
         </div>
       ))}
@@ -148,14 +145,14 @@ export default function AdminDashboardOverview({
         />
         <StatCard
           title="Pagamentos (período)"
-          value={currency.format(grossVolume / 100)}
+          value={formatMoney(grossVolume)}
           subtitle="Período selecionado"
           icon={Wallet}
           accent
         />
         <StatCard
           title="Taxa da plataforma"
-          value={currency.format(platformRevenue / 100)}
+          value={formatMoney(platformRevenue)}
           subtitle="Período selecionado"
           icon={TrendingUp}
         />
@@ -170,7 +167,7 @@ export default function AdminDashboardOverview({
               <p className="text-sm text-gray-500">Últimos 60 dias</p>
             </div>
             <div className="rounded-full border border-[#0081A7]/20 bg-[#0081A7]/10 px-4 py-2 text-sm font-semibold text-[#0081A7] dark:border-[#064E63] dark:bg-[#032B36] dark:text-[#4DD0E1]">
-              {currency.format(grossVolume / 100)} processados
+              {formatMoney(grossVolume)} processados
             </div>
           </div>
           <div className="mt-4 h-64 w-full">
@@ -191,7 +188,7 @@ export default function AdminDashboardOverview({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Assinaturas de coaches</p>
-                <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">{currency.format(coachSubscriptionMRR / 100)}</h3>
+                <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">{formatMoney(coachSubscriptionMRR)}</h3>
                 <p className="text-xs text-gray-500">MRR estimado</p>
               </div>
               <div className="rounded-full bg-[#0081A7]/10 p-3 text-[#0081A7]">
@@ -216,7 +213,7 @@ export default function AdminDashboardOverview({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">Recebido pelos coaches</p>
-                <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">{currency.format(coachPayouts / 100)}</h3>
+                <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">{formatMoney(coachPayouts)}</h3>
                 <p className="text-xs text-gray-500">Total desde o início</p>
               </div>
               <div className="rounded-full bg-[#00AFB9]/10 p-3 text-[#00AFB9]">
@@ -256,7 +253,7 @@ export default function AdminDashboardOverview({
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {currency.format(coach.totalAmount / 100)}
+                    {formatMoney(coach.totalAmount)}
                   </p>
                   <p className="text-xs text-gray-500">#{index + 1}</p>
                 </div>
@@ -301,10 +298,10 @@ export default function AdminDashboardOverview({
                       <p className="text-xs text-gray-500">{payment.aluno?.email}</p>
                     </td>
                     <td className="px-6 py-3 font-semibold text-gray-900 dark:text-white">
-                      {currency.format(payment.amount / 100)}
+                      {formatMoney(payment.amount)}
                     </td>
                     <td className="px-6 py-3 font-semibold text-[#0081A7]">
-                      {currency.format(payment.platform_fee / 100)}
+                      {formatMoney(payment.platform_fee)}
                     </td>
                   </tr>
                 ))}
