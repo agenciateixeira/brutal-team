@@ -126,13 +126,24 @@ export default async function AlunoDashboard() {
   const shouldShowFirstAccessModal = !profile.first_access_completed;
 
   // Verificar se o aluno completou o questionário (anamnese)
-  const { data: anamneseResponse } = await supabase
-    .from('anamnese_responses')
-    .select('id, completed')
-    .or(`temp_email.eq.${profile.email}`)
-    .maybeSingle();
+  const normalizedEmail = profile?.email?.toLowerCase();
+  let hasCompletedQuestionnaire = false;
 
-  const hasCompletedQuestionnaire = anamneseResponse && anamneseResponse.completed;
+  if (normalizedEmail) {
+    const { data: anamneseResponseData, error: anamneseError } = await supabase
+      .from('anamnese_responses')
+      .select('id, completed, completed_at')
+      .eq('temp_email', normalizedEmail)
+      .eq('completed', true)
+      .order('completed_at', { ascending: false })
+      .limit(1);
+
+    if (anamneseError) {
+      console.error('Erro ao verificar anamnese do aluno:', anamneseError);
+    }
+
+    hasCompletedQuestionnaire = !!anamneseResponseData?.[0]?.completed;
+  }
 
   // Buscar observação pública do coach (últimos 7 dias)
   const { data: coachObservation } = await supabase

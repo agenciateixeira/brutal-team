@@ -147,15 +147,21 @@ export default async function CoachDashboard() {
       }
 
       // Verificar se tem anamnese completa
-      const { data: anamnese, error: anamneseError } = await supabase
-        .from('anamnese_responses')
-        .select('id')
-        .eq('temp_email', aluno.email)
-        .eq('completed', true)
-        .maybeSingle();
+      let hasAnamnese = false;
+      if (aluno.email) {
+        const { data: anamneseRows, error: anamneseError } = await supabase
+          .from('anamnese_responses')
+          .select('id')
+          .eq('temp_email', aluno.email.toLowerCase())
+          .eq('completed', true)
+          .order('completed_at', { ascending: false })
+          .limit(1);
 
-      if (anamneseError) {
-        console.error('Erro ao buscar anamnese:', anamneseError);
+        if (anamneseError) {
+          console.error('Erro ao buscar anamnese:', anamneseError);
+        }
+
+        hasAnamnese = !!anamneseRows?.[0];
       }
 
       return {
@@ -167,7 +173,7 @@ export default async function CoachDashboard() {
         has_all_notifications: hasAllNotifications,
         has_diet: !!activeDiet,
         has_workout: !!activeWorkout,
-        has_anamnese: !!anamnese,
+        has_anamnese: hasAnamnese,
       };
     })
   );

@@ -42,6 +42,8 @@ export default async function AlunoDetailPage({ params }: { params: { id: string
     redirect('/coach/dashboard');
   }
 
+  const alunoEmail = alunoProfile.email.toLowerCase();
+
   // Buscar fotos de progresso
   const { data: photos } = await supabase
     .from('progress_photos')
@@ -90,7 +92,7 @@ export default async function AlunoDetailPage({ params }: { params: { id: string
   const { data: allAnamneseForEmail, count: totalCount } = await supabase
     .from('anamnese_responses')
     .select('*', { count: 'exact' })
-    .eq('temp_email', alunoProfile.email);
+    .eq('temp_email', alunoEmail);
 
   console.log('=== DEBUG ANAMNESE DO ALUNO ===');
   console.log('📧 Email do aluno:', alunoProfile.email);
@@ -98,14 +100,15 @@ export default async function AlunoDetailPage({ params }: { params: { id: string
   console.log('📋 Dados de todas anamneses:', allAnamneseForEmail);
 
   // Buscar respostas do questionário de anamnese (apenas completas, mais recente)
-  const { data: anamneseResponse, error: anamneseError } = await supabase
+  const { data: anamneseResponseRows, error: anamneseError } = await supabase
     .from('anamnese_responses')
     .select('*')
-    .eq('temp_email', alunoProfile.email)
+    .eq('temp_email', alunoEmail)
     .eq('completed', true)
     .order('completed_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(1);
+
+  const anamneseResponse = anamneseResponseRows?.[0] || null;
 
   console.log('✅ Anamnese completa encontrada:', anamneseResponse ? 'SIM' : 'NÃO');
   console.log('📝 Dados da anamnese completa:', anamneseResponse);
