@@ -39,9 +39,9 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative w-10 h-10">
@@ -77,7 +77,7 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
 
       {/* Mobile Sidebar */}
       <aside className={`
-        lg:hidden fixed top-0 left-0 bottom-0 z-50 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700
+        lg:hidden fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700
         transform transition-transform duration-300 ease-in-out
         ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
@@ -164,7 +164,7 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
       </aside>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
+      <aside className="hidden lg:flex lg:flex-col fixed top-0 left-0 h-screen w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-40">
         <div className="flex-1 flex flex-col overflow-y-auto">
           {/* Logo/Header */}
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
@@ -247,9 +247,52 @@ export default function AdminLayout({ children, profile }: AdminLayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto pt-16 lg:pt-0">
-        {children}
-      </main>
+      <div className="flex min-h-screen flex-col lg:pl-64">
+        <main className="flex-1 w-full overflow-x-hidden pt-20 pb-28 lg:pt-0 lg:pb-0">
+          {children}
+        </main>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 pb-safe shadow-lg">
+        <div className="grid grid-cols-5 h-20 px-1">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+
+            return (
+              <Link
+                key={`mobile-${item.href}`}
+                href={item.href}
+                className={`flex flex-col items-center justify-center gap-0.5 transition-colors text-xs ${
+                  isActive
+                    ? 'text-[#0081A7] dark:text-[#4DD0E1]'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-[#0081A7]'
+                }`}
+              >
+                <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+                <span className={`text-[10px] leading-tight ${isActive ? 'font-semibold' : 'font-medium'}`}>
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className={`flex flex-col items-center justify-center gap-0.5 transition-colors text-xs ${
+              mobileMenuOpen
+                ? 'text-[#0081A7] dark:text-[#4DD0E1]'
+                : 'text-gray-600 dark:text-gray-400 hover:text-[#0081A7]'
+            }`}
+          >
+            {mobileMenuOpen ? <X size={22} strokeWidth={2.5} /> : <Menu size={22} strokeWidth={2} />}
+            <span className={`text-[10px] leading-tight ${mobileMenuOpen ? 'font-semibold' : 'font-medium'}`}>
+              Menu
+            </span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 }
